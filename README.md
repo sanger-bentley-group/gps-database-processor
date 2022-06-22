@@ -1,6 +1,14 @@
-# GPS Database Validator
+# GPS Database Validator (Work-in-Progress)
 
-The tool is used to check whether your [Global Pneumococcal Sequencing Project](https://www.pneumogen.net/gps/) (GPS) Database only contains expected values or values in the expected formats. 
+This tool is used to check whether your [Global Pneumococcal Sequencing Project](https://www.pneumogen.net/gps/) (GPS) Database only contains expected values or values in the expected formats. 
+
+
+&nbsp;
+## Usage
+To check your database,  put the database in the same directory/folder as the script and run the following command (change `database.db` to the file name of the database):
+```
+python validator.py database.db
+```
 
 
 &nbsp;
