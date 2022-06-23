@@ -5,7 +5,9 @@ import sqlite3
 import pandas as pd
 import os
 import sys
+import re
 from colorlog import get_log
+
 
 # Enter the current table names in the database as value under the relevant key
 TABLE_NAMES = {
@@ -20,10 +22,12 @@ QC_COLUMNS = ["Lane_id", "Streptococcus_pneumoniae", "Total_length", "No_of_cont
 ANALYSIS_COLUMNS = ["Lane_id", "Sample", "Public_name", "ERR", "ERS", "No_of_genome", "Duplicate", "Paper_1", "In_silico_ST", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "Country", "Continent", "Manifest_type", "Children<5yrs", "GPSC", "GPSC__colour", "In_silico_serotype", "In_silico_serotype__colour", "pbp1a", "pbp2b", "pbp2x", "WGS_PEN", "WGS_PEN_SIR_Meningitis", "WGS_PEN_SIR_Nonmeningitis", "WGS_AMO", "WGS_AMO_SIR", "WGS_MER", "WGS_MER_SIR", "WGS_TAX", "WGS_TAX_SIR_Meningitis", "WGS_TAX_SIR_Nonmeningitis", "WGS_CFT", "WGS_CFT_SIR_Meningitis", "WGS_CFT_SIR_Nonmeningitis", "WGS_CFX", "WGS_CFX_SIR", "WGS_ERY", "WGS_ERY_SIR", "WGS_CLI", "WGS_CLI_SIR", "WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR", "WGS_ERY_CLI", "WGS_COT", "WGS_COT_SIR", "WGS_TET", "WGS_TET_SIR", "WGS_DOX", "WGS_DOX_SIR", "WGS_LFX", "WGS_LFX_SIR", "WGS_CHL", "WGS_CHL_SIR", "WGS_RIF", "WGS_RIF_SIR", "WGS_VAN", "WGS_VAN_SIR", "EC", "Cot", "Tet__autocolour", "FQ__autocolour", "Other", "PBP1A_2B_2X__autocolour", "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", "ermB", "ermB__colour", "mefA", "mefA__colour", "folA_I100L", "folA_I100L__colour", "folP__autocolour", "cat", "cat__colour", "PCV7", "PCV10", "PCV13", "PCV15", "PCV20", "Pneumosil", "Published(Y/N)"]
 
 
-def main():
-    global log 
-    log = get_log()
+# Global variables 
+LOG = get_log()
+FOUND_ERRORS = False
 
+
+def main():
     # Ensure the script will read and write to the same dir it locates at
     base = os.path.dirname(os.path.abspath(__file__))
 
@@ -31,91 +35,108 @@ def main():
     try:
         db_name = sys.argv[1]
     except IndexError:
-        log.critical('Invalid command. Use the following format: python validator.py database.db')
+        LOG.critical('Invalid command. Use the following format: python validator.py database.db')
         sys.exit(1)
     
-    global dp_path
     dp_path = os.path.join(base, db_name)
     if not os.path.isfile(dp_path):
-        log.critical('File does not exist')
+        LOG.critical('File does not exist')
         sys.exit(1)
 
-    df_meta, df_qc, df_analysis = read_db()
+    df_meta, df_qc, df_analysis = read_db(dp_path)
 
-    check_meta(df_meta)
-    check_qc(df_qc)
-    check_analysis(df_analysis)
+    check_meta(df_meta, dp_path)
+    check_qc(df_qc, dp_path)
+    check_analysis(df_analysis, dp_path)
 
-    log.info(f'The validation of {sys.argv[1]} is completed.')
+    if FOUND_ERRORS:
+        LOG.warning(f'The validation of {sys.argv[1]} is completed with errors.')
+    else:
+        LOG.info(f'The validation of {sys.argv[1]} is completed.')
 
 
 # Read database into Pandas dataframes for processing
-def read_db():
+def read_db(dp_path):
     try:
         dfs = []
         with sqlite3.connect(dp_path) as con:
             for table_name in TABLE_NAMES.values():
                 dfs.append(pd.read_sql_query(f'SELECT * FROM {table_name}', con).astype(str))
     except pd.io.sql.DatabaseError:
-        log.critical('Unable to find all tables in the database. Incorrect or incompatible database is used.')
+        LOG.critical('Unable to find all tables in the database. Incorrect or incompatible database is used.')
         sys.exit(1)
     return dfs
 
 
 # Check whether meta table only contains expected values / patterns
-def check_meta(df_meta):
+def check_meta(df_meta, dp_path):
     table_name = TABLE_NAMES["meta"]
 
     check_columns(df_meta, META_COLUMNS, table_name)
-    check_y_n(df_meta, 'Selection_random', table_name)
+    check_case(df_meta, 'Sample_name', table_name, dp_path)
+    check_case(df_meta, 'Public_name', table_name, dp_path)
+    check_y_n(df_meta, 'Selection_random', table_name, dp_path)
+    check_continent(df_meta, 'Continent', table_name, dp_path)
+
 
 # Check whether qc table only contains expected values / patterns
-def check_qc(df_qc):
+def check_qc(df_qc, dp_path):
     check_columns(df_qc, QC_COLUMNS, TABLE_NAMES["qc"])
 
 
 # Check whether analysis table only contains expected values / patterns
-def check_analysis(df_analysis):
+def check_analysis(df_analysis, dp_path):
     check_columns(df_analysis, ANALYSIS_COLUMNS, TABLE_NAMES["analysis"])
 
 
+# Check whether tables contain only the expected columns
 def check_columns(df, columns, table_name):
     if (diff := set(list(df)) - set(columns)):
-        log.critical(f'{table_name} has the following unexpected column(s): {", ".join(diff)}. Incorrect or incompatible database is used.')
+        LOG.critical(f'{table_name} has the following unexpected column(s): {", ".join(diff)}. Incorrect or incompatible database is used.')
         sys.exit(1)
     if (diff := set(list(columns)) - set(df)):
-        log.critical(f'{table_name} is missing the following column(s): {", ".join(diff)}. Incorrect or incompatible database is used.')
+        LOG.critical(f'{table_name} is missing the following column(s): {", ".join(diff)}. Incorrect or incompatible database is used.')
         sys.exit(1)
 
 
 # Check column values contain Y, N, _ only
-def check_y_n(df, column_name, table_name):
+def check_y_n(df, column_name, table_name, dp_path):
     expected = {'Y', 'N', '_'}
-    check_expected(df, column_name, table_name, expected)
+    check_expected(df, column_name, table_name, expected, dp_path)
+
+
+# Check column values is in Continent only
+def check_continent(df, column_name, table_name, dp_path):
+    expected = {'AFRICA', 'ASIA', 'CENTRAL AMERICA', 'EUROPE', 'LATIN AMERICA', 'NORTH AMERICA', 'OCEANIA', '_'}
+    check_expected(df, column_name, table_name, expected, dp_path)
 
 
 # Check column values against expected values; correct lowercase string is there is any; report unexpected value(s) if there is any 
-def check_expected(df, column_name, table_name, expected):
-    check_case(df, column_name, table_name)
+def check_expected(df, column_name, table_name, expected, dp_path):
+    check_case(df, column_name, table_name, dp_path)
     extras = set(df[column_name].unique()) - expected
     if extras == set():
         return
-    else:
-        log.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(extras)}.')
+
+    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(extras)}.')
+    global FOUND_ERRORS
+    FOUND_ERRORS = True
 
 
-# Check whether all strings are uppercase in the selected column, ignore "_" values; convert all strings to upper
-def check_case(df, column_name, table_name):
-    uniques_nonempty = set(df[column_name].unique()) - set('_')
-    if all(map(lambda x: x.isupper(), uniques_nonempty)):
+# Check whether all strings are uppercase in the selected column, ignore values without alphabets; convert all strings to upper if any lowercase found
+def check_case(df, column_name, table_name, dp_path):
+    uniques_with_alphabets = (unique for unique in df[column_name].unique() if re.search('[a-zA-Z]', unique))
+    if all(unique.isupper() for unique in uniques_with_alphabets):
         return
+
     df[column_name] = df[column_name].str.upper()
-    db_update_to_upper(table_name, column_name)
-    log.warning(f'{column_name} in {table_name} contained lowercase values. They are now corrected.')
+    db_update_to_upper(table_name, column_name, dp_path)
+    
+    LOG.warning(f'{column_name} in {table_name} contained lowercase value(s). They are now corrected.')
 
 
 # Modify the database, correct all strings to uppercase in the selected column
-def db_update_to_upper(table_name, column_name):
+def db_update_to_upper(table_name, column_name, dp_path):
     with sqlite3.connect(dp_path) as con:
         cur = con.cursor()
         cur.execute(f'''
