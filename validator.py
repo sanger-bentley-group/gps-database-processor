@@ -5,8 +5,7 @@ import sqlite3
 import pandas as pd
 import os
 import sys
-import logging
-
+from colorlog import get_log
 
 # Enter the current table names in the database as value under the relevant key
 TABLE_NAMES = {
@@ -97,16 +96,22 @@ def check_y_n(df, column_name, table_name):
 
 # Check column values against expected values; correct lowercase string is there is any; report unexpected value(s) if there is any 
 def check_expected(df, column_name, table_name, expected):
+    check_case(df, column_name, table_name)
     extras = set(df[column_name].unique()) - expected
     if extras == set():
         return
-
-    casefolded_extras = set(x.casefold() for x in df[column_name].unique()) - {x.casefold() for x in expected}
-    if casefolded_extras == set():
-        db_update_to_upper(table_name, column_name)
-        log.warning(f'{column_name} in {table_name} contained lowercase version of the expected values. They are now corrected.')
     else:
         log.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(extras)}.')
+
+
+# Check whether all strings are uppercase in the selected column, ignore "_" values; convert all strings to upper
+def check_case(df, column_name, table_name):
+    uniques_nonempty = set(df[column_name].unique()) - set('_')
+    if all(map(lambda x: x.isupper(), uniques_nonempty)):
+        return
+    df[column_name] = df[column_name].str.upper()
+    db_update_to_upper(table_name, column_name)
+    log.warning(f'{column_name} in {table_name} contained lowercase values. They are now corrected.')
 
 
 # Modify the database, correct all strings to uppercase in the selected column
@@ -118,42 +123,6 @@ def db_update_to_upper(table_name, column_name):
                     SET {column_name} = UPPER({column_name})
                     ''')
         con.commit()
-
-
-# Create logger and print to the console.
-def get_log():
-    log = logging.getLogger("Validator")
-    log.setLevel(logging.DEBUG)
-
-    console = logging.StreamHandler()
-    console.setLevel(logging.DEBUG)
-    console.setFormatter(Color_Formatter())
-    
-    log.addHandler(console)
-    return log
-
-
-class Color_Formatter(logging.Formatter):
-    green = "\x1b[32;20m"
-    grey = "\x1b[38;20m"
-    yellow = "\x1b[33;20m"
-    red = "\x1b[31;20m"
-    bold_red = "\x1b[31;1m"
-    reset = "\x1b[0m"
-    format = "%(asctime)s | %(levelname)s | %(message)s"
-
-    FORMATS = {
-        logging.DEBUG: grey + format + reset,
-        logging.INFO: green + format + reset,
-        logging.WARNING: yellow + format + reset,
-        logging.ERROR: red + format + reset,
-        logging.CRITICAL: bold_red + format + reset
-    }
-
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
 
 
 if __name__ == '__main__':
