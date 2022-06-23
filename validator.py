@@ -80,8 +80,12 @@ def check_meta(df_meta, dp_path):
     check_month(df_meta, 'Month_collection', table_name, dp_path)
     check_year(df_meta, 'Year_collection', table_name)
     check_gender(df_meta, 'Gender', table_name, dp_path)
+    check_age_years(df_meta, 'Age_years', table_name)
+    check_age_months(df_meta, 'Age_months', table_name)
+    check_age_days(df_meta, 'Age_days', table_name)
+    check_p_n(df_meta, 'HIV_status', table_name, dp_path)
 
-    check_case_only_columns = ['Sample_name', 'Public_name', 'Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution']
+    check_case_only_columns = ['Sample_name', 'Public_name', 'Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution', 'Clinical_manifestation', 'Source', 'Underlying_conditions', 'Phenotypic_serotype_method']
     for col in check_case_only_columns:
         check_case(df_meta, col, table_name, dp_path)
 
@@ -136,8 +140,48 @@ def check_month(df, column_name, table_name, dp_path):
 
 # Check column values is within reasonable year range
 def check_year(df, column_name, table_name):
-    uniques_non_empty = [unique for unique in df[column_name].unique() if unique != '_']
+    uniques_non_empty = get_uniques_non_empty(df, column_name)
     unexpected = [unique for unique in uniques_non_empty if not unique.isdecimal() or not 1985 <= int(unique) <= date.today().year]
+    
+    if len(unexpected) == 0:
+        return
+
+    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
+    found_error()
+
+
+# Check column values is in the expected genders only
+def check_gender(df, column_name, table_name, dp_path):
+    expected = {'M', 'F', '_'}
+    check_expected(df, column_name, table_name, expected, dp_path)
+
+
+# Check column values is within reasonable age year 
+def check_age_years(df, column_name, table_name):
+    uniques_non_empty = get_uniques_non_empty(df, column_name)
+    unexpected = [unique for unique in uniques_non_empty if not re.match('^([0-9]*[.])?[0-9]+$', unique) or not 0 <= float(unique) <= 130]
+    
+    if len(unexpected) == 0:
+        return
+    
+    check_no_alphabet_only_numeric(unexpected, column_name, table_name)
+
+
+# Check column values is within reasonable age month 
+def check_age_months(df, column_name, table_name):
+    uniques_non_empty = get_uniques_non_empty(df, column_name)
+    unexpected = [unique for unique in uniques_non_empty if not re.match('^([0-9]*[.])?[0-9]+$', unique) or not 0 <= float(unique) <= 12]
+    
+    if len(unexpected) == 0:
+        return
+    
+    check_no_alphabet_only_numeric(unexpected, column_name, table_name)
+
+
+# Check column values is within reasonable age month 
+def check_age_days(df, column_name, table_name):
+    uniques_non_empty = get_uniques_non_empty(df, column_name)
+    unexpected = [unique for unique in uniques_non_empty if not unique.isdecimal() or not 0 <= int(unique) <= 31]
     
     if len(unexpected) == 0:
         return
@@ -146,9 +190,9 @@ def check_year(df, column_name, table_name):
     found_error()
 
 
-# Check column values is in the expected genders only
-def check_gender(df, column_name, table_name, dp_path):
-    expected = {'M', 'F', '_'}
+# Check column values contain P, N, _ only
+def check_p_n(df, column_name, table_name, dp_path):
+    expected = {'P', 'N', '_'}
     check_expected(df, column_name, table_name, expected, dp_path)
 
 
@@ -177,6 +221,20 @@ def check_case(df, column_name, table_name, dp_path):
     df[column_name] = df[column_name].str.upper()
     db_update_to_upper(table_name, column_name, dp_path)
     LOG.warning(f'{column_name} in {table_name} contained lowercase value(s). They are now corrected.')
+
+
+# Get uniques values in a column, excluding '_'
+def get_uniques_non_empty(df, column_name):
+    return [unique for unique in df[column_name].unique() if unique != '_']
+
+
+# Check unexpected only contains unexpected values without alphabet, otherwise show alphabet-containing values in error
+def check_no_alphabet_only_numeric(unexpected, column_name, table_name):
+    found_alphabet = [n for n in unexpected if re.search('[a-zA-Z]', n)]
+    if len(found_alphabet) > 0:
+        LOG.error(f'{column_name} in {table_name} has the following alphabet-containing value(s): {", ".join(found_alphabet)}.')
+        found_error()
+    LOG.warning(f'{column_name} in {table_name} has the following non-standard value(s): {", ".join([n for n in unexpected if n not in found_alphabet])}. Please check if they are correct.')
 
 
 # Modify the database, correct all strings to uppercase in the selected column
