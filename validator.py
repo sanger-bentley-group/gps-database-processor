@@ -6,6 +6,7 @@ import pandas as pd
 import os
 import sys
 import re
+from datetime import date
 from colorlog import get_log
 
 
@@ -73,20 +74,30 @@ def check_meta(df_meta, dp_path):
     table_name = TABLE_NAMES["meta"]
 
     check_columns(df_meta, META_COLUMNS, table_name)
-    check_case(df_meta, 'Sample_name', table_name, dp_path)
-    check_case(df_meta, 'Public_name', table_name, dp_path)
     check_y_n(df_meta, 'Selection_random', table_name, dp_path)
     check_continent(df_meta, 'Continent', table_name, dp_path)
+    check_country(df_meta, 'Country', table_name, dp_path)
+    check_month(df_meta, 'Month_collection', table_name, dp_path)
+    check_year(df_meta, 'Year_collection', table_name)
+    check_gender(df_meta, 'Gender', table_name, dp_path)
+
+    check_case_only_columns = ['Sample_name', 'Public_name', 'Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution']
+    for col in check_case_only_columns:
+        check_case(df_meta, col, table_name, dp_path)
 
 
 # Check whether qc table only contains expected values / patterns
 def check_qc(df_qc, dp_path):
-    check_columns(df_qc, QC_COLUMNS, TABLE_NAMES["qc"])
+    table_name = TABLE_NAMES["qc"]
+
+    check_columns(df_qc, QC_COLUMNS, table_name)
 
 
 # Check whether analysis table only contains expected values / patterns
 def check_analysis(df_analysis, dp_path):
-    check_columns(df_analysis, ANALYSIS_COLUMNS, TABLE_NAMES["analysis"])
+    table_name = TABLE_NAMES["analysis"]
+
+    check_columns(df_analysis, ANALYSIS_COLUMNS, table_name)
 
 
 # Check whether tables contain only the expected columns
@@ -105,33 +116,66 @@ def check_y_n(df, column_name, table_name, dp_path):
     check_expected(df, column_name, table_name, expected, dp_path)
 
 
-# Check column values is in Continent only
+# Check column values is in the expected continent only
 def check_continent(df, column_name, table_name, dp_path):
     expected = {'AFRICA', 'ASIA', 'CENTRAL AMERICA', 'EUROPE', 'LATIN AMERICA', 'NORTH AMERICA', 'OCEANIA', '_'}
     check_expected(df, column_name, table_name, expected, dp_path)
 
 
+# Warn if column values contain previously unknown countries
+def check_country(df, column_name, table_name, dp_path):
+    expected = {'ARGENTINA', 'BANGLADESH', 'BELARUS', 'BENIN', 'BOTSWANA', 'BRAZIL', 'BULGARIA', 'CAMBODIA', 'CAMEROON', 'CANADA', 'CENTRAL AFRICAN REPUBLIC', 'CHINA', 'CROATIA', 'CZECH REPUBLIC', 'DRC CONGO', 'ECUADOR', 'EGYPT', 'ETHIOPIA', 'FRANCE', 'GHANA', 'GUATEMALA', 'HUNGARY', 'INDIA', 'INDONESIA', 'IRELAND', 'ISRAEL', 'IVORY COAST', 'KENYA', 'KUWAIT', 'LATVIA', 'LITHUANIA', 'MALAWI', 'MALAYSIA', 'MONGOLIA', 'MOROCCO', 'MOZAMBIQUE', 'NEPAL', 'NETHERLANDS', 'NEW ZEALAND', 'NIGER', 'NIGERIA', 'OMAN', 'PAKISTAN', 'PAPUA NEW GUINEA', 'PERU', 'POLAND', 'QATAR', 'RUSSIAN FEDERATION', 'SENEGAL', 'SLOVENIA', 'SOUTH AFRICA', 'SPAIN', 'SWEDEN', 'TAIWAN', 'THAILAND', 'THE GAMBIA', 'TOGO', 'TRINIDAD AND TOBAGO', 'TURKEY', 'USA', 'WEST AFRICA', '_'}
+    check_expected(df, column_name, table_name, expected, dp_path, absolute=False)
+
+
+# Check column values is in the expected months only
+def check_month(df, column_name, table_name, dp_path):
+    expected = {'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', '_'}
+    check_expected(df, column_name, table_name, expected, dp_path)
+
+
+# Check column values is within reasonable year range
+def check_year(df, column_name, table_name):
+    uniques_non_empty = [unique for unique in df[column_name].unique() if unique != '_']
+    unexpected = [unique for unique in uniques_non_empty if not unique.isdecimal() or not 1985 <= int(unique) <= date.today().year]
+    
+    if len(unexpected) == 0:
+        return
+    
+    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
+    found_error()
+
+
+# Check column values is in the expected genders only
+def check_gender(df, column_name, table_name, dp_path):
+    expected = {'M', 'F', '_'}
+    check_expected(df, column_name, table_name, expected, dp_path)
+
+
 # Check column values against expected values; correct lowercase string is there is any; report unexpected value(s) if there is any 
-def check_expected(df, column_name, table_name, expected, dp_path):
+def check_expected(df, column_name, table_name, expected, dp_path, absolute=True):
     check_case(df, column_name, table_name, dp_path)
     extras = set(df[column_name].unique()) - expected
-    if extras == set():
+    
+    if len(extras) == 0:
         return
-
-    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(extras)}.')
-    global FOUND_ERRORS
-    FOUND_ERRORS = True
+    
+    if absolute:
+        LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(extras)}.')
+        found_error()
+    else:
+        LOG.warning(f'{column_name} in {table_name} has the following previously unknown value(s): {", ".join(extras)}. Please check if they are correct.')
 
 
 # Check whether all strings are uppercase in the selected column, ignore values without alphabets; convert all strings to upper if any lowercase found
 def check_case(df, column_name, table_name, dp_path):
     uniques_with_alphabets = (unique for unique in df[column_name].unique() if re.search('[a-zA-Z]', unique))
+    
     if all(unique.isupper() for unique in uniques_with_alphabets):
         return
 
     df[column_name] = df[column_name].str.upper()
     db_update_to_upper(table_name, column_name, dp_path)
-    
     LOG.warning(f'{column_name} in {table_name} contained lowercase value(s). They are now corrected.')
 
 
@@ -144,6 +188,11 @@ def db_update_to_upper(table_name, column_name, dp_path):
                     SET {column_name} = UPPER({column_name})
                     ''')
         con.commit()
+
+
+def found_error():
+    global FOUND_ERRORS
+    FOUND_ERRORS = True
 
 
 if __name__ == '__main__':
