@@ -135,25 +135,29 @@ def check_columns(df, columns, table_name):
 # Check column values contain Y, N, _ only
 def check_y_n(df, column_name, table_name, dp_path):
     expected = {'Y', 'N', '_'}
-    check_expected(df, column_name, table_name, expected, dp_path)
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
 
 
 # Check column values is in the expected continent only
 def check_continent(df, column_name, table_name, dp_path):
     expected = {'AFRICA', 'ASIA', 'CENTRAL AMERICA', 'EUROPE', 'LATIN AMERICA', 'NORTH AMERICA', 'OCEANIA', '_'}
-    check_expected(df, column_name, table_name, expected, dp_path)
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
 
 
 # Warn if column values contain previously unknown countries
 def check_country(df, column_name, table_name, dp_path):
     expected = {'ARGENTINA', 'BANGLADESH', 'BELARUS', 'BENIN', 'BOTSWANA', 'BRAZIL', 'BULGARIA', 'CAMBODIA', 'CAMEROON', 'CANADA', 'CENTRAL AFRICAN REPUBLIC', 'CHINA', 'CROATIA', 'CZECH REPUBLIC', 'DRC CONGO', 'ECUADOR', 'EGYPT', 'ETHIOPIA', 'FRANCE', 'GHANA', 'GUATEMALA', 'HUNGARY', 'INDIA', 'INDONESIA', 'IRELAND', 'ISRAEL', 'IVORY COAST', 'KENYA', 'KUWAIT', 'LATVIA', 'LITHUANIA', 'MALAWI', 'MALAYSIA', 'MONGOLIA', 'MOROCCO', 'MOZAMBIQUE', 'NEPAL', 'NETHERLANDS', 'NEW ZEALAND', 'NIGER', 'NIGERIA', 'OMAN', 'PAKISTAN', 'PAPUA NEW GUINEA', 'PERU', 'POLAND', 'QATAR', 'RUSSIAN FEDERATION', 'SENEGAL', 'SLOVENIA', 'SOUTH AFRICA', 'SPAIN', 'SWEDEN', 'TAIWAN', 'THAILAND', 'THE GAMBIA', 'TOGO', 'TRINIDAD AND TOBAGO', 'TURKEY', 'USA', 'WEST AFRICA', '_'}
-    check_expected(df, column_name, table_name, expected, dp_path, absolute=False)
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected, absolute=False)
 
 
 # Check column values is in the expected months only
 def check_month_collection(df, column_name, table_name, dp_path):
     expected = {'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', '_'}
-    check_expected(df, column_name, table_name, expected, dp_path)
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
 
 
 # Check column values is within reasonable year range
@@ -164,137 +168,81 @@ def check_year_collection(df, column_name, table_name):
 # Check column values is in the expected genders only
 def check_gender(df, column_name, table_name, dp_path):
     expected = {'M', 'F', '_'}
-    check_expected(df, column_name, table_name, expected, dp_path)
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
 
 
 # Check column values is within reasonable age year 
 def check_age_years(df, column_name, table_name):
-    uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not re.match(r'^(?!0[0-9])([0-9]+([.][0-9]+)?)$', unique) or not 0 <= float(unique) <= 130]
-    
-    if len(unexpected) == 0:
-        return
-    
-    check_no_alphabet_only_numeric(unexpected, column_name, table_name)
+    check_regex(df, column_name, table_name, allow_empty=True, float_range=(0, 130), no_alphabet_only_numeric=True)
 
 
 # Check column values is within reasonable age month 
 def check_age_months(df, column_name, table_name):
-    uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not re.match(r'^(?!0[0-9])([0-9]+([.][0-9]+)?)$', unique) or not 0 <= float(unique) <= 12]
-    
-    if len(unexpected) == 0:
-        return
-    
-    check_no_alphabet_only_numeric(unexpected, column_name, table_name)
+    check_regex(df, column_name, table_name, allow_empty=True, float_range=(0, 12), no_alphabet_only_numeric=True)
 
 
 # Check column values contain 0 - 31 integers or _ only 
 def check_age_days(df, column_name, table_name):
-    uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not unique.isdecimal() or not 0 <= int(unique) <= 31]
-    
-    if len(unexpected) == 0:
-        return
-    
-    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
-    found_error()
+    check_int_range(df, column_name, table_name, lo=0, hi=31)
 
 
 # Check column values contain P, N, _ only
 def check_p_n(df, column_name, table_name, dp_path):
     expected = {'P', 'N', '_'}
-    check_expected(df, column_name, table_name, expected, dp_path)
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
 
 
 # Check column values fit the phenotypic serotype pattern 
 # Expect "NT" or "serotype, optionally followed by [separated by / or &] serotype or sub-group or NT"
 def check_phenotypic_serotype(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not re.match(r'^(NT|((?!0)[0-9]+[A-Z]?)((&|\/)(?!$|&|\/)((?!0)[0-9]*[A-Z]?|NT))*)$', unique)]
-        
-    if len(unexpected) == 0:
-        return
-    
-    LOG.warning(f'{column_name} in {table_name} has the following non-standard phenotypic serotype value(s): {", ".join(unexpected)}. Please check if they are correct.')
+    check_regex(df, column_name, table_name, allow_empty=True, absolute=False, pattern=r'^(NT|((?!0)[0-9]+[A-Z]?)((&|\/)(?!$|&|\/)((?!0)[0-9]*[A-Z]?|NT))*)$')
 
 
-# Check column values contain UNKNOWN or 1 - 50000 integers or _ only
+# Check column values contain 1 - 50000 integers or UNKNOWN or _ only
 def check_sequence_type(df, column_name, table_name, dp_path):
-    check_range_with_unknowns(df, column_name, table_name, dp_path, lo=1, hi=50000)
+    check_case(df, column_name, table_name, dp_path)
+    check_int_range(df, column_name, table_name, lo=1, hi=50000, others=('UNKNOWN'))
 
 
-# Check column values contain UNKNOWN or 1 - 1000 integers or _ only
+# Check column values contain 1 - 1000 integers or UNKNOWN or _ only
 def check_mlst_gene(df, column_name, table_name, dp_path):
-    check_range_with_unknowns(df, column_name, table_name, dp_path, lo=1, hi=1000)
+    check_case(df, column_name, table_name, dp_path)
+    check_int_range(df, column_name, table_name, lo=1, hi=1000, others=('UNKNOWN'))
 
 
 # Check column values contain numeric values (can be a range: >, <, >=, <=) or I or R or S or NS or _ only 
 def check_antibiotic_ast(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not re.match(r'^([IRS]|NS|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?))$', unique)]
-        
-    if len(unexpected) == 0:
-        return
-    
-    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
-    found_error()
+    check_regex(df, column_name, table_name, allow_empty=True, pattern=r'^([IRS]|NS|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?))$')
 
 
 # Check column values are valid latitude only
 def check_latitude(df, column_name, table_name):
-    uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not re.match(r'^-?(90\.0{1,15}|([0-9]|[1-8][0-9])\.[0-9]{1,15})$', unique)]
-        
-    if len(unexpected) == 0:
-        return
-    
-    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
-    found_error()
+    check_regex(df, column_name, table_name, allow_empty=True, pattern=r'^-?(90\.0{1,15}|([0-9]|[1-8][0-9])\.[0-9]{1,15})$')
 
 
 # Check column values are valid longitude only
 def check_longitude(df, column_name, table_name):
-    uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not re.match(r'^-?(180\.0{1,15}|([0-9]|[1-9][0-9]|1[0-7][0-9])\.[0-9]{1,15})$', unique)]
-        
-    if len(unexpected) == 0:
-        return
-    
-    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
-    found_error()
+    check_regex(df, column_name, table_name, allow_empty=True, pattern=r'^-?(180\.0{1,15}|([0-9]|[1-9][0-9]|1[0-7][0-9])\.[0-9]{1,15})$')
 
 
 # Check column values are in Sanger Lane ID format only
 def check_lane_id(df, column_name, table_name):
-    unexpected = [laneid for laneid in df[column_name] if not re.match(r'^(?!0)[0-9]{4,5}_[1-9]#(?!0)[0-9]{1,3}$', laneid)]
-        
-    if len(unexpected) == 0:
-        return
-    
-    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
-    found_error()
+    check_regex(df, column_name, table_name, pattern=r'^(?!0)[0-9]{4,5}_[1-9]#(?!0)[0-9]{1,3}$')
 
 
 # Check column values is in the expected resolutions only
 def check_resolution(df, column_name, table_name):
-    expected = {'0', '1', '2', '_'}
-    check_expected(df, column_name, table_name, expected)
+    check_int_range(df, column_name, table_name, lo=0, hi=2)
 
 
 # Check column values are in vaccine period only
 def check_vaccine_period(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not re.match(r'^PREPCV|POSTPCV(7|10|13)-(?!0)[0-9]{1,2}YR$', unique)]
-        
-    if len(unexpected) == 0:
-        return
-    
-    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
-    found_error()
+    check_regex(df, column_name, table_name, allow_empty=True, pattern=r'^PREPCV|POSTPCV(7|10|13)-(?!0)[0-9]{1,2}YR$')
 
 
 # Check column values is within reasonable year range
@@ -305,24 +253,17 @@ def check_introduction_year(df, column_name, table_name):
 # Check column values contain PCV7, PCV10, PCV13, _ only
 def check_pcv_type(df, column_name, table_name, dp_path):
     expected = {'PCV7', 'PCV10', 'PCV13', '_'}
-    check_expected(df, column_name, table_name, expected, dp_path)
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
 
 
 # Check column values are float in 0 - 100 only
 def check_streptococcus_pneumoniae(df, column_name, table_name):
-    unexpected = [percent for percent in df[column_name] if not re.match(r'^(?!0[0-9])([0-9]+[.][0-9]+)$', percent) or not 0.0 <= float(percent) <= 100.0]
-        
-    if len(unexpected) == 0:
-        return
-    
-    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
-    found_error()
+    check_regex(df, column_name, table_name, float_range=(0, 100))
 
 
 # Check column values against expected values; correct lowercase string if dp_path provided and there is any; report unexpected value(s) if there is any 
-def check_expected(df, column_name, table_name, expected, dp_path=None, absolute=True):
-    if dp_path:
-        check_case(df, column_name, table_name, dp_path)
+def check_expected(df, column_name, table_name, expected, absolute=True):
     extras = set(df[column_name].unique()) - expected
     
     if len(extras) == 0:
@@ -352,16 +293,45 @@ def get_uniques_non_empty(df, column_name):
     return [unique for unique in df[column_name].unique() if unique != '_']
 
 
-# Check column values is between specific year and now
-def check_year(df, column_name, table_name, lo):
+# Check column values contain integers in specific range or values in the others list only
+def check_int_range(df, column_name, table_name, lo, hi, others=None):
     uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not unique.isdecimal() or not lo <= int(unique) <= date.today().year]
+    unexpected = [unique for unique in uniques_non_empty if (not unique.isdecimal() or not lo <= int(unique) <= hi) and unique not in others]
     
     if len(unexpected) == 0:
         return
-
+    
     LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
     found_error()
+
+
+# Check column values is between specific year and now
+def check_year(df, column_name, table_name, lo):
+    check_int_range(df, column_name, table_name, lo=lo, hi=date.today().year)
+
+
+# Check regex pattern or float range, selective: allow empty, float range, no alphabet only numeric, absolute
+def check_regex(df, column_name, table_name, pattern=None, allow_empty=False, float_range=None, no_alphabet_only_numeric=False, absolute=True):
+    if allow_empty:
+        values = get_uniques_non_empty(df, column_name)
+    else:
+        values = df[column_name]
+    
+    if float_range:
+        unexpected = [v for v in values if not re.match(r'^(?!0[0-9])([0-9]+([.][0-9]+)?)$', v) or not float_range[0] <= float(v) <= float_range[1]]
+    else:
+        unexpected = [v for v in values if not re.match(pattern, v)]
+
+    if len(unexpected) == 0:
+        return
+
+    if no_alphabet_only_numeric:
+        check_no_alphabet_only_numeric(unexpected, column_name, table_name)
+    elif absolute:
+        LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
+        found_error()
+    else:
+        LOG.warning(f'{column_name} in {table_name} has the following non-standard value(s): {", ".join(unexpected)}. Please check if they are correct.')
 
 
 # Check unexpected only contains unexpected values without alphabet, otherwise show alphabet-containing values in error
@@ -371,19 +341,6 @@ def check_no_alphabet_only_numeric(unexpected, column_name, table_name):
         LOG.error(f'{column_name} in {table_name} has the following alphabet-containing value(s): {", ".join(found_alphabet)}.')
         found_error()
     LOG.warning(f'{column_name} in {table_name} has the following non-standard value(s): {", ".join([n for n in unexpected if n not in found_alphabet])}. Please check if they are correct.')
-
-
-# Check column values contain integers in specific range or UNKNOWN or _ only
-def check_range_with_unknowns(df, column_name, table_name, dp_path, lo, hi):
-    check_case(df, column_name, table_name, dp_path)
-    uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if (not unique.isdecimal() or not lo <= int(unique) <= hi) and unique != 'UNKNOWN']
-    
-    if len(unexpected) == 0:
-        return
-    
-    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
-    found_error()
 
 
 # Modify the database, correct all strings to uppercase in the selected column
