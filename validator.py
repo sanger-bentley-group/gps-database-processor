@@ -51,7 +51,7 @@ def main():
     check_analysis(df_analysis, dp_path)
 
     if FOUND_ERRORS:
-        LOG.warning(f'The validation of {sys.argv[1]} is completed with errors.')
+        LOG.error(f'The validation of {sys.argv[1]} is completed with error(s).')
     else:
         LOG.info(f'The validation of {sys.argv[1]} is completed.')
 
@@ -84,8 +84,18 @@ def check_meta(df_meta, dp_path):
     check_age_months(df_meta, 'Age_months', table_name)
     check_age_days(df_meta, 'Age_days', table_name)
     check_p_n(df_meta, 'HIV_status', table_name, dp_path)
+    check_phenotypic_serotype(df_meta, 'Phenotypic_serotype', table_name, dp_path)
+    check_sequence_type(df_meta, 'Sequence_Type', table_name, dp_path)
 
-    check_case_only_columns = ['Sample_name', 'Public_name', 'Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution', 'Clinical_manifestation', 'Source', 'Underlying_conditions', 'Phenotypic_serotype_method']
+    mlst_genes_columns = ['aroE', 'gdh', 'gki', 'recP', 'spi', 'xpt', 'ddl']
+    for col in mlst_genes_columns:
+        check_mlst_gene(df_meta, col, table_name, dp_path)
+
+    antibiotics_columns = ['Penicillin', 'Amoxicillin', 'Cefotaxime', 'Ceftriaxone', 'Cefuroxime', 'Meropenem', 'Erythromycin', 'Clindamycin', 'Trim/Sulfa', 'Vancomycin', 'Linezolid', 'Ciprofloxacin', 'Chloramphenicol', 'Tetracycline', 'Levofloxacin', 'Synercid', 'Rifampin']
+    for col in antibiotics_columns:
+        check_antibiotic_ast(df_meta, col, table_name, dp_path)
+
+    check_case_only_columns = ['Sample_name', 'Public_name', 'Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution', 'Clinical_manifestation', 'Source', 'Underlying_conditions', 'Phenotypic_serotype_method', 'AST_method_Penicillin', 'AST_method_Amoxicillin', 'AST_method_Cefotaxime', 'AST_method_Ceftriaxone', 'AST_method_Cefuroxime', 'AST_method_Meropenem', 'AST_method_Erythromycin', 'AST_method_Clindamycin', 'AST_method_Trim/Sulfa', 'AST_method_Vancomycin', 'AST_method_Linezolid', 'AST_method_Ciprofloxacin', 'AST_method_Chloramphenicol', 'AST_method_Tetracycline', 'AST_method_Levofloxacin', 'AST_method_Synercid', 'AST_method_Rifampin']
     for col in check_case_only_columns:
         check_case(df_meta, col, table_name, dp_path)
 
@@ -159,7 +169,7 @@ def check_gender(df, column_name, table_name, dp_path):
 # Check column values is within reasonable age year 
 def check_age_years(df, column_name, table_name):
     uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not re.match('^([0-9]*[.])?[0-9]+$', unique) or not 0 <= float(unique) <= 130]
+    unexpected = [unique for unique in uniques_non_empty if not re.match(r'^([0-9]*[.])?[0-9]+$', unique) or not 0 <= float(unique) <= 130]
     
     if len(unexpected) == 0:
         return
@@ -170,7 +180,7 @@ def check_age_years(df, column_name, table_name):
 # Check column values is within reasonable age month 
 def check_age_months(df, column_name, table_name):
     uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not re.match('^([0-9]*[.])?[0-9]+$', unique) or not 0 <= float(unique) <= 12]
+    unexpected = [unique for unique in uniques_non_empty if not re.match(r'^([0-9]*[.])?[0-9]+$', unique) or not 0 <= float(unique) <= 12]
     
     if len(unexpected) == 0:
         return
@@ -178,7 +188,7 @@ def check_age_months(df, column_name, table_name):
     check_no_alphabet_only_numeric(unexpected, column_name, table_name)
 
 
-# Check column values is within reasonable age month 
+# Check column values contain 0 - 31 integers or _ only 
 def check_age_days(df, column_name, table_name):
     uniques_non_empty = get_uniques_non_empty(df, column_name)
     unexpected = [unique for unique in uniques_non_empty if not unique.isdecimal() or not 0 <= int(unique) <= 31]
@@ -194,6 +204,42 @@ def check_age_days(df, column_name, table_name):
 def check_p_n(df, column_name, table_name, dp_path):
     expected = {'P', 'N', '_'}
     check_expected(df, column_name, table_name, expected, dp_path)
+
+
+# Check column values fit the phenotypic serotype pattern 
+# Expect "NT" or "serotype, optionally followed by [separated by / or &] serotype or sub-group or NT"
+def check_phenotypic_serotype(df, column_name, table_name, dp_path):
+    check_case(df, column_name, table_name, dp_path)
+    uniques_non_empty = get_uniques_non_empty(df, column_name)
+    unexpected = [unique for unique in uniques_non_empty if not re.match(r'^(NT|([1-9][0-9]*[A-Z]?)((&|\/)(?!$)(([1-9][0-9]*)*[A-Z]?|NT))*)$', unique)]
+        
+    if len(unexpected) == 0:
+        return
+    
+    LOG.warning(f'{column_name} in {table_name} has the following non-standard phenotypic serotype value(s): {", ".join(unexpected)}. Please check if they are correct.')
+
+
+# Check column values contain UNKNOWN or 1 - 50000 integers or _ only
+def check_sequence_type(df, column_name, table_name, dp_path):
+    check_range_with_unknowns(df, column_name, table_name, dp_path, lo=1, hi=50000)
+
+
+# Check column values contain UNKNOWN or 1 - 1000 integers or _ only
+def check_mlst_gene(df, column_name, table_name, dp_path):
+    check_range_with_unknowns(df, column_name, table_name, dp_path, lo=1, hi=1000)
+
+
+# Check column values contain numeric values (can be a range: >, <, >=, <=) or I or R or S or _ only 
+def check_antibiotic_ast(df, column_name, table_name, dp_path):
+    check_case(df, column_name, table_name, dp_path)
+    uniques_non_empty = get_uniques_non_empty(df, column_name)
+    unexpected = [unique for unique in uniques_non_empty if not re.match(r'^([IRS0]|([<>]=?)?((0\.0*)?[1-9][0-9]*(\.[0-9]*[1-9])?))$', unique)]
+        
+    if len(unexpected) == 0:
+        return
+    
+    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
+    found_error()
 
 
 # Check column values against expected values; correct lowercase string is there is any; report unexpected value(s) if there is any 
@@ -213,7 +259,7 @@ def check_expected(df, column_name, table_name, expected, dp_path, absolute=True
 
 # Check whether all strings are uppercase in the selected column, ignore values without alphabets; convert all strings to upper if any lowercase found
 def check_case(df, column_name, table_name, dp_path):
-    uniques_with_alphabets = (unique for unique in df[column_name].unique() if re.search('[a-zA-Z]', unique))
+    uniques_with_alphabets = (unique for unique in df[column_name].unique() if re.search(r'[a-zA-Z]', unique))
     
     if all(unique.isupper() for unique in uniques_with_alphabets):
         return
@@ -230,11 +276,24 @@ def get_uniques_non_empty(df, column_name):
 
 # Check unexpected only contains unexpected values without alphabet, otherwise show alphabet-containing values in error
 def check_no_alphabet_only_numeric(unexpected, column_name, table_name):
-    found_alphabet = [n for n in unexpected if re.search('[a-zA-Z]', n)]
+    found_alphabet = [n for n in unexpected if re.search(r'[a-zA-Z]', n)]
     if len(found_alphabet) > 0:
         LOG.error(f'{column_name} in {table_name} has the following alphabet-containing value(s): {", ".join(found_alphabet)}.')
         found_error()
     LOG.warning(f'{column_name} in {table_name} has the following non-standard value(s): {", ".join([n for n in unexpected if n not in found_alphabet])}. Please check if they are correct.')
+
+
+# Check column values contain integers in specific range or UNKNOWN or _ only
+def check_range_with_unknowns(df, column_name, table_name, dp_path, lo, hi):
+    check_case(df, column_name, table_name, dp_path)
+    uniques_non_empty = get_uniques_non_empty(df, column_name)
+    unexpected = [unique for unique in uniques_non_empty if (not unique.isdecimal() or not lo <= int(unique) <= hi) and unique != 'UNKNOWN']
+    
+    if len(unexpected) == 0:
+        return
+    
+    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
+    found_error()
 
 
 # Modify the database, correct all strings to uppercase in the selected column
