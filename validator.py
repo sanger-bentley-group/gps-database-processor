@@ -114,6 +114,12 @@ def check_qc(df_qc, dp_path):
     check_columns(df_qc, QC_COLUMNS, table_name)
     check_lane_id(df_qc, 'Lane_id', table_name)
     check_streptococcus_pneumoniae(df_qc, 'Streptococcus_pneumoniae', table_name)
+    check_total_length(df_qc, 'Total_length', table_name)
+    check_no_of_contigs(df_qc, 'No_of_contigs', table_name)
+    check_genome_covered(df_qc, 'Genome_covered', table_name)
+    check_depth_of_coverage(df_qc, 'Depth_of_coverage', table_name)
+    check_proportion_of_het_snps(df_qc, 'Proportion_of_Het_SNPs', table_name)
+
 
 # Check whether analysis table only contains expected values / patterns
 def check_analysis(df_analysis, dp_path):
@@ -184,7 +190,7 @@ def check_age_months(df, column_name, table_name):
 
 # Check column values contain 0 - 31 integers or _ only 
 def check_age_days(df, column_name, table_name):
-    check_int_range(df, column_name, table_name, lo=0, hi=31)
+    check_int_range(df, column_name, table_name, lo=0, hi=31, allow_empty=True)
 
 
 # Check column values contain P, N, _ only
@@ -204,13 +210,13 @@ def check_phenotypic_serotype(df, column_name, table_name, dp_path):
 # Check column values contain 1 - 50000 integers or UNKNOWN or _ only
 def check_sequence_type(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_int_range(df, column_name, table_name, lo=1, hi=50000, others=('UNKNOWN'))
+    check_int_range(df, column_name, table_name, lo=1, hi=50000, others=('UNKNOWN'), allow_empty=True)
 
 
 # Check column values contain 1 - 1000 integers or UNKNOWN or _ only
 def check_mlst_gene(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_int_range(df, column_name, table_name, lo=1, hi=1000, others=('UNKNOWN'))
+    check_int_range(df, column_name, table_name, lo=1, hi=1000, others=('UNKNOWN'), allow_empty=True)
 
 
 # Check column values contain numeric values (can be a range: >, <, >=, <=) or I or R or S or NS or _ only 
@@ -236,7 +242,7 @@ def check_lane_id(df, column_name, table_name):
 
 # Check column values is in the expected resolutions only
 def check_resolution(df, column_name, table_name):
-    check_int_range(df, column_name, table_name, lo=0, hi=2)
+    check_int_range(df, column_name, table_name, lo=0, hi=2, allow_empty=True)
 
 
 # Check column values are in vaccine period only
@@ -260,6 +266,31 @@ def check_pcv_type(df, column_name, table_name, dp_path):
 # Check column values are float in 0 - 100 only
 def check_streptococcus_pneumoniae(df, column_name, table_name):
     check_regex(df, column_name, table_name, float_range=(0, 100))
+
+
+# Check column values contain 1 - 20000000 integers or _ only
+def check_total_length(df, column_name, table_name):
+    check_int_range(df, column_name, table_name, lo=1, hi=20000000, allow_empty=True)
+
+
+# Check column values contain 1 - 20000 integers or _ only
+def check_no_of_contigs(df, column_name, table_name):
+    check_int_range(df, column_name, table_name, lo=1, hi=20000, allow_empty=True)
+
+
+# Check column values are float in 0 - 100 or _ only
+def check_genome_covered(df, column_name, table_name):
+    check_regex(df, column_name, table_name, float_range=(0, 100), allow_empty=True)
+
+
+# Check column values are float in 0 - 2000 only
+def check_depth_of_coverage(df, column_name, table_name):
+    check_regex(df, column_name, table_name, float_range=(0, 2000)) 
+
+
+# Check column values are float in 0 - 100 or _ only
+def check_proportion_of_het_snps(df, column_name, table_name):
+    check_regex(df, column_name, table_name, float_range=(0, 100), allow_empty=True)
 
 
 # Check column values against expected values; correct lowercase string if dp_path provided and there is any; report unexpected value(s) if there is any 
@@ -294,9 +325,16 @@ def get_uniques_non_empty(df, column_name):
 
 
 # Check column values contain integers in specific range or values in the others list only
-def check_int_range(df, column_name, table_name, lo, hi, others=None):
-    uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if (not unique.isdecimal() or not lo <= int(unique) <= hi) and unique not in others]
+def check_int_range(df, column_name, table_name, lo, hi, others=None, allow_empty=False):
+    if allow_empty:
+        values = get_uniques_non_empty(df, column_name)
+    else:
+        values = df[column_name]
+    
+    if others is not None:
+        unexpected = [v for v in values if (not v.isdecimal() or not lo <= int(v) <= hi) and v not in others]
+    else:
+        unexpected = [v for v in values if (not v.isdecimal() or not lo <= int(v) <= hi)]
     
     if len(unexpected) == 0:
         return
@@ -305,9 +343,9 @@ def check_int_range(df, column_name, table_name, lo, hi, others=None):
     found_error()
 
 
-# Check column values is between specific year and now
+# Check column values is between specific year and now or _
 def check_year(df, column_name, table_name, lo):
-    check_int_range(df, column_name, table_name, lo=lo, hi=date.today().year)
+    check_int_range(df, column_name, table_name, lo=lo, hi=date.today().year, allow_empty=True)
 
 
 # Check regex pattern or float range, selective: allow empty, float range, no alphabet only numeric, absolute
