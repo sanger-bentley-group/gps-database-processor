@@ -77,8 +77,8 @@ def check_meta(df_meta, dp_path):
     check_y_n(df_meta, 'Selection_random', table_name, dp_path)
     check_continent(df_meta, 'Continent', table_name, dp_path)
     check_country(df_meta, 'Country', table_name, dp_path)
-    check_month(df_meta, 'Month_collection', table_name, dp_path)
-    check_year(df_meta, 'Year_collection', table_name)
+    check_month_collection(df_meta, 'Month_collection', table_name, dp_path)
+    check_year_collection(df_meta, 'Year_collection', table_name)
     check_gender(df_meta, 'Gender', table_name, dp_path)
     check_age_years(df_meta, 'Age_years', table_name)
     check_age_months(df_meta, 'Age_months', table_name)
@@ -151,21 +151,14 @@ def check_country(df, column_name, table_name, dp_path):
 
 
 # Check column values is in the expected months only
-def check_month(df, column_name, table_name, dp_path):
+def check_month_collection(df, column_name, table_name, dp_path):
     expected = {'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', '_'}
     check_expected(df, column_name, table_name, expected, dp_path)
 
 
 # Check column values is within reasonable year range
-def check_year(df, column_name, table_name):
-    uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not unique.isdecimal() or not 1985 <= int(unique) <= date.today().year]
-    
-    if len(unexpected) == 0:
-        return
-
-    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
-    found_error()
+def check_year_collection(df, column_name, table_name):
+    check_year(df, column_name, table_name, lo=1985)
 
 
 # Check column values is in the expected genders only
@@ -306,14 +299,7 @@ def check_vaccine_period(df, column_name, table_name, dp_path):
 
 # Check column values is within reasonable year range
 def check_introduction_year(df, column_name, table_name):
-    uniques_non_empty = get_uniques_non_empty(df, column_name)
-    unexpected = [unique for unique in uniques_non_empty if not unique.isdecimal() or not 2000 <= int(unique) <= date.today().year]
-    
-    if len(unexpected) == 0:
-        return
-
-    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
-    found_error()
+    check_year(df, column_name, table_name, lo=2000)
 
 
 # Check column values contain PCV7, PCV10, PCV13, _ only
@@ -364,6 +350,18 @@ def check_case(df, column_name, table_name, dp_path):
 # Get uniques values in a column, excluding '_'
 def get_uniques_non_empty(df, column_name):
     return [unique for unique in df[column_name].unique() if unique != '_']
+
+
+# Check column values is between specific year and now
+def check_year(df, column_name, table_name, lo):
+    uniques_non_empty = get_uniques_non_empty(df, column_name)
+    unexpected = [unique for unique in uniques_non_empty if not unique.isdecimal() or not lo <= int(unique) <= date.today().year]
+    
+    if len(unexpected) == 0:
+        return
+
+    LOG.error(f'{column_name} in {table_name} has the following unexpected value(s): {", ".join(unexpected)}.')
+    found_error()
 
 
 # Check unexpected only contains unexpected values without alphabet, otherwise show alphabet-containing values in error
