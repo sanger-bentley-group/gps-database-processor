@@ -46,9 +46,9 @@ def main():
 
     df_meta, df_qc, df_analysis = read_db(dp_path)
 
-    check_meta(df_meta, dp_path)
-    check_qc(df_qc, dp_path)
-    check_analysis(df_analysis, dp_path)
+    check_meta_table(df_meta, dp_path)
+    check_qc_table(df_qc, dp_path)
+    check_analysis_table(df_analysis, dp_path)
 
     if FOUND_ERRORS:
         LOG.error(f'The validation of {sys.argv[1]} is completed with error(s).')
@@ -70,10 +70,11 @@ def read_db(dp_path):
 
 
 # Check whether meta table only contains expected values / patterns
-def check_meta(df_meta, dp_path):
+def check_meta_table(df_meta, dp_path):
     table_name = TABLE_NAMES["meta"]
 
     check_columns(df_meta, META_COLUMNS, table_name)
+
     check_y_n(df_meta, 'Selection_random', table_name, dp_path)
     check_continent(df_meta, 'Continent', table_name, dp_path)
     check_country(df_meta, 'Country', table_name, dp_path)
@@ -108,10 +109,11 @@ def check_meta(df_meta, dp_path):
 
 
 # Check whether qc table only contains expected values / patterns
-def check_qc(df_qc, dp_path):
+def check_qc_table(df_qc, dp_path):
     table_name = TABLE_NAMES["qc"]
 
     check_columns(df_qc, QC_COLUMNS, table_name)
+
     check_lane_id(df_qc, 'Lane_id', table_name)
     check_streptococcus_pneumoniae(df_qc, 'Streptococcus_pneumoniae', table_name)
     check_total_length(df_qc, 'Total_length', table_name)
@@ -119,10 +121,16 @@ def check_qc(df_qc, dp_path):
     check_genome_covered(df_qc, 'Genome_covered', table_name)
     check_depth_of_coverage(df_qc, 'Depth_of_coverage', table_name)
     check_proportion_of_het_snps(df_qc, 'Proportion_of_Het_SNPs', table_name)
+    check_qc(df_qc, 'QC', table_name, dp_path)
+    check_hetsites_50bp(df_qc, 'Hetsites_50bp', table_name)
+
+    check_case_only_columns = ['Supplier_name']
+    for col in check_case_only_columns:
+        check_case(df_qc, col, table_name, dp_path)
 
 
 # Check whether analysis table only contains expected values / patterns
-def check_analysis(df_analysis, dp_path):
+def check_analysis_table(df_analysis, dp_path):
     table_name = TABLE_NAMES["analysis"]
 
     check_columns(df_analysis, ANALYSIS_COLUMNS, table_name)
@@ -291,6 +299,18 @@ def check_depth_of_coverage(df, column_name, table_name):
 # Check column values are float in 0 - 100 or _ only
 def check_proportion_of_het_snps(df, column_name, table_name):
     check_regex(df, column_name, table_name, float_range=(0, 100), allow_empty=True)
+
+
+# Check column values contain PASS, PASSPLUS, FAIL, _ only
+def check_qc(df, column_name, table_name, dp_path):
+    expected = {'PASS', 'PASSPLUS', 'FAIL', '_'}
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
+
+
+# Check column values contain 0 - 10000 integers or _ only
+def check_hetsites_50bp(df, column_name, table_name):
+    check_int_range(df, column_name, table_name, lo=0, hi=10000, allow_empty=True)
 
 
 # Check column values against expected values; correct lowercase string if dp_path provided and there is any; report unexpected value(s) if there is any 
