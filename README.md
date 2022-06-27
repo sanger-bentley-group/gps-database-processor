@@ -1,4 +1,4 @@
-# GPS Database Validator (Work-in-Progress)
+# GPS Database Validator
 
 This tool is used to check whether your [Global Pneumococcal Sequencing Project](https://www.pneumogen.net/gps/) (GPS) Database only contains expected values or values in the expected formats. 
 
