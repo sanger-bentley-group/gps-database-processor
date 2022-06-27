@@ -75,7 +75,7 @@ def check_meta_table(df_meta, dp_path):
 
     check_columns(df_meta, META_COLUMNS, table_name)
 
-    check_y_n(df_meta, 'Selection_random', table_name, dp_path)
+    check_selection_random(df_meta, 'Selection_random', table_name, dp_path)
     check_continent(df_meta, 'Continent', table_name, dp_path)
     check_country(df_meta, 'Country', table_name, dp_path)
     check_month_collection(df_meta, 'Month_collection', table_name, dp_path)
@@ -135,6 +135,59 @@ def check_analysis_table(df_analysis, dp_path):
 
     check_columns(df_analysis, ANALYSIS_COLUMNS, table_name)
     check_lane_id(df_analysis, 'Lane_id', table_name)
+    check_sample(df_analysis, 'Sample', table_name, dp_path)
+    check_err(df_analysis, 'ERR', table_name, dp_path)
+    check_ers(df_analysis, 'ERS', table_name, dp_path)
+    check_no_of_genome(df_analysis, 'No_of_genome', table_name)
+    check_duplicate(df_analysis, 'Duplicate', table_name, dp_path)
+    check_paper_1(df_analysis, 'Paper_1', table_name, dp_path)
+    check_in_silico_st(df_analysis, 'In_silico_ST', table_name, dp_path)
+
+    mlst_genes_in_silico_columns = ['aroE', 'gdh', 'gki', 'recP', 'spi', 'xpt', 'ddl']
+    for col in mlst_genes_in_silico_columns:
+        check_mlst_gene_in_silico(df_analysis, col, table_name, dp_path)
+
+    check_country(df_analysis, 'Country', table_name, dp_path)
+    check_continent(df_analysis, 'Continent', table_name, dp_path)
+    check_manifest_type(df_analysis, 'Manifest_type', table_name, dp_path)
+    check_children_5yrs(df_analysis, 'Children<5yrs', table_name, dp_path)
+    check_gpsc(df_analysis, 'GPSC', table_name)
+
+    color_columns = ['GPSC__colour', 'In_silico_serotype__colour', 'ermB__colour', 'mefA__colour', 'folA_I100L__colour', 'cat__colour']
+    color_columns_with_transparent = ['WGS_PEN_SIR_Meningitis__colour', 'WGS_PEN_SIR_Nonmeningitis__colour', 'WGS_AMO_SIR__colour', 'WGS_MER_SIR__colour', 'WGS_TAX_SIR_Meningitis__colour', 'WGS_TAX_SIR_Nonmeningitis__colour', 'WGS_CFT_SIR_Meningitis__colour', 'WGS_CFT_SIR_Nonmeningitis__colour', 'WGS_CFX_SIR__colour', 'WGS_ERY_SIR__colour', 'WGS_CLI_SIR__colour', 'WGS_SYN_SIR__colour', 'WGS_LZO_SIR__colour', 'WGS_COT_SIR__colour', 'WGS_TET_SIR__colour', 'WGS_DOX_SIR__colour', 'WGS_LFX_SIR__colour', 'WGS_CHL_SIR__colour', 'WGS_RIF_SIR__colour', 'WGS_VAN_SIR__colour']
+    for col in color_columns:
+        check_color(df_analysis, col, table_name, dp_path)
+    for col in color_columns_with_transparent:
+        check_color(df_analysis, col, table_name, dp_path, transparent=True)
+    
+    check_in_silico_serotype(df_analysis, 'In_silico_serotype', table_name, dp_path)
+
+    pbp_columns = ['pbp1a', 'pbp2b', 'pbp2x']
+    for col in pbp_columns:
+        check_pbp(df_analysis, col, table_name, dp_path)
+
+    wgs_columns = ['WGS_PEN', 'WGS_AMO', 'WGS_MER', 'WGS_TAX', 'WGS_CFT', 'WGS_CFX', 'WGS_ERY', 'WGS_CLI', 'WGS_SYN', 'WGS_LZO', 'WGS_COT', 'WGS_TET', 'WGS_DOX', 'WGS_LFX', 'WGS_CHL', 'WGS_RIF', 'WGS_VAN']
+    wgs_sir_columns = ['WGS_PEN_SIR_Meningitis', 'WGS_PEN_SIR_Nonmeningitis', 'WGS_AMO_SIR', 'WGS_MER_SIR', 'WGS_TAX_SIR_Meningitis', 'WGS_TAX_SIR_Nonmeningitis', 'WGS_CFT_SIR_Meningitis', 'WGS_CFT_SIR_Nonmeningitis', 'WGS_CFX_SIR', 'WGS_ERY_SIR', 'WGS_CLI_SIR', 'WGS_SYN_SIR', 'WGS_LZO_SIR', 'WGS_COT_SIR', 'WGS_TET_SIR', 'WGS_DOX_SIR', 'WGS_LFX_SIR', 'WGS_CHL_SIR', 'WGS_RIF_SIR', 'WGS_VAN_SIR']
+    for col in wgs_columns:
+        check_wgs(df_analysis, col, table_name, dp_path)
+    for col in wgs_sir_columns:
+        check_wgs_sir(df_analysis, col, table_name, dp_path)
+    
+    check_wgs_ery_cli(df_analysis, 'WGS_ERY_CLI', table_name, dp_path)
+    check_pbp1a_2b_2x_autocolour(df_analysis, 'PBP1A_2B_2X__autocolour', table_name, dp_path)
+
+    pos_neg_columns = ['ermB', 'mefA', 'folA_I100L', 'cat']
+    for col in pos_neg_columns:
+        check_pos_neg(df_analysis, col, table_name, dp_path)
+
+    y_n_columns = ['PCV7', 'PCV10', 'PCV13', 'PCV15', 'PCV20', 'Pneumosil', 'Published(Y/N)']
+    for col in y_n_columns:
+        check_y_n(df_analysis, col, table_name, dp_path)
+
+    check_case_only_columns = ['Public_name']
+    for col in check_case_only_columns:
+        check_case(df_analysis, col, table_name, dp_path)
+
 
 # Check whether tables contain only the expected columns
 def check_columns(df, columns, table_name):
@@ -147,7 +200,7 @@ def check_columns(df, columns, table_name):
 
 
 # Check column values contain Y, N, _ only
-def check_y_n(df, column_name, table_name, dp_path):
+def check_selection_random(df, column_name, table_name, dp_path):
     expected = {'Y', 'N', '_'}
     check_case(df, column_name, table_name, dp_path)
     check_expected(df, column_name, table_name, expected)
@@ -212,22 +265,22 @@ def check_p_n(df, column_name, table_name, dp_path):
 # Expect "NT" or "serotype, optionally followed by [separated by / or &] serotype or sub-group or NT"
 def check_phenotypic_serotype(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_regex(df, column_name, table_name, allow_empty=True, absolute=False, pattern=r'^(NT|((?!0)[0-9]+[A-Z]?)((&|\/)(?!$|&|\/)((?!0)[0-9]*[A-Z]?|NT))*)$')
+    check_regex(df, column_name, table_name, allow_empty=True, absolute=False, pattern=r'^(NT|((?!0)[0-9]{1,2}[A-Z]?)((&|\/)(?!$|&|\/)((?!0)[0-9]{0,2}[A-Z]?|NT))*)$')
 
 
-# Check column values contain 1 - 50000 integers or UNKNOWN or _ only
+# Check column values contain 1 - 50000 integers or UNKNOWN, _ only
 def check_sequence_type(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_int_range(df, column_name, table_name, lo=1, hi=50000, others=('UNKNOWN'), allow_empty=True)
+    check_int_range(df, column_name, table_name, lo=1, hi=50000, allow_empty=True, others=('UNKNOWN'))
 
 
-# Check column values contain 1 - 1000 integers or UNKNOWN or _ only
+# Check column values contain 1 - 1000 integers or UNKNOWN, _ only
 def check_mlst_gene(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_int_range(df, column_name, table_name, lo=1, hi=1000, others=('UNKNOWN'), allow_empty=True)
+    check_int_range(df, column_name, table_name, lo=1, hi=1000, allow_empty=True, others=('UNKNOWN'))
 
 
-# Check column values contain numeric values (can be a range: >, <, >=, <=) or I or R or S or NS or _ only 
+# Check column values contain numeric values (can be a range: >, <, >=, <=) or I, R, S, NS, _ only 
 def check_antibiotic_ast(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
     check_regex(df, column_name, table_name, allow_empty=True, pattern=r'^([IRS]|NS|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?))$')
@@ -256,7 +309,7 @@ def check_resolution(df, column_name, table_name):
 # Check column values are in vaccine period only
 def check_vaccine_period(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_regex(df, column_name, table_name, allow_empty=True, pattern=r'^PREPCV|POSTPCV(7|10|13)-(?!0)[0-9]{1,2}YR$')
+    check_regex(df, column_name, table_name, allow_empty=True, pattern=r'^(PREPCV|POSTPCV(7|10|13)-(?!0)[0-9]{1,2}YR)$')
 
 
 # Check column values is within reasonable year range
@@ -313,6 +366,135 @@ def check_hetsites_50bp(df, column_name, table_name):
     check_int_range(df, column_name, table_name, lo=0, hi=10000, allow_empty=True)
 
 
+# Check column values are in Sanger sample format only
+def check_sample(df, column_name, table_name, dp_path):
+    check_case(df, column_name, table_name, dp_path)
+    check_regex(df, column_name, table_name, pattern=r'^[0-9]{4}STDY[0-9]{7}$')
+
+
+# Check column values are in valid ERR format only
+def check_err(df, column_name, table_name, dp_path):
+    check_case(df, column_name, table_name, dp_path)
+    check_regex(df, column_name, table_name, pattern=r'^(NOTFOUND|ERR[0-9]{6,7})$')
+
+
+# Check column values are in valid ERS format only
+def check_ers(df, column_name, table_name, dp_path):
+    check_case(df, column_name, table_name, dp_path)
+    check_regex(df, column_name, table_name, pattern=r'^ERS[0-9]{6,7}$')
+
+
+# Check column values contain 1 - 4 integers only
+def check_no_of_genome(df, column_name, table_name):
+    check_int_range(df, column_name, table_name, lo=1, hi=4)
+
+
+# Check column values contain DUPLICATE, UNIQUE only
+def check_duplicate(df, column_name, table_name, dp_path):
+    expected = {'DUPLICATE', 'UNIQUE'}
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
+
+
+# Check column values contain YES, NO only
+def check_paper_1(df, column_name, table_name, dp_path):
+    expected = {'YES', 'NO'}
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
+
+
+# Check column values contain 1 - 20000 integers or NEW, FAILED, UNDETERMINABLE, _ only
+def check_in_silico_st(df, column_name, table_name, dp_path):
+    check_case(df, column_name, table_name, dp_path)
+    check_int_range(df, column_name, table_name, lo=1, hi=20000, allow_empty=True, others=('NEW', 'FAILED', 'UNDETERMINABLE'))
+
+
+# Check column values contain 0 - 2000 integers or NEW, UNDETERMINABLE, FAILED, _ only
+def check_mlst_gene_in_silico(df, column_name, table_name, dp_path):
+    check_case(df, column_name, table_name, dp_path)
+    check_int_range(df, column_name, table_name, lo=0, hi=2000, allow_empty=True, others=('NEW', 'UNDETERMINABLE', 'FAILED'))
+
+
+# Check column values contain CARRIAGE, DIS_CAR, IPD, NON_INVASIVE DISEASE, NON_IPD, UNKNOWN, URI, _ only
+def check_manifest_type(df, column_name, table_name, dp_path):
+    expected = {'CARRIAGE', 'DIS_CAR', 'IPD', 'NON_INVASIVE DISEASE', 'NON_IPD', 'UNKNOWN', 'URI', '_'}
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected, absolute=False)
+
+
+# Check column values contain Y, N, UNKNOWN, _ only
+def check_children_5yrs(df, column_name, table_name, dp_path):
+    expected = {'Y', 'N', 'UNKNOWN', '_'}
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected, absolute=False)
+
+
+# Check column values contain 1 - 1000 integers, _ only
+def check_gpsc(df, column_name, table_name):
+    check_int_range(df, column_name, table_name, lo=1, hi=1000, allow_empty=True)
+
+
+# Check column values are in HEX color format, _ (optionally TRANSPARENT) only
+def check_color(df, column_name, table_name, dp_path, transparent=False):
+    check_case(df, column_name, table_name, dp_path)
+    if transparent:
+        check_regex(df, column_name, table_name, pattern=r'^(TRANSPARENT|_|#[0-9A-F]{6})$')
+    else:
+        check_regex(df, column_name, table_name, pattern=r'^(_|#[0-9A-F]{6})$')
+
+
+# Check column values fit the in silico serotype pattern 
+# Expect single serotype
+def check_in_silico_serotype(df, column_name, table_name, dp_path):
+    check_case(df, column_name, table_name, dp_path)
+    check_regex(df, column_name, table_name, absolute=False, pattern=r'^(?!0)[0-9]{1,2}[A-Z]?$')
+
+
+# Check column values contain 1 - 1000 integers or NEW, NF, ERROR only
+def check_pbp(df, column_name, table_name, dp_path):
+    check_case(df, column_name, table_name, dp_path)
+    check_int_range(df, column_name, table_name, lo=0, hi=1000, others=('NEW', 'NF', 'ERROR'))
+
+
+# Check column values are numeric values (can be a range: >, <, >=, <=) or FLAG, NF only
+def check_wgs(df, column_name, table_name, dp_path):
+    check_case(df, column_name, table_name, dp_path)
+    check_regex(df, column_name, table_name, allow_empty=True, pattern=r'^(FLAG|NF|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?))$')
+
+
+# Check column values contain NF, R, I, S, FLAG only
+def check_wgs_sir(df, column_name, table_name, dp_path):
+    expected = {'NF', 'R', 'I', 'S', 'FLAG'}
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
+
+# Check column values contain FLAG, NEG, POS only
+def check_wgs_ery_cli(df, column_name, table_name, dp_path):
+    expected = {'FLAG', 'NEG', 'POS'}
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
+
+
+# Check column values are in the format of x__x__x, where x is NEW, NF, 0-999, ERROR only
+def check_pbp1a_2b_2x_autocolour(df, column_name, table_name, dp_path):
+    check_case(df, column_name, table_name, dp_path)
+    check_regex(df, column_name, table_name, allow_empty=True, pattern=r'^(NEW|NF|ERROR|[0-9]{1,3})__(NEW|NF|ERROR|[0-9]{1,3})__(NEW|NF|ERROR|[0-9]{1,3})$')
+
+
+# Check column values contain POS, NEG only
+def check_pos_neg(df, column_name, table_name, dp_path):
+    expected = {'POS', 'NEG'}
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
+
+
+# Check column values contain Y, N only
+def check_y_n(df, column_name, table_name, dp_path):
+    expected = {'Y', 'N'}
+    check_case(df, column_name, table_name, dp_path)
+    check_expected(df, column_name, table_name, expected)
+
+
 # Check column values against expected values; correct lowercase string if dp_path provided and there is any; report unexpected value(s) if there is any 
 def check_expected(df, column_name, table_name, expected, absolute=True):
     extras = set(df[column_name].unique()) - expected
@@ -336,7 +518,7 @@ def check_case(df, column_name, table_name, dp_path):
 
     df[column_name] = df[column_name].str.upper()
     db_update_to_upper(table_name, column_name, dp_path)
-    LOG.warning(f'{column_name} in {table_name} contained lowercase value(s). They are now corrected.')
+    LOG.info(f'{column_name} in {table_name} contained lowercase value(s). They are now corrected.')
 
 
 # Get uniques values in a column, excluding '_'
@@ -349,7 +531,7 @@ def check_int_range(df, column_name, table_name, lo, hi, others=None, allow_empt
     if allow_empty:
         values = get_uniques_non_empty(df, column_name)
     else:
-        values = df[column_name]
+        values = df[column_name].unique()
     
     if others is not None:
         unexpected = [v for v in values if (not v.isdecimal() or not lo <= int(v) <= hi) and v not in others]
@@ -368,12 +550,12 @@ def check_year(df, column_name, table_name, lo):
     check_int_range(df, column_name, table_name, lo=lo, hi=date.today().year, allow_empty=True)
 
 
-# Check regex pattern or float range, selective: allow empty, float range, no alphabet only numeric, absolute
+# Check regex pattern or float range, optional: allow empty, float range, no alphabet only numeric, absolute
 def check_regex(df, column_name, table_name, pattern=None, allow_empty=False, float_range=None, no_alphabet_only_numeric=False, absolute=True):
     if allow_empty:
         values = get_uniques_non_empty(df, column_name)
     else:
-        values = df[column_name]
+        values = df[column_name].unique()
     
     if float_range:
         unexpected = [v for v in values if not re.match(r'^(?!0[0-9])([0-9]+([.][0-9]+)?)$', v) or not float_range[0] <= float(v) <= float_range[1]]
