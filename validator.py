@@ -184,7 +184,7 @@ def check_analysis_table(df_analysis, dp_path):
     for col in y_n_columns:
         check_y_n(df_analysis, col, table_name, dp_path)
 
-    check_case_only_columns = ['Public_name']
+    check_case_only_columns = ['Public_name', 'Cot']
     for col in check_case_only_columns:
         check_case(df_analysis, col, table_name, dp_path)
 
@@ -229,7 +229,7 @@ def check_month_collection(df, column_name, table_name, dp_path):
 
 # Check column values is within reasonable year range
 def check_year_collection(df, column_name, table_name):
-    check_year(df, column_name, table_name, lo=1985)
+    check_year(df, column_name, table_name, lo=1900)
 
 
 # Check column values is in the expected genders only
@@ -296,11 +296,6 @@ def check_longitude(df, column_name, table_name):
     check_regex(df, column_name, table_name, allow_empty=True, pattern=r'^-?(180\.0{1,15}|([0-9]|[1-9][0-9]|1[0-7][0-9])\.[0-9]{1,15})$')
 
 
-# Check column values are in Sanger Lane ID format only
-def check_lane_id(df, column_name, table_name):
-    check_regex(df, column_name, table_name, pattern=r'^(?!0)[0-9]{4,5}_[1-9]#(?!0)[0-9]{1,3}$')
-
-
 # Check column values is in the expected resolutions only
 def check_resolution(df, column_name, table_name):
     check_int_range(df, column_name, table_name, lo=0, hi=2, allow_empty=True)
@@ -322,6 +317,11 @@ def check_pcv_type(df, column_name, table_name, dp_path):
     expected = {'PCV7', 'PCV10', 'PCV13', '_'}
     check_case(df, column_name, table_name, dp_path)
     check_expected(df, column_name, table_name, expected)
+
+
+# Check column values are in Sanger Lane ID format only
+def check_lane_id(df, column_name, table_name):
+    check_regex(df, column_name, table_name, pattern=r'^(?!0)[0-9]{4,5}_[1-9]#(?!0)[0-9]{1,3}$')
 
 
 # Check column values are float in 0 - 100 only
@@ -409,10 +409,10 @@ def check_in_silico_st(df, column_name, table_name, dp_path):
     check_int_range(df, column_name, table_name, lo=1, hi=20000, allow_empty=True, others=('NEW', 'FAILED', 'UNDETERMINABLE'))
 
 
-# Check column values contain 0 - 2000 integers or NEW, UNDETERMINABLE, FAILED, _ only
+# Check column values contain 1 - 2000 integers or NEW, UNDETERMINABLE, FAILED, _ only
 def check_mlst_gene_in_silico(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_int_range(df, column_name, table_name, lo=0, hi=2000, allow_empty=True, others=('NEW', 'UNDETERMINABLE', 'FAILED'))
+    check_int_range(df, column_name, table_name, lo=1, hi=2000, allow_empty=True, others=('NEW', 'UNDETERMINABLE', 'FAILED'))
 
 
 # Check column values contain CARRIAGE, DIS_CAR, IPD, NON_INVASIVE DISEASE, NON_IPD, UNKNOWN, URI, _ only
@@ -426,12 +426,12 @@ def check_manifest_type(df, column_name, table_name, dp_path):
 def check_children_5yrs(df, column_name, table_name, dp_path):
     expected = {'Y', 'N', 'UNKNOWN', '_'}
     check_case(df, column_name, table_name, dp_path)
-    check_expected(df, column_name, table_name, expected, absolute=False)
+    check_expected(df, column_name, table_name, expected)
 
 
-# Check column values contain 1 - 1000 integers, _ only
+# Check column values contain 1 - 2000 integers, _ only
 def check_gpsc(df, column_name, table_name):
-    check_int_range(df, column_name, table_name, lo=1, hi=1000, allow_empty=True)
+    check_int_range(df, column_name, table_name, lo=1, hi=2000, allow_empty=True)
 
 
 # Check column values are in HEX color format, _ (optionally TRANSPARENT) only
@@ -478,7 +478,7 @@ def check_wgs_ery_cli(df, column_name, table_name, dp_path):
 # Check column values are in the format of x__x__x, where x is NEW, NF, 0-999, ERROR only
 def check_pbp1a_2b_2x_autocolour(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_regex(df, column_name, table_name, allow_empty=True, pattern=r'^(NEW|NF|ERROR|[0-9]{1,3})__(NEW|NF|ERROR|[0-9]{1,3})__(NEW|NF|ERROR|[0-9]{1,3})$')
+    check_regex(df, column_name, table_name, allow_empty=True, pattern=r'^(NEW|NF|ERROR|(?!0[0-9])[0-9]{1,3})__(NEW|NF|ERROR|(?!0[0-9])[0-9]{1,3})__(NEW|NF|ERROR|(?!0[0-9])[0-9]{1,3})$')
 
 
 # Check column values contain POS, NEG only
