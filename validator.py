@@ -64,7 +64,7 @@ def read_db(dp_path):
             for table_name in TABLE_NAMES.values():
                 dfs.append(pd.read_sql_query(f'SELECT * FROM {table_name}', con).astype(str))
     except pd.io.sql.DatabaseError:
-        LOG.critical('Unable to find all tables in the database. Incorrect or incompatible database is used.')
+        LOG.critical('Unable to find all tables in the database. Incorrect or incompatible database is used and cannot be validated.')
         sys.exit(1)
     return dfs
 
@@ -75,6 +75,11 @@ def check_meta_table(df_meta, dp_path):
 
     check_columns(df_meta, META_COLUMNS, table_name)
 
+    check_case_and_space_columns = ['Sample_name', 'Public_name']
+    for col in check_case_and_space_columns:
+        check_case(df_meta, col, table_name, dp_path)
+        check_space(df_meta, col, table_name)
+
     check_selection_random(df_meta, 'Selection_random', table_name, dp_path)
     check_continent(df_meta, 'Continent', table_name, dp_path)
     check_country(df_meta, 'Country', table_name, dp_path)
@@ -84,7 +89,7 @@ def check_meta_table(df_meta, dp_path):
     check_age_years(df_meta, 'Age_years', table_name)
     check_age_months(df_meta, 'Age_months', table_name)
     check_age_days(df_meta, 'Age_days', table_name)
-    check_p_n(df_meta, 'HIV_status', table_name, dp_path)
+    check_hiv_status(df_meta, 'HIV_status', table_name, dp_path)
     check_phenotypic_serotype(df_meta, 'Phenotypic_serotype', table_name, dp_path)
     check_sequence_type(df_meta, 'Sequence_Type', table_name, dp_path)
 
@@ -103,7 +108,7 @@ def check_meta_table(df_meta, dp_path):
     check_introduction_year(df_meta, 'Introduction_year', table_name)
     check_pcv_type(df_meta, 'PCV_type', table_name, dp_path)
 
-    check_case_only_columns = ['Sample_name', 'Public_name', 'Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution', 'Clinical_manifestation', 'Source', 'Underlying_conditions', 'Phenotypic_serotype_method', 'AST_method_Penicillin', 'AST_method_Amoxicillin', 'AST_method_Cefotaxime', 'AST_method_Ceftriaxone', 'AST_method_Cefuroxime', 'AST_method_Meropenem', 'AST_method_Erythromycin', 'AST_method_Clindamycin', 'AST_method_Trim/Sulfa', 'AST_method_Vancomycin', 'AST_method_Linezolid', 'AST_method_Ciprofloxacin', 'AST_method_Chloramphenicol', 'AST_method_Tetracycline', 'AST_method_Levofloxacin', 'AST_method_Synercid', 'AST_method_Rifampin']
+    check_case_only_columns = ['Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution', 'Clinical_manifestation', 'Source', 'Underlying_conditions', 'Phenotypic_serotype_method', 'AST_method_Penicillin', 'AST_method_Amoxicillin', 'AST_method_Cefotaxime', 'AST_method_Ceftriaxone', 'AST_method_Cefuroxime', 'AST_method_Meropenem', 'AST_method_Erythromycin', 'AST_method_Clindamycin', 'AST_method_Trim/Sulfa', 'AST_method_Vancomycin', 'AST_method_Linezolid', 'AST_method_Ciprofloxacin', 'AST_method_Chloramphenicol', 'AST_method_Tetracycline', 'AST_method_Levofloxacin', 'AST_method_Synercid', 'AST_method_Rifampin']
     for col in check_case_only_columns:
         check_case(df_meta, col, table_name, dp_path)
 
@@ -192,11 +197,23 @@ def check_analysis_table(df_analysis, dp_path):
 # Check whether tables contain only the expected columns
 def check_columns(df, columns, table_name):
     if (diff := set(list(df)) - set(columns)):
-        LOG.critical(f'{table_name} has the following unexpected column(s): {", ".join(diff)}. Incorrect or incompatible database is used.')
+        LOG.critical(f'{table_name} has the following unexpected column(s): {", ".join(diff)}. Incorrect or incompatible database is used and cannot be validated.')
         sys.exit(1)
     if (diff := set(list(columns)) - set(df)):
-        LOG.critical(f'{table_name} is missing the following column(s): {", ".join(diff)}. Incorrect or incompatible database is used.')
+        LOG.critical(f'{table_name} is missing the following column(s): {", ".join(diff)}. Incorrect or incompatible database is used and cannot be validated.')
         sys.exit(1)
+
+
+# Check column values contain no space at any position in the string
+def check_space(df, column_name, table_name):
+    values = df[column_name].unique()
+    unexpected = [v for v in values if re.search(r' ', v)]
+
+    if len(unexpected) == 0:
+        return
+    
+    LOG.error(f'{column_name} in {table_name} has the following value(s) with space(s): {", ".join(unexpected)}.')
+    found_error()
 
 
 # Check column values contain Y, N, _ only
@@ -255,7 +272,7 @@ def check_age_days(df, column_name, table_name):
 
 
 # Check column values contain P, N, _ only
-def check_p_n(df, column_name, table_name, dp_path):
+def check_hiv_status(df, column_name, table_name, dp_path):
     expected = {'P', 'N', '_'}
     check_case(df, column_name, table_name, dp_path)
     check_expected(df, column_name, table_name, expected)
@@ -271,13 +288,13 @@ def check_phenotypic_serotype(df, column_name, table_name, dp_path):
 # Check column values contain 1 - 50000 integers or UNKNOWN, _ only
 def check_sequence_type(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_int_range(df, column_name, table_name, lo=1, hi=50000, allow_empty=True, others=('UNKNOWN'))
+    check_int_range(df, column_name, table_name, lo=1, hi=50000, allow_empty=True, others=['UNKNOWN'])
 
 
-# Check column values contain 1 - 1000 integers or UNKNOWN, _ only
+# Check column values contain 1 or larger integers or UNKNOWN, _ only
 def check_mlst_gene(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_int_range(df, column_name, table_name, lo=1, hi=1000, allow_empty=True, others=('UNKNOWN'))
+    check_int_range(df, column_name, table_name, lo=1, allow_empty=True, others=['UNKNOWN'])
 
 
 # Check column values contain numeric values (can be a range: >, <, >=, <=) or I, R, S, NS, _ only 
@@ -329,14 +346,14 @@ def check_streptococcus_pneumoniae(df, column_name, table_name):
     check_regex(df, column_name, table_name, float_range=(0, 100))
 
 
-# Check column values contain 1 - 20000000 integers or _ only
+# Check column values contain 1 or larger integers or _ only
 def check_total_length(df, column_name, table_name):
-    check_int_range(df, column_name, table_name, lo=1, hi=20000000, allow_empty=True)
+    check_int_range(df, column_name, table_name, lo=1, allow_empty=True)
 
 
-# Check column values contain 1 - 20000 integers or _ only
+# Check column values contain 1 or larger integers or _ only
 def check_no_of_contigs(df, column_name, table_name):
-    check_int_range(df, column_name, table_name, lo=1, hi=20000, allow_empty=True)
+    check_int_range(df, column_name, table_name, lo=1, allow_empty=True)
 
 
 # Check column values are float in 0 - 100 or _ only
@@ -344,9 +361,9 @@ def check_genome_covered(df, column_name, table_name):
     check_regex(df, column_name, table_name, float_range=(0, 100), allow_empty=True)
 
 
-# Check column values are float in 0 - 2000 only
+# Check column values are float in 0 - infinity only
 def check_depth_of_coverage(df, column_name, table_name):
-    check_regex(df, column_name, table_name, float_range=(0, 2000)) 
+    check_regex(df, column_name, table_name, float_range=(0, float('inf'))) 
 
 
 # Check column values are float in 0 - 100 or _ only
@@ -361,9 +378,9 @@ def check_qc(df, column_name, table_name, dp_path):
     check_expected(df, column_name, table_name, expected)
 
 
-# Check column values contain 0 - 10000 integers or _ only
+# Check column values contain 0 or larger integers or _ only
 def check_hetsites_50bp(df, column_name, table_name):
-    check_int_range(df, column_name, table_name, lo=0, hi=10000, allow_empty=True)
+    check_int_range(df, column_name, table_name, lo=0, allow_empty=True)
 
 
 # Check column values are in Sanger sample format only
@@ -406,13 +423,13 @@ def check_paper_1(df, column_name, table_name, dp_path):
 # Check column values contain 1 - 20000 integers or NEW, FAILED, UNDETERMINABLE, _ only
 def check_in_silico_st(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_int_range(df, column_name, table_name, lo=1, hi=20000, allow_empty=True, others=('NEW', 'FAILED', 'UNDETERMINABLE'))
+    check_int_range(df, column_name, table_name, lo=1, hi=20000, allow_empty=True, others=['NEW', 'FAILED', 'UNDETERMINABLE'])
 
 
-# Check column values contain 1 - 2000 integers or NEW, UNDETERMINABLE, FAILED, _ only
+# Check column values contain 1 or larger integers or NEW, UNDETERMINABLE, FAILED, _ only
 def check_mlst_gene_in_silico(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_int_range(df, column_name, table_name, lo=1, hi=2000, allow_empty=True, others=('NEW', 'UNDETERMINABLE', 'FAILED'))
+    check_int_range(df, column_name, table_name, lo=1, allow_empty=True, others=['NEW', 'UNDETERMINABLE', 'FAILED'])
 
 
 # Check column values contain CARRIAGE, DIS_CAR, IPD, NON_INVASIVE DISEASE, NON_IPD, UNKNOWN, URI, _ only
@@ -453,7 +470,7 @@ def check_in_silico_serotype(df, column_name, table_name, dp_path):
 # Check column values contain 1 - 1000 integers or NEW, NF, ERROR only
 def check_pbp(df, column_name, table_name, dp_path):
     check_case(df, column_name, table_name, dp_path)
-    check_int_range(df, column_name, table_name, lo=0, hi=1000, others=('NEW', 'NF', 'ERROR'))
+    check_int_range(df, column_name, table_name, lo=0, hi=1000, others=['NEW', 'NF', 'ERROR'])
 
 
 # Check column values are numeric values (can be a range: >, <, >=, <=) or FLAG, NF only
@@ -526,17 +543,17 @@ def get_uniques_non_empty(df, column_name):
     return [unique for unique in df[column_name].unique() if unique != '_']
 
 
-# Check column values contain integers in specific range or values in the others list only
-def check_int_range(df, column_name, table_name, lo, hi, others=None, allow_empty=False):
+# Check column values contain integers in specific range (if no hi value is provided, it assume no upper limit) or values in the others list only
+def check_int_range(df, column_name, table_name, lo, hi=float('inf'), others=None, allow_empty=False):
     if allow_empty:
         values = get_uniques_non_empty(df, column_name)
     else:
         values = df[column_name].unique()
     
     if others is not None:
-        unexpected = [v for v in values if (not v.isdecimal() or not lo <= int(v) <= hi) and v not in others]
-    else:
-        unexpected = [v for v in values if (not v.isdecimal() or not lo <= int(v) <= hi)]
+        values = set(values) - set(others)
+
+    unexpected = [v for v in values if (not v.isdecimal() or not lo <= int(v) <= hi)]
     
     if len(unexpected) == 0:
         return
