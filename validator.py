@@ -575,7 +575,7 @@ def check_regex(df, column_name, table_name, pattern=None, allow_empty=False, fl
         values = df[column_name].unique()
     
     if float_range:
-        unexpected = [v for v in values if not re.match(r'^(?!0[0-9])([0-9]+([.][0-9]+)?)$', v) or not float_range[0] <= float(v) <= float_range[1]]
+        unexpected = [v for v in values if not (re.match(r'^(?!0[0-9])([0-9]+([.][0-9]+)?)$', v) and float_range[0] <= float(v) <= float_range[1])]
     else:
         unexpected = [v for v in values if not re.match(pattern, v)]
 
