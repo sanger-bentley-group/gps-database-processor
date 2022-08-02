@@ -1,14 +1,26 @@
-# GPS Database Validator
+# GPS Database Processor - Work-In-Progress
 
-This tool is used to check whether your [Global Pneumococcal Sequencing Project](https://www.pneumogen.net/gps/) (GPS) Database only contains expected values or values in the expected formats. 
+GPS Database Processor is an all-in-one tool for processing GPS database updates. 
+
+This tool takes the GPS database's three `CSV` source files as input:
+- `table1.csv` - metadata
+- `table2.csv` - QC
+- `table3.csv` - analysis
+
+The tool carries out several operations in the following order:
+1. Validation of columns and values in the `CSV` files
+   - The terminal output displays any unexpected or erroneous values
+   - If there are any critical errors, the tool will terminate its process and will not carry out the subsequent operations
+2. Generate `table4.csv` based on inferred data
+3. Generate [Monocle](https://github.com/sanger-pathogens/monocle)-ready CSV files for all tables
+   - Removing non-public data
+   - Adding column(s) required by Monocle
+4. Generate `data.json` for GPS Database Overview (upcoming project)
 
 
 &nbsp;
 ## Usage
-To check your database,  put the database in the same directory/folder as the script and run the following command (change `database.db` to the file name of the database):
-```
-python validator.py database.db
-```
+TBC
 
 
 &nbsp;
@@ -18,7 +30,7 @@ Python script requirements:
 - [Pandas](https://pandas.pydata.org/) 1.4.0
 
 GPS Database requirement:
-- GPS1 v3.4
+- TBC
 
 
 &nbsp;
