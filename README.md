@@ -2,13 +2,13 @@
 
 GPS Database Processor is an all-in-one tool for processing GPS database updates. 
 
-This tool takes the GPS database's three `CSV` source files as input:
+This tool takes the GPS database's three `.csv` (comma-separated values) source files as input:
 - `table1.csv` - metadata
 - `table2.csv` - QC
 - `table3.csv` - analysis
 
 The tool carries out several operations in the following order:
-1. Validation of columns and values in the `CSV` files
+1. Validation of columns and values in the `.csv` files
    - The terminal output displays any unexpected or erroneous values
    - If there are any critical errors, the tool will terminate its process and will not carry out the subsequent operations
 2. Generate `table4.csv` based on inferred data
