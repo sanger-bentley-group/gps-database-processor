@@ -1,5 +1,6 @@
-# This script takes the GPS database tables and check whether all fields in the tables contain only
-# the expected values or values in the expected formats for their respective columns in all tables. 
+# This module contains 'validator' function and its supporting functions.
+# 'validator' function takes the GPS database tables as input, then check whether the tables contain only the expected columns
+# and all fields contain only the expected values or values in the expected formats for their respective columns. 
 
 
 import pandas as pd
@@ -20,6 +21,7 @@ LOG = get_log()
 FOUND_ERRORS = False
 
 
+# The main function to perform validation on the provided GPS1 database tables.
 def validator(table1, table2, table3):
     df_meta, df_qc, df_analysis = read_tables(table1, table2, table3)
 
