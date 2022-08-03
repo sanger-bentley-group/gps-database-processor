@@ -12,6 +12,10 @@ def get_table4(table1, table3):
 
     df_meta, df_analysis = read_tables(table1, table3)
 
+    df_table4 = df_meta[['Public_name', 'Country', 'City', 'Region']].copy()
+
+
+    df_table4.to_csv('table4.csv', index=False)
     LOG.info('table4.csv is generated.')
 
 
