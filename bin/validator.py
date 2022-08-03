@@ -10,9 +10,9 @@ from bin.colorlog import get_log
 
 
 # Column names of each table in list
-META_COLUMNS = ["Sample_name", "Public_name", "Study_name", "Selection_random", "Continent", "Country", "Region", "City", "Facility_where_collected", "Submitting_institution", "Month_collection", "Year_collection", "Gender", "Age_years", "Age_months", "Age_days", "Clinical_manifestation", "Source", "HIV_status", "Underlying_conditions", "Phenotypic_serotype_method", "Phenotypic_serotype", "Sequence_Type", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "AST_method_Penicillin", "Penicillin", "AST_method_Amoxicillin", "Amoxicillin", "AST_method_Cefotaxime", "Cefotaxime", "AST_method_Ceftriaxone", "Ceftriaxone", "AST_method_Cefuroxime", "Cefuroxime", "AST_method_Meropenem", "Meropenem", "AST_method_Erythromycin", "Erythromycin", "AST_method_Clindamycin", "Clindamycin", "AST_method_Trim/Sulfa", "Trim/Sulfa", "AST_method_Vancomycin", "Vancomycin", "AST_method_Linezolid", "Linezolid", "AST_method_Ciprofloxacin", "Ciprofloxacin", "AST_method_Chloramphenicol", "Chloramphenicol", "AST_method_Tetracycline", "Tetracycline", "AST_method_Levofloxacin", "Levofloxacin", "AST_method_Synercid", "Synercid", "AST_method_Rifampin", "Rifampin", "Comments", "Latitude", "Longitude", "Resolution", "Vaccine_period", "Introduction_year", "PCV_type"]
+META_COLUMNS = ["Sample_name", "Public_name", "Study_name", "Selection_random", "Continent", "Country", "Region", "City", "Facility_where_collected", "Submitting_institution", "Month", "Year", "Gender", "Age_years", "Age_months", "Age_days", "Clinical_manifestation", "Source", "HIV_status", "Underlying_conditions", "Phenotypic_serotype_method", "Phenotypic_serotype", "Sequence_Type", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "AST_method_Penicillin", "Penicillin", "AST_method_Amoxicillin", "Amoxicillin", "AST_method_Cefotaxime", "Cefotaxime", "AST_method_Ceftriaxone", "Ceftriaxone", "AST_method_Cefuroxime", "Cefuroxime", "AST_method_Meropenem", "Meropenem", "AST_method_Erythromycin", "Erythromycin", "AST_method_Clindamycin", "Clindamycin", "AST_method_Trim/Sulfa", "Trim/Sulfa", "AST_method_Vancomycin", "Vancomycin", "AST_method_Linezolid", "Linezolid", "AST_method_Ciprofloxacin", "Ciprofloxacin", "AST_method_Chloramphenicol", "Chloramphenicol", "AST_method_Tetracycline", "Tetracycline", "AST_method_Levofloxacin", "Levofloxacin", "AST_method_Synercid", "Synercid", "AST_method_Rifampin", "Rifampin", "Comments"]
 QC_COLUMNS = ["Lane_id", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "Proportion_of_Het_SNPs", "QC", "Supplier_name", "Hetsites_50bp"]
-ANALYSIS_COLUMNS = ["Lane_id", "Sample", "Public_name", "ERR", "ERS", "No_of_genome", "Duplicate", "Paper_1", "In_silico_ST", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "Country", "Continent", "Manifest_type", "Children<5yrs", "GPSC", "GPSC__colour", "In_silico_serotype", "In_silico_serotype__colour", "pbp1a", "pbp2b", "pbp2x", "WGS_PEN", "WGS_PEN_SIR_Meningitis", "WGS_PEN_SIR_Nonmeningitis", "WGS_AMO", "WGS_AMO_SIR", "WGS_MER", "WGS_MER_SIR", "WGS_TAX", "WGS_TAX_SIR_Meningitis", "WGS_TAX_SIR_Nonmeningitis", "WGS_CFT", "WGS_CFT_SIR_Meningitis", "WGS_CFT_SIR_Nonmeningitis", "WGS_CFX", "WGS_CFX_SIR", "WGS_ERY", "WGS_ERY_SIR", "WGS_CLI", "WGS_CLI_SIR", "WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR", "WGS_ERY_CLI", "WGS_COT", "WGS_COT_SIR", "WGS_TET", "WGS_TET_SIR", "WGS_DOX", "WGS_DOX_SIR", "WGS_LFX", "WGS_LFX_SIR", "WGS_CHL", "WGS_CHL_SIR", "WGS_RIF", "WGS_RIF_SIR", "WGS_VAN", "WGS_VAN_SIR", "EC", "Cot", "Tet__autocolour", "FQ__autocolour", "Other", "PBP1A_2B_2X__autocolour", "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", "ermB", "ermB__colour", "mefA", "mefA__colour", "folA_I100L", "folA_I100L__colour", "folP__autocolour", "cat", "cat__colour", "PCV7", "PCV10", "PCV13", "PCV15", "PCV20", "Pneumosil", "Published(Y/N)"]
+ANALYSIS_COLUMNS = ["Lane_id", "Sample", "Public_name", "ERR", "ERS", "No_of_genome", "Duplicate", "Paper_1", "In_silico_ST", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "GPSC", "GPSC__colour", "In_silico_serotype", "In_silico_serotype__colour", "pbp1a", "pbp2b", "pbp2x", "WGS_PEN", "WGS_PEN_SIR_Meningitis", "WGS_PEN_SIR_Nonmeningitis", "WGS_AMO", "WGS_AMO_SIR", "WGS_MER", "WGS_MER_SIR", "WGS_TAX", "WGS_TAX_SIR_Meningitis", "WGS_TAX_SIR_Nonmeningitis", "WGS_CFT", "WGS_CFT_SIR_Meningitis", "WGS_CFT_SIR_Nonmeningitis", "WGS_CFX", "WGS_CFX_SIR", "WGS_ERY", "WGS_ERY_SIR", "WGS_CLI", "WGS_CLI_SIR", "WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR", "WGS_ERY_CLI", "WGS_COT", "WGS_COT_SIR", "WGS_TET", "WGS_TET_SIR", "WGS_DOX", "WGS_DOX_SIR", "WGS_LFX", "WGS_LFX_SIR", "WGS_CHL", "WGS_CHL_SIR", "WGS_RIF", "WGS_RIF_SIR", "WGS_VAN", "WGS_VAN_SIR", "EC", "Cot", "Tet__autocolour", "FQ__autocolour", "Other", "PBP1A_2B_2X__autocolour", "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", "ermB", "ermB__colour", "mefA", "mefA__colour", "folA_I100L", "folA_I100L__colour", "folP__autocolour", "cat", "cat__colour"]
 
 
 # Global variables 
@@ -40,7 +40,7 @@ def read_tables(table1, table2, table3):
         try:
             dfs.append(pd.read_csv(table, dtype=str))
         except:
-            LOG.critical('Unable to locate all the tables. Please provide correct file names for the tables.')
+            LOG.critical('Unable to locate all the tables. Please provide correct file names for the tables. The process will now be halted.')
             sys.exit(1)
     return dfs
 
@@ -57,8 +57,8 @@ def check_meta_table(df_meta, table):
     check_selection_random(df_meta, 'Selection_random', table)
     check_continent(df_meta, 'Continent', table)
     check_country(df_meta, 'Country', table)
-    check_month_collection(df_meta, 'Month_collection', table)
-    check_year_collection(df_meta, 'Year_collection', table)
+    check_month_collection(df_meta, 'Month', table)
+    check_year_collection(df_meta, 'Year', table)
     check_gender(df_meta, 'Gender', table)
     check_age_years(df_meta, 'Age_years', table)
     check_age_months(df_meta, 'Age_months', table)
@@ -75,12 +75,6 @@ def check_meta_table(df_meta, table):
     for col in antibiotics_columns:
         check_antibiotic_ast(df_meta, col, table)
 
-    check_latitude(df_meta, 'Latitude', table)
-    check_longitude(df_meta, 'Longitude', table)
-    check_resolution(df_meta, 'Resolution', table)
-    check_vaccine_period(df_meta, 'Vaccine_period', table)
-    check_introduction_year(df_meta, 'Introduction_year', table)
-    check_pcv_type(df_meta, 'PCV_type', table)
 
     check_case_only_columns = ['Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution', 'Clinical_manifestation', 'Source', 'Underlying_conditions', 'Phenotypic_serotype_method', 'AST_method_Penicillin', 'AST_method_Amoxicillin', 'AST_method_Cefotaxime', 'AST_method_Ceftriaxone', 'AST_method_Cefuroxime', 'AST_method_Meropenem', 'AST_method_Erythromycin', 'AST_method_Clindamycin', 'AST_method_Trim/Sulfa', 'AST_method_Vancomycin', 'AST_method_Linezolid', 'AST_method_Ciprofloxacin', 'AST_method_Chloramphenicol', 'AST_method_Tetracycline', 'AST_method_Levofloxacin', 'AST_method_Synercid', 'AST_method_Rifampin']
     for col in check_case_only_columns:
@@ -122,10 +116,6 @@ def check_analysis_table(df_analysis, table):
     for col in mlst_genes_in_silico_columns:
         check_mlst_gene_in_silico(df_analysis, col, table)
 
-    check_country(df_analysis, 'Country', table)
-    check_continent(df_analysis, 'Continent', table)
-    check_manifest_type(df_analysis, 'Manifest_type', table)
-    check_children_5yrs(df_analysis, 'Children<5yrs', table)
     check_gpsc(df_analysis, 'GPSC', table)
 
     color_columns = ['GPSC__colour', 'In_silico_serotype__colour', 'ermB__colour', 'mefA__colour', 'folA_I100L__colour', 'cat__colour']
@@ -155,10 +145,6 @@ def check_analysis_table(df_analysis, table):
     for col in pos_neg_columns:
         check_pos_neg(df_analysis, col, table)
 
-    y_n_columns = ['PCV7', 'PCV10', 'PCV13', 'PCV15', 'PCV20', 'Pneumosil', 'Published(Y/N)']
-    for col in y_n_columns:
-        check_y_n(df_analysis, col, table)
-
     check_case_only_columns = ['Public_name', 'Cot']
     for col in check_case_only_columns:
         check_case(df_analysis, col, table)
@@ -167,10 +153,10 @@ def check_analysis_table(df_analysis, table):
 # Check whether tables contain only the expected columns
 def check_columns(df, columns, table):
     if (diff := set(list(df)) - set(columns)):
-        LOG.critical(f'{table} has the following unexpected column(s): {", ".join(diff)}. Incorrect or incompatible table is used and cannot be validated.')
+        LOG.critical(f'{table} has the following unexpected column(s): {", ".join(diff)}. Incorrect or incompatible table is used and cannot be validated. The process will now be halted.')
         sys.exit(1)
     if (diff := set(list(columns)) - set(df)):
-        LOG.critical(f'{table} is missing the following column(s): {", ".join(diff)}. Incorrect or incompatible table is used and cannot be validated.')
+        LOG.critical(f'{table} is missing the following column(s): {", ".join(diff)}. Incorrect or incompatible table is used and cannot be validated. The process will now be halted.')
         sys.exit(1)
 
 
@@ -273,39 +259,6 @@ def check_antibiotic_ast(df, column_name, table):
     check_regex(df, column_name, table, allow_empty=True, pattern=r'^([IRS]|NS|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?))$')
 
 
-# Check column values are valid latitude only
-def check_latitude(df, column_name, table):
-    check_regex(df, column_name, table, allow_empty=True, pattern=r'^-?(90\.0{1,15}|([0-9]|[1-8][0-9])\.[0-9]{1,15})$')
-
-
-# Check column values are valid longitude only
-def check_longitude(df, column_name, table):
-    check_regex(df, column_name, table, allow_empty=True, pattern=r'^-?(180\.0{1,15}|([0-9]|[1-9][0-9]|1[0-7][0-9])\.[0-9]{1,15})$')
-
-
-# Check column values is in the expected resolutions only
-def check_resolution(df, column_name, table):
-    check_int_range(df, column_name, table, lo=0, hi=2, allow_empty=True)
-
-
-# Check column values are in vaccine period only
-def check_vaccine_period(df, column_name, table):
-    check_case(df, column_name, table)
-    check_regex(df, column_name, table, allow_empty=True, pattern=r'^(PREPCV|POSTPCV(7|10|13)-(?!0)[0-9]{1,2}YR)$')
-
-
-# Check column values is within reasonable year range
-def check_introduction_year(df, column_name, table):
-    check_year(df, column_name, table, lo=2000)
-
-
-# Check column values contain PCV7, PCV10, PCV13, _ only
-def check_pcv_type(df, column_name, table):
-    expected = {'PCV7', 'PCV10', 'PCV13', '_'}
-    check_case(df, column_name, table)
-    check_expected(df, column_name, table, expected)
-
-
 # Check column values are in Sanger Lane ID format only
 def check_lane_id(df, column_name, table):
     check_regex(df, column_name, table, pattern=r'^(?!0)[0-9]{4,5}_[1-9]#(?!0)[0-9]{1,3}$')
@@ -402,20 +355,6 @@ def check_mlst_gene_in_silico(df, column_name, table):
     check_int_range(df, column_name, table, lo=1, allow_empty=True, others=['NEW', 'UNDETERMINABLE', 'FAILED'])
 
 
-# Check column values contain CARRIAGE, DIS_CAR, IPD, NON_INVASIVE DISEASE, NON_IPD, UNKNOWN, URI, _ only
-def check_manifest_type(df, column_name, table):
-    expected = {'CARRIAGE', 'DIS_CAR', 'IPD', 'NON_INVASIVE DISEASE', 'NON_IPD', 'UNKNOWN', 'URI', '_'}
-    check_case(df, column_name, table)
-    check_expected(df, column_name, table, expected, absolute=False)
-
-
-# Check column values contain Y, N, UNKNOWN, _ only
-def check_children_5yrs(df, column_name, table):
-    expected = {'Y', 'N', 'UNKNOWN', '_'}
-    check_case(df, column_name, table)
-    check_expected(df, column_name, table, expected)
-
-
 # Check column values contain 1 - 2000 integers, _ only
 def check_gpsc(df, column_name, table):
     check_int_range(df, column_name, table, lo=1, hi=2000, allow_empty=True)
@@ -471,13 +410,6 @@ def check_pbp1a_2b_2x_autocolour(df, column_name, table):
 # Check column values contain POS, NEG only
 def check_pos_neg(df, column_name, table):
     expected = {'POS', 'NEG'}
-    check_case(df, column_name, table)
-    check_expected(df, column_name, table, expected)
-
-
-# Check column values contain Y, N only
-def check_y_n(df, column_name, table):
-    expected = {'Y', 'N'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
