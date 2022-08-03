@@ -2,11 +2,17 @@
 
 
 import pandas as pd
+import bin.config as config
 
 
 # Generate table4.csv based on data from table1.csv and table3.csv
 def get_table4(table1, table3):
+    global LOG
+    LOG = config.LOG
+
     df_meta, df_analysis = read_tables(table1, table3)
+
+    LOG.info('table4.csv is generated.')
 
 
 # Read the tables into Pandas dataframes for processing

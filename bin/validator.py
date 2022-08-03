@@ -1,5 +1,5 @@
-# This module contains 'validator' function and its supporting functions.
-# 'validator' function takes the GPS database tables as input, then check whether the tables contain only the expected columns
+# This module contains 'validate' function and its supporting functions.
+# 'validate' function takes the GPS database tables as input, then check whether the tables contain only the expected columns
 # and all fields contain only the expected values or values in the expected formats for their respective columns. 
 
 
@@ -7,7 +7,7 @@ import pandas as pd
 import sys
 import re
 from datetime import date
-from bin.colorlog import get_log
+import bin.config as config
 
 
 # Column names of each table in list
@@ -16,13 +16,14 @@ QC_COLUMNS = ["Lane_id", "Streptococcus_pneumoniae", "Total_length", "No_of_cont
 ANALYSIS_COLUMNS = ["Lane_id", "Sample", "Public_name", "ERR", "ERS", "No_of_genome", "Duplicate", "Paper_1", "In_silico_ST", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "GPSC", "GPSC__colour", "In_silico_serotype", "In_silico_serotype__colour", "pbp1a", "pbp2b", "pbp2x", "WGS_PEN", "WGS_PEN_SIR_Meningitis", "WGS_PEN_SIR_Nonmeningitis", "WGS_AMO", "WGS_AMO_SIR", "WGS_MER", "WGS_MER_SIR", "WGS_TAX", "WGS_TAX_SIR_Meningitis", "WGS_TAX_SIR_Nonmeningitis", "WGS_CFT", "WGS_CFT_SIR_Meningitis", "WGS_CFT_SIR_Nonmeningitis", "WGS_CFX", "WGS_CFX_SIR", "WGS_ERY", "WGS_ERY_SIR", "WGS_CLI", "WGS_CLI_SIR", "WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR", "WGS_ERY_CLI", "WGS_COT", "WGS_COT_SIR", "WGS_TET", "WGS_TET_SIR", "WGS_DOX", "WGS_DOX_SIR", "WGS_LFX", "WGS_LFX_SIR", "WGS_CHL", "WGS_CHL_SIR", "WGS_RIF", "WGS_RIF_SIR", "WGS_VAN", "WGS_VAN_SIR", "EC", "Cot", "Tet__autocolour", "FQ__autocolour", "Other", "PBP1A_2B_2X__autocolour", "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", "ermB", "ermB__colour", "mefA", "mefA__colour", "folA_I100L", "folA_I100L__colour", "folP__autocolour", "cat", "cat__colour"]
 
 
-# Global variables 
-LOG = get_log()
-FOUND_ERRORS = False
-
-
 # The main function to perform validation on the provided GPS1 database tables.
-def validator(table1, table2, table3):
+def validate(table1, table2, table3):
+    global LOG
+    LOG = config.LOG
+
+    global FOUND_ERRORS
+    FOUND_ERRORS = False
+
     df_meta, df_qc, df_analysis = read_tables(table1, table2, table3)
 
     check_meta_table(df_meta, table1)
@@ -30,7 +31,8 @@ def validator(table1, table2, table3):
     check_analysis_table(df_analysis, table3)
 
     if FOUND_ERRORS:
-        LOG.error(f'The validation of the tables is completed with error(s).')
+        LOG.error(f'The validation of the tables is completed with error(s). The process will now be halted. Please correct the error(s) and re-run the processor')
+        sys.exit(1)
     else:
         LOG.info(f'The validation of the tables is completed.')
 
