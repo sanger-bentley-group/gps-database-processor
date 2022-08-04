@@ -5,6 +5,7 @@ import bin.colorlog as colorlog
 import data.api_keys as api_keys
 import csv
 
+
 def init():
     # Provide global logger to all functions
     global LOG
