@@ -3,6 +3,9 @@
 
 import pandas as pd
 import bin.config as config
+from geopy.geocoders import MapBox
+import csv
+import sys
 
 
 # Generate table4.csv based on data from table1.csv
@@ -10,10 +13,16 @@ def get_table4(table1, table3):
     global LOG
     LOG = config.LOG
 
+    global UPDATED_COORDINATES
+    UPDATED_COORDINATES = False
+
     df_meta, df_analysis = read_tables(table1, table3)
 
     df_table4_meta = df_meta[['Public_name', 'Country', 'Region', 'City']].copy()
-    df_table4_meta = df_table4_meta.apply(get_coordinate_and_res, axis=1)
+    geocoder = MapBox(api_key=config.MAPBOX_API_KEY)
+    df_table4_meta = df_table4_meta.apply(get_coordinate_and_res, geocoder=geocoder, axis=1)
+    if UPDATED_COORDINATES:
+        LOG.warning(f'Please verify the new coordinate(s). If any is incorrect, modify the coordinate in {config.COORDINATES_FILE} and re-run this tool.')
 
     df_table4_analysis = df_analysis[['Public_name', 'In_silico_serotype', 'Duplicate']].copy()
     df_table4_analysis.drop(df_table4_analysis[df_table4_analysis['Duplicate'] != 'UNIQUE'].index, inplace = True)
@@ -39,13 +48,28 @@ def read_tables(*arg):
 # Get coordinates based on 'Country', 'Region', 'City'.
 # Use pre-existing data in 'data/coordinates.csv' if possible,
 # otherwise search with geopy and add to 'data/coordinates.csv'
-def get_coordinate_and_res(row):
+def get_coordinate_and_res(row, geocoder):
     country, region, city = row['Country'], row['Region'], row['City']
     country_region_city = ','.join((country, region, city))
     if country_region_city in config.COORDINATES:
         latitude, longitude = config.COORDINATES[country_region_city]
-        row['Latitude'] = latitude
-        row['Longitude'] = longitude
     else:
-        raise('NOT FOUND')
+        try:
+            coordinate = geocoder.geocode(country_region_city)
+        except:
+            LOG.critical(f'{country_region_city} has no known coordinate, but no valid Mapbox API key is provided. Please provide Mapbox API key in "data/api_keys.py" or manually enter coordinate of {country_region_city} in "data/coordinates.csv", then re-run this tool. The process will now be halted.')
+            sys.exit(1)
+        latitude, longitude = coordinate.latitude, coordinate.longitude
+
+        # Save new coordinate to file and reload coordinates dictionary from file
+        with open(config.COORDINATES_FILE, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow([country_region_city, latitude, longitude])
+        config.read_coordinates()
+
+        global UPDATED_COORDINATES
+        UPDATED_COORDINATES = True
+        LOG.warning(f'New location {country_region_city} is found, the coordinate is determined to be {latitude}, {longitude} and added to "{config.COORDINATES_FILE}".')
+    row['Latitude'] = latitude
+    row['Longitude'] = longitude
     return row
