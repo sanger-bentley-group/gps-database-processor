@@ -24,6 +24,8 @@ def get_table4(table1, table3):
     if UPDATED_COORDINATES:
         LOG.warning(f'Please verify the new coordinate(s). If any is incorrect, modify the coordinate in {config.COORDINATES_FILE} and re-run this tool.')
 
+    df_table4_meta = df_table4_meta.apply(get_resolution, axis=1)
+
     df_table4_analysis = df_analysis[['Public_name', 'In_silico_serotype', 'Duplicate']].copy()
     df_table4_analysis.drop(df_table4_analysis[df_table4_analysis['Duplicate'] != 'UNIQUE'].index, inplace = True)
 
@@ -51,6 +53,7 @@ def read_tables(*arg):
 def get_coordinate_and_res(row, geocoder):
     country, region, city = row['Country'], row['Region'], row['City']
     country_region_city = ','.join((country, region, city))
+    
     if country_region_city in config.COORDINATES:
         latitude, longitude = config.COORDINATES[country_region_city]
     else:
@@ -59,6 +62,7 @@ def get_coordinate_and_res(row, geocoder):
         except:
             LOG.critical(f'{country_region_city} has no known coordinate, but no valid Mapbox API key is provided. Please provide Mapbox API key in "data/api_keys.py" or manually enter coordinate of {country_region_city} in "data/coordinates.csv", then re-run this tool. The process will now be halted.')
             sys.exit(1)
+        
         latitude, longitude = coordinate.latitude, coordinate.longitude
 
         # Save new coordinate to file and reload coordinates dictionary from file
@@ -70,6 +74,23 @@ def get_coordinate_and_res(row, geocoder):
         global UPDATED_COORDINATES
         UPDATED_COORDINATES = True
         LOG.warning(f'New location {country_region_city} is found, the coordinate is determined to be {latitude}, {longitude} and added to "{config.COORDINATES_FILE}".')
+    
     row['Latitude'] = latitude
     row['Longitude'] = longitude
+    return row
+
+
+# Get resolution based on the right-most non-empty values in 'Country', 'Region', 'City'.
+def get_resolution(row):
+    country, region, city = row['Country'], row['Region'], row['City']
+
+    resolution = "_"
+    if country not in ("_", ""):
+        resolution = "0"
+    if region not in ("_", ""):
+        resolution = "1"
+    if city not in ("_", ""):
+        resolution = "2"
+    row['Resolution'] = resolution
+
     return row
