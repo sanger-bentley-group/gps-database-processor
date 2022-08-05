@@ -16,6 +16,11 @@ def init():
     COORDINATES_FILE = 'data/coordinates.csv'
     read_coordinates()
 
+    # Path to vaccines file and store content as global dictionary
+    global VACCINES_FILE
+    VACCINES_FILE = 'data/vaccines.csv'
+    read_vaccines()
+
     global MAPBOX_API_KEY
     MAPBOX_API_KEY = api_keys.mapbox
 
@@ -29,3 +34,14 @@ def read_coordinates():
         COORDINATES = {}
         for country_region_city, latitude, longitude in reader:
             COORDINATES[country_region_city] = (latitude, longitude)
+
+
+# Provide global dictionary for acessing pre-existing coordinates
+def read_vaccines():
+    global VACCINES
+    with open(VACCINES_FILE, 'r') as f:
+        reader = csv.reader(f)
+        next(reader)
+        VACCINES = {}
+        for vaccine, serotypes in reader:
+            VACCINES[vaccine] = set(serotypes.split(','))
