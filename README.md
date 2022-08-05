@@ -1,6 +1,6 @@
 # GPS Database Processor - Work-In-Progress
 
-GPS Database Processor is an all-in-one tool for processing GPS database updates. 
+GPS Database Processor is an all-in-one tool for processing GPS ([Global Pneumococcal Sequencing Project](https://www.pneumogen.net/gps/)) database updates. 
 
 This tool takes the GPS database's three `.csv` (comma-separated values) source files as input:
 - `table1.csv` - metadata
