@@ -25,9 +25,10 @@ TBC
 
 &nbsp;
 ## Requirements & Compatibility
-Python script requirements:
+Python script tested on:
 - [Python](https://www.python.org/) 3.10
-- [Pandas](https://pandas.pydata.org/) 1.4.0
+- [Pandas](https://pandas.pydata.org/) 1.4.2
+- [NumPy](https://numpy.org/) 1.22.4
 - [geopy](https://github.com/geopy/geopy) 2.2.0
 
 GPS Database requirement:
@@ -42,6 +43,10 @@ This project uses Open Source components. You can find the source code of their 
 - Copyright (c) 2008-2011, AQR Capital Management, LLC, Lambda Foundry, Inc. and PyData Development Team. All rights reserved.
 - Copyright (c) 2011-2022, Open source contributors.
 - License (BSD-3-Clause): https://github.com/pandas-dev/pandas/blob/main/LICENSE
+
+[**NumPy**](https://numpy.org/)
+- Copyright (c) 2005-2022, NumPy Developers. All rights reserved.
+- License (BSD-3-Clause): https://github.com/numpy/numpy/blob/main/LICENSE.txt
 
 [**geopy**](https://github.com/geopy/geopy)
 - © geopy contributors 2006-2018 (see AUTHORS) under the MIT License.

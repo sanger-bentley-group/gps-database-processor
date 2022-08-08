@@ -11,19 +11,23 @@ def init():
     global LOG
     LOG = colorlog.get_log()
 
-    # Path to coordinates file and store content as global dictionary
+    # Path to coordinates file and store content as global dictionary COORDINATES
     global COORDINATES_FILE
     COORDINATES_FILE = 'data/coordinates.csv'
     read_coordinates()
 
-    # Path to vaccines valency file and store content as global dictionary
+    # Path to vaccines valency file and store content as global dictionary VACCINES_VALENCY
     vaccines_valency_file = 'data/vaccines_valency.csv'
     read_vaccines_valency(vaccines_valency_file)
 
-    # Path to non-standard ages file and store content as global dictionary
+    # Path to non-standard ages file and store content as global dictionary NON_STANDARD_AGES
     global NON_STANDARD_AGES_FILE
     NON_STANDARD_AGES_FILE = 'data/non_standard_ages.csv'
     read_non_standard_ages()
+
+    # Path to published public names file and store content as global set PUBLISHED_PUBLIC_NAMES
+    published_public_names_file = 'data/published_public_names.txt'
+    read_published_public_names(published_public_names_file)
 
     global MAPBOX_API_KEY
     MAPBOX_API_KEY = api_keys.mapbox
@@ -60,3 +64,9 @@ def read_non_standard_ages():
         NON_STANDARD_AGES = {}
         for age, less_than_5_years_old in reader:
             NON_STANDARD_AGES[age] = less_than_5_years_old
+
+
+# Provide global set for acessing published public names
+def read_published_public_names(published_public_names_file):
+    global PUBLISHED_PUBLIC_NAMES
+    PUBLISHED_PUBLIC_NAMES = set(line.strip() for line in open(published_public_names_file))

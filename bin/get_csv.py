@@ -2,6 +2,7 @@
 
 
 import pandas as pd
+import numpy as np
 import bin.config as config
 from geopy.geocoders import MapBox
 import csv
@@ -28,6 +29,7 @@ def get_table4(table1, table3):
 
     df_table4_meta = df_table4_meta.apply(get_resolution, axis=1)
     df_table4_meta = df_table4_meta.apply(get_less_than_5_years_old, axis=1)
+    df_table4_meta['Published'] = np.where(df_table4_meta['Public_name'].isin(config.PUBLISHED_PUBLIC_NAMES), 'Y', 'N')
 
     # Create a partial table4 dataframe based on a subset of table3
     df_table4_analysis = df_analysis[['Public_name', 'In_silico_serotype', 'Duplicate']].copy()
