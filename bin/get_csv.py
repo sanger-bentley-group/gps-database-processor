@@ -17,7 +17,7 @@ def get_table4(table1, table3):
     df_meta, df_analysis = read_tables(table1, table3)
 
     # Create a partial table4 dataframe based on a subset of table1
-    df_table4_meta = df_meta[['Public_name', 'Country', 'Region', 'City']].copy()
+    df_table4_meta = df_meta[['Public_name', 'Country', 'Region', 'City', 'Age_years', 'Age_months', 'Age_days']].copy()
 
     global UPDATED_COORDINATES
     UPDATED_COORDINATES = False
@@ -27,6 +27,7 @@ def get_table4(table1, table3):
         LOG.warning(f'Please verify the new coordinate(s). If any is incorrect, modify the coordinate in {config.COORDINATES_FILE} and re-run this tool.')
 
     df_table4_meta = df_table4_meta.apply(get_resolution, axis=1)
+    df_table4_meta = df_table4_meta.apply(get_less_than_5_years_old, axis=1)
 
     # Create a partial table4 dataframe based on a subset of table3
     df_table4_analysis = df_analysis[['Public_name', 'In_silico_serotype', 'Duplicate']].copy()
@@ -101,6 +102,26 @@ def get_resolution(row):
         resolution = '2'
     row['Resolution'] = resolution
 
+    return row
+
+
+# Get whether the age of of the row is less than 5 years old or not.
+def get_less_than_5_years_old(row):
+    age_years, age_months, age_days = row['Age_years'], row['Age_months'], row['Age_days']
+
+    if age_years == '_' and age_months == '_' and age_days == '_':
+        less_than_5_years_old = '_'
+    elif age_years == '_':
+        less_than_5_years_old = 'Y'
+    elif age_years in config.NON_STANDARD_AGES:
+        less_than_5_years_old = config.NON_STANDARD_AGES[age_years]
+    else:
+        if float(age_years) < 5:
+            less_than_5_years_old = 'Y'
+        else:
+            less_than_5_years_old = 'N'
+
+    row['Less_than_5_years_old'] = less_than_5_years_old
     return row
 
 

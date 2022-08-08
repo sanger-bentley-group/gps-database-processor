@@ -21,6 +21,11 @@ def init():
     VACCINES_FILE = 'data/vaccines.csv'
     read_vaccines()
 
+    # Path to non-standard ages file and store content as global dictionary
+    global NON_STANDARD_AGES_FILE
+    NON_STANDARD_AGES_FILE = 'data/non_standard_ages.csv'
+    read_non_standard_ages()
+
     global MAPBOX_API_KEY
     MAPBOX_API_KEY = api_keys.mapbox
 
@@ -45,3 +50,14 @@ def read_vaccines():
         VACCINES = {}
         for vaccine, serotypes in reader:
             VACCINES[vaccine] = set(serotypes.split(','))
+
+
+# Provide global dictionary for acessing whether non_standard_ages are less than 5 years old or not
+def read_non_standard_ages():
+    global NON_STANDARD_AGES
+    with open(NON_STANDARD_AGES_FILE, 'r') as f:
+        reader = csv.reader(f)
+        next(reader)
+        NON_STANDARD_AGES = {}
+        for age, less_than_5_years_old in reader:
+            NON_STANDARD_AGES[age] = less_than_5_years_old

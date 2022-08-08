@@ -216,9 +216,18 @@ def check_gender(df, column_name, table):
     check_expected(df, column_name, table, expected)
 
 
-# Check column values is within reasonable age year 
+# Check column values is within reasonable age year, or in 'data/non_standard_ages.csv'
 def check_age_years(df, column_name, table):
-    check_regex(df, column_name, table, allow_empty=True, float_range=(0, 130), no_alphabet_only_numeric=True)
+    values = get_uniques_non_empty(df, column_name)
+    values = set(values) - set(config.NON_STANDARD_AGES.keys())
+
+    unexpected = [v for v in values if not (re.match(r'^(?!0[0-9])([0-9]+([.][0-9]+)?)$', v) and 0 <= float(v) <= 130)]
+
+    if len(unexpected) == 0:
+        return
+
+    LOG.error(f'{column_name} in {table} has the following unexpected value(s): {", ".join(unexpected)}. If valid, please add to {config.NON_STANDARD_AGES_FILE} and state whether it is less than 5 years old or not.')
+    found_error()
 
 
 # Check column values is within reasonable age month 
