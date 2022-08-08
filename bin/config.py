@@ -16,10 +16,9 @@ def init():
     COORDINATES_FILE = 'data/coordinates.csv'
     read_coordinates()
 
-    # Path to vaccines file and store content as global dictionary
-    global VACCINES_FILE
-    VACCINES_FILE = 'data/vaccines.csv'
-    read_vaccines()
+    # Path to vaccines valency file and store content as global dictionary
+    vaccines_valency_file = 'data/vaccines_valency.csv'
+    read_vaccines_valency(vaccines_valency_file)
 
     # Path to non-standard ages file and store content as global dictionary
     global NON_STANDARD_AGES_FILE
@@ -41,15 +40,15 @@ def read_coordinates():
             COORDINATES[country_region_city] = (latitude, longitude)
 
 
-# Provide global dictionary for acessing pre-existing coordinates
-def read_vaccines():
-    global VACCINES
-    with open(VACCINES_FILE, 'r') as f:
+# Provide global dictionary for acessing valency of vaccines
+def read_vaccines_valency(vaccines_valency_file):
+    global VACCINES_VALENCY
+    with open(vaccines_valency_file, 'r') as f:
         reader = csv.reader(f)
         next(reader)
-        VACCINES = {}
+        VACCINES_VALENCY = {}
         for vaccine, serotypes in reader:
-            VACCINES[vaccine] = set(serotypes.split(','))
+            VACCINES_VALENCY[vaccine] = set(serotypes.split(','))
 
 
 # Provide global dictionary for acessing whether non_standard_ages are less than 5 years old or not

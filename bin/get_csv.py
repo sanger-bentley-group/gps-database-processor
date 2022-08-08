@@ -32,7 +32,7 @@ def get_table4(table1, table3):
     # Create a partial table4 dataframe based on a subset of table3
     df_table4_analysis = df_analysis[['Public_name', 'In_silico_serotype', 'Duplicate']].copy()
     df_table4_analysis.drop(df_table4_analysis[df_table4_analysis['Duplicate'] != 'UNIQUE'].index, inplace = True)
-    df_table4_analysis = df_table4_analysis.apply(get_vaccines, axis=1)
+    df_table4_analysis = df_table4_analysis.apply(get_vaccines_covered, axis=1)
 
     # Merge the partial table4 dataframes
     df_table4 = pd.merge(df_table4_meta, df_table4_analysis, on='Public_name', how='left', validate='one_to_one')
@@ -125,11 +125,11 @@ def get_less_than_5_years_old(row):
     return row
 
 
-# Get whether the in silico serotype of the row is included in each vaccine.
-def get_vaccines(row):
+# Get whether the in silico serotype of the row is targeted by each vaccine.
+def get_vaccines_covered(row):
     serotype = row['In_silico_serotype']
 
-    for vaccine, serotypes in config.VACCINES.items():
+    for vaccine, serotypes in config.VACCINES_VALENCY.items():
         if serotype in serotypes:
             row[vaccine] = 'Y'
         else:
