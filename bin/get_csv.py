@@ -18,7 +18,7 @@ def get_table4(table1, table3):
     df_meta, df_analysis = read_tables(table1, table3)
 
     # Create a partial table4 dataframe based on a subset of table1
-    df_table4_meta = df_meta[['Public_name', 'Country', 'Region', 'City', 'Age_years', 'Age_months', 'Age_days']].copy()
+    df_table4_meta = df_meta[['Public_name', 'Country', 'Region', 'City', 'Age_years', 'Age_months', 'Age_days', 'Clinical_manifestation', 'Source']].copy()
 
     global UPDATED_COORDINATES
     UPDATED_COORDINATES = False
@@ -29,6 +29,10 @@ def get_table4(table1, table3):
 
     df_table4_meta = df_table4_meta.apply(get_resolution, axis=1)
     df_table4_meta = df_table4_meta.apply(get_less_than_5_years_old, axis=1)
+
+    # Get the manifest type based on the values in 'Clinical_manifestation', 'Source', 'City' and the 'data/manifest_types.csv' reference table.
+    df_table4_meta['Manifest_type'] = df_table4_meta.set_index(['Clinical_manifestation', 'Source']).index.map(config.MANIFEST_TYPES.get)
+    # Get the published status based on the values in 'Public_name' and the 'data/published_public_names.txt' reference list.
     df_table4_meta['Published'] = np.where(df_table4_meta['Public_name'].isin(config.PUBLISHED_PUBLIC_NAMES), 'Y', 'N')
 
     # Create a partial table4 dataframe based on a subset of table3
