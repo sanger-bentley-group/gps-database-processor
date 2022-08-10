@@ -343,10 +343,27 @@ def check_no_of_genome(df, column_name, table):
 
 
 # Check column values contain DUPLICATE, UNIQUE only
+# Each public name should contains one UNIQUE value at most
 def check_duplicate(df, column_name, table):
     expected = {'DUPLICATE', 'UNIQUE'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
+    
+    df_uniques = df[~df['Public_name'].duplicated(keep=False)]
+
+    uniques_as_duplicate = df_uniques[df_uniques[column_name]=='DUPLICATE']['Public_name'].tolist()
+    if uniques_as_duplicate:
+        LOG.warning(f'{table} has the following unique Public_name marked as DUPLICATE in {column_name}: {", ".join(uniques_as_duplicate)}. Please check if they are correct.')
+
+    df_duplicates = df[df['Public_name'].duplicated(keep=False)]
+    df_duplicates_unique_count = df_duplicates[df_duplicates['Duplicate']=='UNIQUE'].groupby(['Public_name']).size()
+    duplicates_no_unique = df_duplicates_unique_count.index[df_duplicates_unique_count == 0].tolist()
+    if duplicates_no_unique:
+        LOG.warning(f'{table} has the following duplicated Public_name with none of its duplicates marked as UNIQUE in {column_name}: {", ".join(duplicates_no_unique)}. Please check if they are correct.')
+    duplicates_more_than_one_unique = df_duplicates_unique_count.index[df_duplicates_unique_count > 1].tolist()
+    if duplicates_more_than_one_unique:
+        LOG.error(f'{table} has the following duplicated Public_name with more than one of its duplicates marked as UNIQUE in {column_name}: {", ".join(duplicates_more_than_one_unique)}.')
+        found_error()
 
 
 # Check column values contain YES, NO only
