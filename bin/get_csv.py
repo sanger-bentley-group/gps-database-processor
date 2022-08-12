@@ -23,7 +23,7 @@ def get_table4(table1, table3):
     global UPDATED_COORDINATES
     UPDATED_COORDINATES = False
     geocoder = MapBox(api_key=config.MAPBOX_API_KEY)
-    df_table4_meta = df_table4_meta.apply(get_coordinate_and_res, geocoder=geocoder, axis=1)
+    df_table4_meta = df_table4_meta.apply(get_coordinate, geocoder=geocoder, axis=1)
     if UPDATED_COORDINATES:
         LOG.warning(f'Please verify the new coordinate(s). If any is incorrect, modify the coordinate in {config.COORDINATES_FILE} and re-run this tool.')
 
@@ -65,11 +65,13 @@ def read_tables(*arg):
 # Get coordinates based on 'Country', 'Region', 'City'.
 # Use pre-existing data in 'data/coordinates.csv' if possible,
 # otherwise search with geopy and add to 'data/coordinates.csv'
-def get_coordinate_and_res(row, geocoder):
+def get_coordinate(row, geocoder):
     country, region, city = row['Country'], row['Region'], row['City']
     country_region_city = ','.join((country, region, city))
     
-    if country_region_city in config.COORDINATES:
+    if country_region_city == '_,_,_':
+        latitude, longitude = '_', '_'
+    elif country_region_city in config.COORDINATES:
         latitude, longitude = config.COORDINATES[country_region_city]
     else:
         try:
