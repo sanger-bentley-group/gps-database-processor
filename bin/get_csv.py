@@ -30,8 +30,8 @@ def get_table4(table1, table3):
     df_table4_meta = df_table4_meta.apply(get_resolution, axis=1)
     df_table4_meta = df_table4_meta.apply(get_less_than_5_years_old, axis=1)
 
-    # Get the manifest type based on the values in 'Clinical_manifestation', 'Source', 'City' and the 'data/manifest_types.csv' reference table.
-    df_table4_meta['Manifest_type'] = df_table4_meta.set_index(['Clinical_manifestation', 'Source']).index.map(config.MANIFEST_TYPES.get)
+    # Get the Manifestation based on the values in 'Clinical_manifestation', 'Source' and the 'data/manifestations.csv' reference table.
+    df_table4_meta['Manifestation'] = df_table4_meta.set_index(['Clinical_manifestation', 'Source']).index.map(config.MANIFESTATIONS.get)
     # Get the published status based on the values in 'Public_name' and the 'data/published_public_names.txt' reference list.
     df_table4_meta['Published'] = np.where(df_table4_meta['Public_name'].isin(config.PUBLISHED_PUBLIC_NAMES), 'Y', 'N')
 
@@ -46,7 +46,7 @@ def get_table4(table1, table3):
     df_table4.fillna('_', inplace=True)
 
     # Drop all columns that are not in the schema of table4
-    output_cols = ('Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifest_type', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT-25', 'Published')
+    output_cols = ('Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifestation', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT-25', 'Published')
     df_table4.drop(columns=[col for col in df_table4 if col not in output_cols], inplace=True)
     
     # Export table4

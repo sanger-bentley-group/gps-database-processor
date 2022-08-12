@@ -21,10 +21,10 @@ def init():
     NON_STANDARD_AGES_FILE = 'data/non_standard_ages.csv'
     read_non_standard_ages()
 
-    # Path to manifest types file and store content as global dictionary MANIFEST_TYPES
-    global MANIFEST_TYPES_FILE
-    MANIFEST_TYPES_FILE = 'data/manifest_types.csv'
-    read_manifest_types()
+    # Path to manifestations file and store content as global dictionary MANIFESTATIONS
+    global MANIFESTATIONS_FILE
+    MANIFESTATIONS_FILE = 'data/manifestations.csv'
+    read_manifestations()
 
     # Path to published public names file and store content as global set PUBLISHED_PUBLIC_NAMES
     published_public_names_file = 'data/published_public_names.txt'
@@ -60,15 +60,15 @@ def read_non_standard_ages():
             NON_STANDARD_AGES[age] = less_than_5_years_old
 
 
-# Provide global dictionary for acessing the clinical manifestation and source combination results in which manifest type
-def read_manifest_types():
-    global MANIFEST_TYPES
-    with open(MANIFEST_TYPES_FILE, 'r') as f:
+# Provide global dictionary for acessing the clinical manifestation and source combination results in which manifestation
+def read_manifestations():
+    global MANIFESTATIONS
+    with open(MANIFESTATIONS_FILE, 'r') as f:
         reader = csv.reader(f)
         next(reader)
-        MANIFEST_TYPES = {}
-        for Clinical_manifestation, Source, Manifest_type in reader:
-            MANIFEST_TYPES[Clinical_manifestation, Source] = Manifest_type
+        MANIFESTATIONS = {}
+        for Clinical_manifestation, Source, Manifestation in reader:
+            MANIFESTATIONS[Clinical_manifestation, Source] = Manifestation
             
 
 # Provide global set for acessing published public names
