@@ -3,6 +3,7 @@
 # and all fields contain only the expected values or values in the expected formats for their respective columns. 
 
 
+from math import comb
 import pandas as pd
 import sys
 import re
@@ -68,6 +69,7 @@ def check_meta_table(df_meta, table):
     check_age_months(df_meta, 'Age_months', table)
     check_age_days(df_meta, 'Age_days', table)
     check_hiv_status(df_meta, 'HIV_status', table)
+    check_clinical_manifestation_and_source(df_meta, 'Clinical_manifestation', 'Source', table)
     check_phenotypic_serotype(df_meta, 'Phenotypic_serotype', table)
     check_sequence_type(df_meta, 'Sequence_Type', table)
 
@@ -80,7 +82,7 @@ def check_meta_table(df_meta, table):
         check_antibiotic_ast(df_meta, col, table)
 
 
-    check_case_only_columns = ['Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution', 'Clinical_manifestation', 'Source', 'Underlying_conditions', 'Phenotypic_serotype_method', 'AST_method_Penicillin', 'AST_method_Amoxicillin', 'AST_method_Cefotaxime', 'AST_method_Ceftriaxone', 'AST_method_Cefuroxime', 'AST_method_Meropenem', 'AST_method_Erythromycin', 'AST_method_Clindamycin', 'AST_method_COT', 'AST_method_Vancomycin', 'AST_method_Linezolid', 'AST_method_Ciprofloxacin', 'AST_method_Chloramphenicol', 'AST_method_Tetracycline', 'AST_method_Levofloxacin', 'AST_method_Synercid', 'AST_method_Rifampin']
+    check_case_only_columns = ['Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution', 'Underlying_conditions', 'Phenotypic_serotype_method', 'AST_method_Penicillin', 'AST_method_Amoxicillin', 'AST_method_Cefotaxime', 'AST_method_Ceftriaxone', 'AST_method_Cefuroxime', 'AST_method_Meropenem', 'AST_method_Erythromycin', 'AST_method_Clindamycin', 'AST_method_COT', 'AST_method_Vancomycin', 'AST_method_Linezolid', 'AST_method_Ciprofloxacin', 'AST_method_Chloramphenicol', 'AST_method_Tetracycline', 'AST_method_Levofloxacin', 'AST_method_Synercid', 'AST_method_Rifampin']
     for col in check_case_only_columns:
         check_case(df_meta, col, table)
 
@@ -245,6 +247,21 @@ def check_hiv_status(df, column_name, table):
     expected = {'P', 'N', '_'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
+
+
+# Check whether the Clinical_manifestation and Source combinations are all included in the global dictionary MANIFESTATIONS
+def check_clinical_manifestation_and_source(df, clinical_manifestation, source, table):
+    check_case(df, clinical_manifestation, table)
+    check_case(df, source, table)
+    combinations = df.set_index(['Clinical_manifestation', 'Source']).index.unique().tolist()
+    unexpected = set(combinations) - set(config.MANIFESTATIONS.keys())
+
+    if len(unexpected) == 0:
+        return
+
+    unexpected = [f'{n}' for n in unexpected]
+    LOG.error(f'{table} has the following unexpected Clinical_manifestation and Source combinations(s): {", ".join(unexpected)}. Please add the combination(s) to {config.MANIFESTATIONS_FILE} and state the resulting Manifestation.')
+    found_error()
 
 
 # Check column values fit the phenotypic serotype pattern 
