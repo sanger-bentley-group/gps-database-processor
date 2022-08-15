@@ -137,10 +137,10 @@ def get_less_than_5_years_old(row):
 def get_vaccines_covered(row):
     serotype = row['In_silico_serotype']
 
-    for vaccine, serotypes in config.VACCINES_VALENCY.items():
+    for pcv, serotypes in config.PCV_VALENCY.items():
         if serotype in serotypes:
-            row[vaccine] = 'Y'
+            row[pcv] = 'Y'
         else:
-            row[vaccine] = 'N'
+            row[pcv] = 'N'
 
     return row

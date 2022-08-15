@@ -30,9 +30,9 @@ def init():
     published_public_names_file = 'data/published_public_names.txt'
     read_published_public_names(published_public_names_file)
 
-    # Path to vaccines valency file and store content as global dictionary VACCINES_VALENCY
-    vaccines_valency_file = 'data/vaccines_valency.csv'
-    read_vaccines_valency(vaccines_valency_file)
+    # Path to vaccines valency file and store content as global dictionary PCV_VALENCY
+    pcv_valency_file = 'data/pcv_valency.csv'
+    read_pcv_valency(pcv_valency_file)
 
     global MAPBOX_API_KEY
     MAPBOX_API_KEY = api_keys.mapbox
@@ -78,11 +78,11 @@ def read_published_public_names(published_public_names_file):
 
 
 # Provide global dictionary for acessing valency of vaccines
-def read_vaccines_valency(vaccines_valency_file):
-    global VACCINES_VALENCY
-    with open(vaccines_valency_file, 'r') as f:
+def read_pcv_valency(pcv_valency_file):
+    global PCV_VALENCY
+    with open(pcv_valency_file, 'r') as f:
         reader = csv.reader(f)
         next(reader)
-        VACCINES_VALENCY = {}
-        for vaccine, serotypes in reader:
-            VACCINES_VALENCY[vaccine] = set(serotypes.split(','))
+        PCV_VALENCY = {}
+        for pcv, serotypes in reader:
+            PCV_VALENCY[pcv] = set(serotypes.split(','))
