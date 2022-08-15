@@ -13,12 +13,14 @@ import sys
 def get_table4(table1, table3):
     global LOG
     LOG = config.LOG
+    
+    LOG.info(f'Generating table4.csv now...')
 
     # Read table1 and table3 for inferring data in table4
     df_meta, df_analysis = read_tables(table1, table3)
 
     # Create a partial table4 dataframe based on a subset of table1
-    df_table4_meta = df_meta[['Public_name', 'Country', 'Region', 'City', 'Age_years', 'Age_months', 'Age_days', 'Clinical_manifestation', 'Source']].copy()
+    df_table4_meta = df_meta[['Public_name', 'Country', 'Region', 'City', 'Year', 'Age_years', 'Age_months', 'Age_days', 'Clinical_manifestation', 'Source']].copy()
 
     global UPDATED_COORDINATES
     UPDATED_COORDINATES = False
@@ -28,6 +30,7 @@ def get_table4(table1, table3):
         LOG.warning(f'Please verify the new coordinate(s). If any is incorrect, modify the coordinate in {config.COORDINATES_FILE} and re-run this tool.')
 
     df_table4_meta = df_table4_meta.apply(get_resolution, axis=1)
+    df_table4_meta = df_table4_meta.apply(get_pcv_info, axis=1)
     df_table4_meta = df_table4_meta.apply(get_less_than_5_years_old, axis=1)
 
     # Get the Manifestation based on the values in 'Clinical_manifestation', 'Source' and the 'data/manifestations.csv' reference table.
@@ -48,6 +51,7 @@ def get_table4(table1, table3):
     # Drop all columns that are not in the schema of table4
     output_cols = ('Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifestation', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT-25', 'Published')
     df_table4.drop(columns=[col for col in df_table4 if col not in output_cols], inplace=True)
+    df_table4 = df_table4.reindex(columns = output_cols)
     
     # Export table4
     df_table4.to_csv('table4.csv', index=False)
@@ -110,6 +114,37 @@ def get_resolution(row):
         resolution = '2'
     row['Resolution'] = resolution
 
+    return row
+
+
+# Get vaccine period, introduction year, PCV type based on the values in 'Country', 'Year' and the 'data/pcv_introduction_year.csv' reference table.
+def get_pcv_info(row):
+    country, region, year = row['Country'], row['Region'], row['Year']
+
+    # Workaround for non-country level entry that has separated PCV programmes
+    if region in {'HONG KONG'}:
+        country = region
+    
+    output_intro_year = '_'
+    output_pcv = '_'
+
+    try:
+        year = int(year)
+        output_vaccine_period = 'PREPCV'
+
+        for intro_year, pcv in config.PCV_INTRO_YEARS[country]:
+            intro_year = int(intro_year)
+            if not year > intro_year:
+                break
+            output_vaccine_period = f'POST{pcv}-{year - intro_year}YR'
+            output_intro_year = intro_year
+            output_pcv = pcv
+    except ValueError:
+        output_vaccine_period = '_'
+
+    row['Vaccine_period'] = output_vaccine_period
+    row['Introduction_year'] = output_intro_year
+    row['PCV_type'] = output_pcv
     return row
 
 

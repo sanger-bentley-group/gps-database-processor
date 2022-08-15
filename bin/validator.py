@@ -25,6 +25,8 @@ def validate(table1, table2, table3):
     global FOUND_ERRORS
     FOUND_ERRORS = False
 
+    LOG.info(f'Validating the tables now...')
+
     df_meta, df_qc, df_analysis = read_tables(table1, table2, table3)
 
     check_meta_table(df_meta, table1)
@@ -192,11 +194,19 @@ def check_continent(df, column_name, table):
     check_expected(df, column_name, table, expected)
 
 
-# Warn if column values contain previously unknown countries
+# Warn if column values contain previously unknown countries; or countries not in 'data/pcv_introduction_year.csv'
 def check_country(df, column_name, table):
     expected = {'ARGENTINA', 'BANGLADESH', 'BELARUS', 'BENIN', 'BOTSWANA', 'BRAZIL', 'BULGARIA', 'CAMBODIA', 'CAMEROON', 'CANADA', 'CENTRAL AFRICAN REPUBLIC', 'CHINA', 'CROATIA', 'CZECH REPUBLIC', 'DRC CONGO', 'ECUADOR', 'EGYPT', 'ETHIOPIA', 'FRANCE', 'GHANA', 'GUATEMALA', 'HUNGARY', 'INDIA', 'INDONESIA', 'IRELAND', 'ISRAEL', 'IVORY COAST', 'KENYA', 'KUWAIT', 'LATVIA', 'LITHUANIA', 'MALAWI', 'MALAYSIA', 'MONGOLIA', 'MOROCCO', 'MOZAMBIQUE', 'NEPAL', 'NETHERLANDS', 'NEW ZEALAND', 'NIGER', 'NIGERIA', 'OMAN', 'PAKISTAN', 'PAPUA NEW GUINEA', 'PERU', 'POLAND', 'QATAR', 'RUSSIAN FEDERATION', 'SENEGAL', 'SLOVENIA', 'SOUTH AFRICA', 'SPAIN', 'SWEDEN', 'TAIWAN', 'THAILAND', 'THE GAMBIA', 'TOGO', 'TRINIDAD AND TOBAGO', 'TURKEY', 'USA', 'WEST AFRICA', '_', 'UNKNOWN'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected, absolute=False)
+
+    values = get_uniques_non_empty(df, column_name)
+    values = set(values) - set(config.PCV_INTRO_YEARS.keys())
+    
+    if len(values) == 0:
+        return 
+
+    LOG.warning(f'{column_name} in {table} has the following country(s) without vaccine information: {", ".join(values)}. If their National Immunisation/Vaccination Programme includes PCV, please add their information to {config.PCV_INTRO_YEARS_FILE}')
 
 
 # Check column values is in the expected months only

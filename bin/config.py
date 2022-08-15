@@ -4,6 +4,7 @@
 import bin.colorlog as colorlog
 import data.api_keys as api_keys
 import csv
+from collections import defaultdict
 
 
 def init():
@@ -29,6 +30,11 @@ def init():
     # Path to published public names file and store content as global set PUBLISHED_PUBLIC_NAMES
     published_public_names_file = 'data/published_public_names.txt'
     read_published_public_names(published_public_names_file)
+
+    # Path to vaccines introduction year file and store content as global dictionary PCV_INTRO_YEARS
+    global PCV_INTRO_YEARS_FILE
+    PCV_INTRO_YEARS_FILE = 'data/pcv_introduction_year.csv'
+    read_pcv_intro_years()
 
     # Path to vaccines valency file and store content as global dictionary PCV_VALENCY
     pcv_valency_file = 'data/pcv_valency.csv'
@@ -75,6 +81,20 @@ def read_manifestations():
 def read_published_public_names(published_public_names_file):
     global PUBLISHED_PUBLIC_NAMES
     PUBLISHED_PUBLIC_NAMES = set(line.strip() for line in open(published_public_names_file))
+
+
+# Provide global dictionary for acessing vaccines introduction years in each country
+def read_pcv_intro_years():
+    global PCV_INTRO_YEARS
+    with open(PCV_INTRO_YEARS_FILE, 'r') as f:
+        reader = csv.reader(f)
+        next(reader)
+        PCV_INTRO_YEARS = defaultdict(list)
+        for country, pcv, intro_year in reader:
+            PCV_INTRO_YEARS[country].append((intro_year, pcv))
+        
+    for country in PCV_INTRO_YEARS:
+        PCV_INTRO_YEARS[country].sort()
 
 
 # Provide global dictionary for acessing valency of vaccines
