@@ -128,6 +128,8 @@ def get_pcv_info(row):
     output_intro_year = '_'
     output_pcv = '_'
 
+    # row without valid 'Year' will have '_' instead of 'PREPCV' or others for 'Vaccine_period'.
+    # 'Year' of the row must be larger than the introduction year of that PCV to be considered within that vaccine period, same year is not considered. 
     try:
         year = int(year)
         output_vaccine_period = 'PREPCV'
