@@ -32,8 +32,6 @@ def get_table4(table1, table3, table4):
 
     # Get the Manifestation based on the values in 'Clinical_manifestation', 'Source' and the 'data/manifestations.csv' reference table.
     df_table4_meta['Manifestation'] = df_table4_meta.set_index(['Clinical_manifestation', 'Source']).index.map(config.MANIFESTATIONS.get)
-    # Get the published status based on the values in 'Public_name' and the 'data/published_public_names.txt' reference list.
-    df_table4_meta['Published'] = np.where(df_table4_meta['Public_name'].isin(config.PUBLISHED_PUBLIC_NAMES), 'Y', 'N')
 
     # Create a partial table4 dataframe based on a subset of table3
     df_table4_analysis = df_analysis[['Public_name', 'In_silico_serotype', 'Duplicate']].copy()
@@ -41,7 +39,9 @@ def get_table4(table1, table3, table4):
     df_table4_analysis = df_table4_analysis.apply(get_vaccines_covered, axis=1)
 
     # Merge the partial table4 dataframes
-    df_table4 = df_table4_meta.merge(df_table4_analysis, on='Public_name', how='left', validate='one_to_one')
+    df_table4 = df_table4_meta.merge(df_table4_analysis, on='Public_name', how='outer', validate='one_to_one')
+    # Get the published status based on the values in 'Public_name' and the 'data/published_public_names.txt' reference list.
+    df_table4['Published'] = np.where(df_table4['Public_name'].isin(config.PUBLISHED_PUBLIC_NAMES), 'Y', 'N')
     # Replace all NA values with '_'
     df_table4.fillna('_', inplace=True)
 
