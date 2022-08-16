@@ -9,9 +9,9 @@ import csv
 import sys
 
 
-# Generate table4.csv based on data from table1.csv
-def get_table4(table1, table3):
-    config.LOG.info(f'Generating table4.csv now...')
+# Generate table4 based on data from table1
+def get_table4(table1, table3, table4):
+    config.LOG.info(f'Generating {table4} now...')
 
     # Read table1 and table3 for inferring data in table4
     df_meta, df_analysis = read_tables(table1, table3)
@@ -37,11 +37,11 @@ def get_table4(table1, table3):
 
     # Create a partial table4 dataframe based on a subset of table3
     df_table4_analysis = df_analysis[['Public_name', 'In_silico_serotype', 'Duplicate']].copy()
-    df_table4_analysis.drop(df_table4_analysis[df_table4_analysis['Duplicate'] != 'UNIQUE'].index, inplace = True)
+    df_table4_analysis.drop(df_table4_analysis[df_table4_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
     df_table4_analysis = df_table4_analysis.apply(get_vaccines_covered, axis=1)
 
     # Merge the partial table4 dataframes
-    df_table4 = pd.merge(df_table4_meta, df_table4_analysis, on='Public_name', how='left', validate='one_to_one')
+    df_table4 = df_table4_meta.merge(df_table4_analysis, on='Public_name', how='left', validate='one_to_one')
     # Replace all NA values with '_'
     df_table4.fillna('_', inplace=True)
 
@@ -51,8 +51,37 @@ def get_table4(table1, table3):
     df_table4 = df_table4.reindex(columns = output_cols)
     
     # Export table4
-    df_table4.to_csv('table4.csv', index=False)
-    config.LOG.info('table4.csv is generated.')
+    df_table4.to_csv(table4, index=False)
+    config.LOG.info(f'{table4} is generated.')
+
+
+# Generate Monocle tables based on table1 - 4
+def get_monocle_tables(table1, table2, table3, table4):
+    config.LOG.info(f'Generating Monocle tables now...')
+
+    df_meta, df_qc, df_analysis, df_table4 = read_tables(table1, table2, table3, table4)
+
+    # Only preserve UNIQUE and Published for Monocle tables
+    df_analysis.drop(df_analysis[df_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
+    df_table4.drop(df_table4[df_table4['Published'] != 'Y'].index, inplace=True)
+
+    # Relocate table4 columns to table1 and table3 due to database architecture of Monocle
+    cols_table4_to_meta = ['Public_name','Latitude','Longitude','Resolution','Vaccine_period','Introduction_year','PCV_type']
+    cols_table4_to_analysis = ['Public_name','Manifestation','Less_than_5_years_old','PCV7','PCV10_GSK','PCV10_Pneumosil','PCV13','PCV15','PCV20','PCV21','PCV24','IVT-25','Published']
+    df_table4_meta = df_table4[cols_table4_to_meta].copy()
+    df_table4_analysis = df_table4[cols_table4_to_analysis].copy()
+    df_meta_monocle = df_meta.merge(df_table4_meta, how='right', on='Public_name', validate='one_to_one')
+    df_analysis_monocle = df_analysis.merge(df_table4_analysis, how='right', on='Public_name', validate='one_to_one')
+
+    output_lane_ids = set(df_analysis_monocle['Lane_id'].tolist())
+    df_qc_monocle = df_qc.drop(df_qc[~df_qc['Lane_id'].isin(output_lane_ids)].index)
+
+    # Export Monocle tables
+    for df, table in zip((df_meta_monocle, df_qc_monocle, df_analysis_monocle), (table1, table2, table3)):
+        df.replace('_', '', inplace=True)
+        df.to_csv(f'{table[:-4]}_monocle.csv', index=False)
+
+    config.LOG.info('Monocle tables are generated.')
 
 
 # Read the tables into Pandas dataframes for processing
