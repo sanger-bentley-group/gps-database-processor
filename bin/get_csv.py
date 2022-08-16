@@ -11,10 +11,7 @@ import sys
 
 # Generate table4.csv based on data from table1.csv
 def get_table4(table1, table3):
-    global LOG
-    LOG = config.LOG
-    
-    LOG.info(f'Generating table4.csv now...')
+    config.LOG.info(f'Generating table4.csv now...')
 
     # Read table1 and table3 for inferring data in table4
     df_meta, df_analysis = read_tables(table1, table3)
@@ -27,7 +24,7 @@ def get_table4(table1, table3):
     geocoder = MapBox(api_key=config.MAPBOX_API_KEY)
     df_table4_meta = df_table4_meta.apply(get_coordinate, geocoder=geocoder, axis=1)
     if UPDATED_COORDINATES:
-        LOG.warning(f'Please verify the new coordinate(s). If any is incorrect, modify the coordinate in {config.COORDINATES_FILE} and re-run this tool.')
+        config.LOG.warning(f'Please verify the new coordinate(s). If any is incorrect, modify the coordinate in {config.COORDINATES_FILE} and re-run this tool.')
 
     df_table4_meta = df_table4_meta.apply(get_resolution, axis=1)
     df_table4_meta = df_table4_meta.apply(get_pcv_info, axis=1)
@@ -55,7 +52,7 @@ def get_table4(table1, table3):
     
     # Export table4
     df_table4.to_csv('table4.csv', index=False)
-    LOG.info('table4.csv is generated.')
+    config.LOG.info('table4.csv is generated.')
 
 
 # Read the tables into Pandas dataframes for processing
@@ -81,7 +78,7 @@ def get_coordinate(row, geocoder):
         try:
             coordinate = geocoder.geocode(country_region_city)
         except:
-            LOG.critical(f'{country_region_city} has no known coordinate, but no valid Mapbox API key is provided. Please provide Mapbox API key in "data/api_keys.py" or manually enter coordinate of {country_region_city} in "data/coordinates.csv", then re-run this tool. The process will now be halted.')
+            config.LOG.critical(f'{country_region_city} has no known coordinate, but no valid Mapbox API key is provided. Please provide Mapbox API key in "data/api_keys.py" or manually enter coordinate of {country_region_city} in "data/coordinates.csv", then re-run this tool. The process will now be halted.')
             sys.exit(1)
         
         latitude, longitude = coordinate.latitude, coordinate.longitude
@@ -94,7 +91,7 @@ def get_coordinate(row, geocoder):
 
         global UPDATED_COORDINATES
         UPDATED_COORDINATES = True
-        LOG.warning(f'New location {country_region_city} is found, the coordinate is determined to be {latitude}, {longitude} and added to "{config.COORDINATES_FILE}".')
+        config.LOG.warning(f'New location {country_region_city} is found, the coordinate is determined to be {latitude}, {longitude} and added to "{config.COORDINATES_FILE}".')
     
     row['Latitude'] = latitude
     row['Longitude'] = longitude

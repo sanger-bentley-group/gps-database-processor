@@ -18,13 +18,10 @@ ANALYSIS_COLUMNS = ["Lane_id", "Sample", "Public_name", "ERR", "ERS", "No_of_gen
 
 # The main function to perform validation on the provided GPS1 database tables.
 def validate(table1, table2, table3):
-    global LOG
-    LOG = config.LOG
-
     global FOUND_ERRORS
     FOUND_ERRORS = False
 
-    LOG.info(f'Validating the tables now...')
+    config.LOG.info(f'Validating the tables now...')
 
     df_meta, df_qc, df_analysis = read_tables(table1, table2, table3)
 
@@ -33,10 +30,10 @@ def validate(table1, table2, table3):
     check_analysis_table(df_analysis, table3)
 
     if FOUND_ERRORS:
-        LOG.error(f'The validation of the tables is completed with error(s). The process will now be halted. Please correct the error(s) and re-run the processor')
+        config.LOG.error(f'The validation of the tables is completed with error(s). The process will now be halted. Please correct the error(s) and re-run the processor')
         sys.exit(1)
     else:
-        LOG.info(f'The validation of the tables is completed.')
+        config.LOG.info(f'The validation of the tables is completed.')
 
 
 # Read the tables into Pandas dataframes for processing
@@ -46,7 +43,7 @@ def read_tables(table1, table2, table3):
         try:
             dfs.append(pd.read_csv(table, dtype=str))
         except:
-            LOG.critical('Unable to locate all the tables. Please provide correct file names for the tables. The process will now be halted.')
+            config.LOG.critical('Unable to locate all the tables. Please provide correct file names for the tables. The process will now be halted.')
             sys.exit(1)
     return dfs
 
@@ -161,10 +158,10 @@ def check_analysis_table(df_analysis, table):
 # Check whether tables contain only the expected columns
 def check_columns(df, columns, table):
     if (diff := set(list(df)) - set(columns)):
-        LOG.critical(f'{table} has the following unexpected column(s): {", ".join(diff)}. Incorrect or incompatible table is used and cannot be validated. The process will now be halted.')
+        config.LOG.critical(f'{table} has the following unexpected column(s): {", ".join(diff)}. Incorrect or incompatible table is used and cannot be validated. The process will now be halted.')
         sys.exit(1)
     if (diff := set(list(columns)) - set(df)):
-        LOG.critical(f'{table} is missing the following column(s): {", ".join(diff)}. Incorrect or incompatible table is used and cannot be validated. The process will now be halted.')
+        config.LOG.critical(f'{table} is missing the following column(s): {", ".join(diff)}. Incorrect or incompatible table is used and cannot be validated. The process will now be halted.')
         sys.exit(1)
 
 
@@ -176,7 +173,7 @@ def check_space(df, column_name, table):
     if len(unexpected) == 0:
         return
     
-    LOG.error(f'{column_name} in {table} has the following value(s) with space(s): {", ".join(unexpected)}.')
+    config.LOG.error(f'{column_name} in {table} has the following value(s) with space(s): {", ".join(unexpected)}.')
     found_error()
 
 
@@ -206,7 +203,7 @@ def check_country(df, column_name, table):
     if len(values) == 0:
         return 
 
-    LOG.warning(f'{column_name} in {table} has the following country(s) without vaccine information: {", ".join(values)}. If their National Immunisation/Vaccination Programme includes PCV, please add their information to {config.PCV_INTRO_YEARS_FILE}')
+    config.LOG.warning(f'{column_name} in {table} has the following country(s) without vaccine information: {", ".join(values)}. If their National Immunisation/Vaccination Programme includes PCV, please add their information to {config.PCV_INTRO_YEARS_FILE}')
 
 
 # Check column values is in the expected months only
@@ -238,7 +235,7 @@ def check_age_years(df, column_name, table):
     if len(unexpected) == 0:
         return
 
-    LOG.error(f'{column_name} in {table} has the following unexpected value(s): {", ".join(unexpected)}. If valid, please add to {config.NON_STANDARD_AGES_FILE} and state whether it is less than 5 years old or not.')
+    config.LOG.error(f'{column_name} in {table} has the following unexpected value(s): {", ".join(unexpected)}. If valid, please add to {config.NON_STANDARD_AGES_FILE} and state whether it is less than 5 years old or not.')
     found_error()
 
 
@@ -270,7 +267,7 @@ def check_clinical_manifestation_and_source(df, clinical_manifestation, source, 
         return
 
     unexpected = [f'{n}' for n in unexpected]
-    LOG.error(f'{table} has the following unexpected Clinical_manifestation and Source combinations(s): {", ".join(unexpected)}. Please add the combination(s) to {config.MANIFESTATIONS_FILE} and state the resulting Manifestation.')
+    config.LOG.error(f'{table} has the following unexpected Clinical_manifestation and Source combinations(s): {", ".join(unexpected)}. Please add the combination(s) to {config.MANIFESTATIONS_FILE} and state the resulting Manifestation.')
     found_error()
 
 
@@ -361,7 +358,7 @@ def check_public_name_analysis(df, column_name, table):
     if len(unexpected) == 0:
         return
     
-    LOG.error(f'The following Public_name(s) are stated to be Published in {config.PUBLISHED_PUBLIC_NAMES_FILE} but not found in {table}: {", ".join(unexpected)}.')
+    config.LOG.error(f'The following Public_name(s) are stated to be Published in {config.PUBLISHED_PUBLIC_NAMES_FILE} but not found in {table}: {", ".join(unexpected)}.')
     found_error()
 
 
@@ -393,16 +390,16 @@ def check_duplicate(df, column_name, table):
 
     uniques_as_duplicate = df_uniques[df_uniques[column_name]=='DUPLICATE']['Public_name'].tolist()
     if uniques_as_duplicate:
-        LOG.warning(f'{table} has the following unique Public_name marked as DUPLICATE in {column_name}: {", ".join(uniques_as_duplicate)}. Please check if they are correct.')
+        config.LOG.warning(f'{table} has the following unique Public_name marked as DUPLICATE in {column_name}: {", ".join(uniques_as_duplicate)}. Please check if they are correct.')
 
     df_duplicates = df[df['Public_name'].duplicated(keep=False)]
     df_duplicates_unique_count = df_duplicates[df_duplicates['Duplicate']=='UNIQUE'].groupby(['Public_name']).size()
     duplicates_no_unique = df_duplicates_unique_count.index[df_duplicates_unique_count == 0].tolist()
     if duplicates_no_unique:
-        LOG.warning(f'{table} has the following duplicated Public_name with none of its duplicates marked as UNIQUE in {column_name}: {", ".join(duplicates_no_unique)}. Please check if they are correct.')
+        config.LOG.warning(f'{table} has the following duplicated Public_name with none of its duplicates marked as UNIQUE in {column_name}: {", ".join(duplicates_no_unique)}. Please check if they are correct.')
     duplicates_more_than_one_unique = df_duplicates_unique_count.index[df_duplicates_unique_count > 1].tolist()
     if duplicates_more_than_one_unique:
-        LOG.error(f'{table} has the following duplicated Public_name with more than one of its duplicates marked as UNIQUE in {column_name}: {", ".join(duplicates_more_than_one_unique)}.')
+        config.LOG.error(f'{table} has the following duplicated Public_name with more than one of its duplicates marked as UNIQUE in {column_name}: {", ".join(duplicates_more_than_one_unique)}.')
         found_error()
 
 
@@ -492,10 +489,10 @@ def check_expected(df, column_name, table, expected, absolute=True):
         return
     
     if absolute:
-        LOG.error(f'{column_name} in {table} has the following unexpected value(s): {", ".join(extras)}.')
+        config.LOG.error(f'{column_name} in {table} has the following unexpected value(s): {", ".join(extras)}.')
         found_error()
     else:
-        LOG.warning(f'{column_name} in {table} has the following previously unknown value(s): {", ".join(extras)}. Please check if they are correct.')
+        config.LOG.warning(f'{column_name} in {table} has the following previously unknown value(s): {", ".join(extras)}. Please check if they are correct.')
 
 
 # Check whether all strings are uppercase in the selected column, ignore values without alphabets; convert all strings to upper if any lowercase found
@@ -507,7 +504,7 @@ def check_case(df, column_name, table):
 
     df[column_name] = df[column_name].str.upper()
     df.to_csv(table, index=False)
-    LOG.info(f'{column_name} in {table} contained lowercase value(s). They are now corrected.')
+    config.LOG.info(f'{column_name} in {table} contained lowercase value(s). They are now corrected.')
 
 
 # Get uniques values in a column, excluding '_'
@@ -530,7 +527,7 @@ def check_int_range(df, column_name, table, lo, hi=float('inf'), others=None, al
     if len(unexpected) == 0:
         return
     
-    LOG.error(f'{column_name} in {table} has the following unexpected value(s): {", ".join(unexpected)}.')
+    config.LOG.error(f'{column_name} in {table} has the following unexpected value(s): {", ".join(unexpected)}.')
     found_error()
 
 
@@ -557,19 +554,19 @@ def check_regex(df, column_name, table, pattern=None, allow_empty=False, float_r
     if no_alphabet_only_numeric:
         check_no_alphabet_only_numeric(unexpected, column_name, table)
     elif absolute:
-        LOG.error(f'{column_name} in {table} has the following unexpected value(s): {", ".join(unexpected)}.')
+        config.LOG.error(f'{column_name} in {table} has the following unexpected value(s): {", ".join(unexpected)}.')
         found_error()
     else:
-        LOG.warning(f'{column_name} in {table} has the following non-standard value(s): {", ".join(unexpected)}. Please check if they are correct.')
+        config.LOG.warning(f'{column_name} in {table} has the following non-standard value(s): {", ".join(unexpected)}. Please check if they are correct.')
 
 
 # Check unexpected only contains unexpected values without alphabet, otherwise show alphabet-containing values in error
 def check_no_alphabet_only_numeric(unexpected, column_name, table):
     found_alphabet = [n for n in unexpected if re.search(r'[a-zA-Z]', n)]
     if len(found_alphabet) > 0:
-        LOG.error(f'{column_name} in {table} has the following alphabet-containing value(s): {", ".join(found_alphabet)}.')
+        config.LOG.error(f'{column_name} in {table} has the following alphabet-containing value(s): {", ".join(found_alphabet)}.')
         found_error()
-    LOG.warning(f'{column_name} in {table} has the following non-standard value(s): {", ".join([n for n in unexpected if n not in found_alphabet])}. Please check if they are correct.')
+    config.LOG.warning(f'{column_name} in {table} has the following non-standard value(s): {", ".join([n for n in unexpected if n not in found_alphabet])}. Please check if they are correct.')
 
 
 def found_error():
