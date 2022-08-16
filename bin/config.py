@@ -28,8 +28,9 @@ def init():
     read_manifestations()
 
     # Path to published public names file and store content as global set PUBLISHED_PUBLIC_NAMES
-    published_public_names_file = 'data/published_public_names.txt'
-    read_published_public_names(published_public_names_file)
+    global PUBLISHED_PUBLIC_NAMES_FILE
+    PUBLISHED_PUBLIC_NAMES_FILE = 'data/published_public_names.txt'
+    read_published_public_names()
 
     # Path to vaccines introduction year file and store content as global dictionary PCV_INTRO_YEARS
     global PCV_INTRO_YEARS_FILE
@@ -78,9 +79,9 @@ def read_manifestations():
             
 
 # Provide global set for acessing published public names
-def read_published_public_names(published_public_names_file):
+def read_published_public_names():
     global PUBLISHED_PUBLIC_NAMES
-    PUBLISHED_PUBLIC_NAMES = set(line.strip() for line in open(published_public_names_file))
+    PUBLISHED_PUBLIC_NAMES = set(line.strip() for line in open(PUBLISHED_PUBLIC_NAMES_FILE))
 
 
 # Provide global dictionary for acessing vaccines introduction years in each country

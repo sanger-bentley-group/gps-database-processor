@@ -3,7 +3,6 @@
 # and all fields contain only the expected values or values in the expected formats for their respective columns. 
 
 
-from math import comb
 import pandas as pd
 import sys
 import re
@@ -113,6 +112,7 @@ def check_analysis_table(df_analysis, table):
     check_columns(df_analysis, ANALYSIS_COLUMNS, table)
     check_lane_id(df_analysis, 'Lane_id', table)
     check_sample(df_analysis, 'Sample', table)
+    check_public_name_analysis(df_analysis, 'Public_name', table)
     check_err(df_analysis, 'ERR', table)
     check_ers(df_analysis, 'ERS', table)
     check_no_of_genome(df_analysis, 'No_of_genome', table)
@@ -153,7 +153,7 @@ def check_analysis_table(df_analysis, table):
     for col in pos_neg_columns:
         check_pos_neg(df_analysis, col, table)
 
-    check_case_only_columns = ['Public_name', 'Cot']
+    check_case_only_columns = ['Cot']
     for col in check_case_only_columns:
         check_case(df_analysis, col, table)
 
@@ -350,6 +350,19 @@ def check_hetsites_50bp(df, column_name, table):
 def check_sample(df, column_name, table):
     check_case(df, column_name, table)
     check_regex(df, column_name, table, pattern=r'^[0-9]{4}STDY[0-9]{7}$')
+
+
+# Check all values in PUBLISHED_PUBLIC_NAMES can be found in this column 
+def check_public_name_analysis(df, column_name, table):
+    check_case(df, column_name, table)
+    
+    public_name_uniques = set(df['Public_name'].unique().tolist())
+    unexpected = config.PUBLISHED_PUBLIC_NAMES - public_name_uniques
+    if len(unexpected) == 0:
+        return
+    
+    LOG.error(f'The following Public_name(s) are stated to be Published in {config.PUBLISHED_PUBLIC_NAMES_FILE} but not found in {table}: {", ".join(unexpected)}.')
+    found_error()
 
 
 # Check column values are in valid ERR format only
