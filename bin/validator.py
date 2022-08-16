@@ -390,16 +390,16 @@ def check_duplicate(df, column_name, table):
 
     uniques_as_duplicate = df_uniques[df_uniques[column_name]=='DUPLICATE']['Public_name'].tolist()
     if uniques_as_duplicate:
-        config.LOG.warning(f'{table} has the following unique Public_name marked as DUPLICATE in {column_name}: {", ".join(uniques_as_duplicate)}. Please check if they are correct.')
+        config.LOG.warning(f'{table} has the following unique Public_name(s) marked as DUPLICATE in {column_name}: {", ".join(uniques_as_duplicate)}. Please check if they are correct.')
 
     df_duplicates = df[df['Public_name'].duplicated(keep=False)]
     df_duplicates_unique_count = df_duplicates[df_duplicates['Duplicate']=='UNIQUE'].groupby(['Public_name']).size()
     duplicates_no_unique = df_duplicates_unique_count.index[df_duplicates_unique_count == 0].tolist()
     if duplicates_no_unique:
-        config.LOG.warning(f'{table} has the following duplicated Public_name with none of its duplicates marked as UNIQUE in {column_name}: {", ".join(duplicates_no_unique)}. Please check if they are correct.')
+        config.LOG.warning(f'{table} has the following duplicated Public_name(s) with none of their duplicates marked as UNIQUE in {column_name}: {", ".join(duplicates_no_unique)}. Please check if they are correct.')
     duplicates_more_than_one_unique = df_duplicates_unique_count.index[df_duplicates_unique_count > 1].tolist()
     if duplicates_more_than_one_unique:
-        config.LOG.error(f'{table} has the following duplicated Public_name with more than one of its duplicates marked as UNIQUE in {column_name}: {", ".join(duplicates_more_than_one_unique)}.')
+        config.LOG.error(f'{table} has the following duplicated Public_name(s) with more than one of their duplicates marked as UNIQUE in {column_name}: {", ".join(duplicates_more_than_one_unique)}.')
         found_error()
 
 
