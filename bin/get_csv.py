@@ -56,7 +56,7 @@ def get_table4(table1, table3, table4):
 
 
 # Generate Monocle tables based on table1 - 4
-def get_monocle_tables(table1, table2, table3, table4):
+def get_monocle(table1, table2, table3, table4):
     config.LOG.info(f'Generating Monocle tables now...')
 
     df_meta, df_qc, df_analysis, df_table4 = read_tables(table1, table2, table3, table4)
