@@ -8,7 +8,7 @@ This tool takes the GPS database's three `.csv` (comma-separated values) source 
 - `table3` - analysis
 
 The tool carries out several operations in the following order:
-1. Validation of columns and values in the `.csv` files
+1. Validation of columns and values in the `.csv` input files
    - The terminal output displays any unexpected or erroneous values
    - For columns that should only contain UPPERCASE strings, all strings will be converted to UPPERCASE strings
    - If there are any critical errors, the tool will terminate its process and will not carry out the subsequent operations
@@ -22,18 +22,32 @@ The tool carries out several operations in the following order:
 
 &nbsp;
 ## Usage
+### Basic
 1. Clone this repoistory to your machine
-2. Install `Python 3.10+`, `Pandas`, `NumPy`, `geopy` with `pip` or create a `conda` environment with these packages
+2. Install `Python 3`, `Pandas`, `NumPy`, `geopy` with `pip` or create a `conda` environment with these packages
 3. Put the GPS database's three `.csv` source files into the directory containing the cloned repoistory
-4. Run the following command to validate your input files and generate the output files
+4. Run the following command to validate your input files and generate the output files:
    ```
    python processor.py
    ```
 
+### Optional arguments
 - By default, the tool assumes the file names of table1, table2 and table3 to be `table1.csv`, `table2.csv`, `table3.csv` respectively, and the output file name of table4 will be `table4.csv`, these can be changed by using optional arguments; The 3 Monocle-ready `.csv` files will use the file names of table1, table2 and table3 with `_monocle` appended at the end; The data file for GPS Database Overview will always have the file name `data.json`
-- Optional arguments:
-  - WIP
-   
+- Available optional arguments:
+  - `-m your_file_name.csv` or `--meta your_file_name.csv`: Override the default table1 (metadata) file name of table1.csv
+  - `-q your_file_name.csv` or `--qc your_file_name.csv`: Override the default table2 (qc) file name of table2.csv
+  - `-a your_file_name.csv` or `--analysis your_file_name.csv`: Override the default table3 (analysis) file name of table3.csv
+  - `-o your_file_name.csv` or `--output your_file_name.csv`: Override the default table4 file name of table4.csv
+- Example command using optional arguments:
+  ```
+  python processor.py -m table1_meta.csv -q table2_qc.csv -a table3_analysis.csv -o table4_inferred.csv
+  ```
+
+### Updating Reference Tables
+- If you have updated any of the reference tables (i.e. all files in the `data` directory except `api_keys.py`), please create a PR (Pull Request) on this repository. 
+
+### About `api_keys.py`
+- Currently, `api_keys.py` is only used to provide Mapbox API key (access token) for geocoding via `geopy` if there is any Country-Region-City combination in `table1` not found in the `coordinates.csv` reference table. For more information on Mapbox API key (access token), please visit [their documentation](https://docs.mapbox.com/help/glossary/access-token/).
 
 &nbsp;
 ## Requirements & Compatibility
