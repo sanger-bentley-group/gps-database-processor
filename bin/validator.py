@@ -7,6 +7,7 @@ import pandas as pd
 import sys
 import re
 from datetime import date
+import shutil
 import bin.config as config
 
 
@@ -21,13 +22,23 @@ def validate(table1, table2, table3):
     global FOUND_ERRORS
     FOUND_ERRORS = False
 
+    global UPDATED_CASE 
+    UPDATED_CASE = set()
+
     config.LOG.info(f'Validating the tables now...')
 
-    df_meta, df_qc, df_analysis = read_tables(table1, table2, table3)
+    df_index = read_tables(table1, table2, table3)
 
-    check_meta_table(df_meta, table1)
-    check_qc_table(df_qc, table2)
-    check_analysis_table(df_analysis, table3)
+    check_meta_table(df_index[table1], table1)
+    check_qc_table(df_index[table2], table2)
+    check_analysis_table(df_index[table3], table3)
+
+    # Copy original file if there is a case conversion, then save the conversion result in-place
+    for table in UPDATED_CASE:
+        original_copy = f'{table[:-4]}_original.csv'
+        shutil.copy(table, original_copy)
+        df_index[table].to_csv(table, index=False)
+        config.LOG.info(f'The unexpected lowercase value(s) in {table} have been fixed in-place. The original {table} is saved as {original_copy}.')
 
     if FOUND_ERRORS:
         config.LOG.error(f'The validation of the tables is completed with error(s). The process will now be halted. Please correct the error(s) and re-run the processor')
@@ -38,14 +49,14 @@ def validate(table1, table2, table3):
 
 # Read the tables into Pandas dataframes for processing
 def read_tables(table1, table2, table3):
-    dfs = []
+    df_index = dict()
     for table in table1, table2, table3:
         try:
-            dfs.append(pd.read_csv(table, dtype=str))
+            df_index[table] = pd.read_csv(table, dtype=str)
         except:
             config.LOG.critical('Unable to locate all the tables. Please provide correct file names for the tables. The process will now be halted.')
             sys.exit(1)
-    return dfs
+    return df_index
 
 
 # Check whether meta table only contains expected values / patterns
@@ -481,7 +492,7 @@ def check_pos_neg(df, column_name, table):
     check_expected(df, column_name, table, expected)
 
 
-# Check column values against expected values; correct lowercase string if dp_path provided and there is any; report unexpected value(s) if there is any 
+# Check column values against expected values; report unexpected value(s) if there is any 
 def check_expected(df, column_name, table, expected, absolute=True):
     extras = set(df[column_name].unique()) - expected
     
@@ -503,8 +514,10 @@ def check_case(df, column_name, table):
         return
 
     df[column_name] = df[column_name].str.upper()
-    df.to_csv(table, index=False)
-    config.LOG.info(f'{column_name} in {table} contained lowercase value(s). They are now corrected.')
+
+    global UPDATED_CASE
+    UPDATED_CASE.add(table)
+    config.LOG.info(f'{column_name} in {table} contains lowercase value(s) while being a UPPERCASE-only column.')
 
 
 # Get uniques values in a column, excluding '_'

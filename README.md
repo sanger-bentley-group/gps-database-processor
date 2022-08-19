@@ -10,7 +10,7 @@ This tool takes the GPS database's three `.csv` (comma-separated values) source 
 The tool carries out several operations in the following order:
 1. Validation of columns and values in the `.csv` input files
    - The terminal output displays any unexpected or erroneous values
-   - For columns that should only contain UPPERCASE strings, all strings will be converted to UPPERCASE strings
+   - For columns that should only contain UPPERCASE strings, any lowercase value will be converted to UPPERCASE; if a case conversion occurs in a table, a copy of the original file will be saved with `_original` at the end, then the updated table will be saved in-place
    - If there are any critical errors, the tool will terminate its process and will not carry out the subsequent operations
 2. Generate `table4` using inferred data based on `table1`, `table3` and reference tables in the `data` directory (i.e. `coordinates.csv`, `manifestations.csv`, `non_standard_ages.csv`, `pcv_introduction_year.csv`, `pcv_valency.csv`, `published_public_names.txt`)
 3. Generate [Monocle](https://github.com/sanger-pathogens/monocle)-ready `.csv` files in 3-table format
