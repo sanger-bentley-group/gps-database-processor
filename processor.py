@@ -1,14 +1,15 @@
 import argparse
+import sys
 import bin.config as config
 import bin.validator as validator
 import bin.get_csv as get_csv
 
 
 def main():
+    config.init()
+
     args = parse_args()
     table1, table2, table3, table4 = args.table1, args.table2, args.table3, args.table4
-
-    config.init()
 
     validator.validate(table1, table2, table3)
     get_csv.get_table4(table1, table3, table4)
@@ -17,6 +18,7 @@ def main():
     config.LOG.info('The processing is completed. Database is validated and all files are generated.')
 
 
+# Parse optional arguments for overriding default file names
 def parse_args():
     parser = argparse.ArgumentParser(
         allow_abbrev=False,
@@ -56,7 +58,20 @@ def parse_args():
         help='(Output file) Override the default table4 file name of table4.csv'
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    # Check all input and output files are .csv
+    non_csv = []
+    for arg in vars(args):
+        filename = getattr(args, arg)
+        if filename[-4:] == '.csv':
+            continue
+        non_csv.append(filename)
+    if non_csv:
+        config.LOG.critical(f'The following file name(s) do not have ".csv" as their file extension: {", ".join(non_csv)}. This tool only work with ".csv" files. The process will now be halted.')
+        sys.exit(1)
+
+    return args
 
 
 if __name__ == "__main__":
