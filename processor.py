@@ -3,6 +3,7 @@ import sys
 import bin.config as config
 import bin.validator as validator
 import bin.get_csv as get_csv
+import bin.get_json as get_json
 
 
 def main():
@@ -14,6 +15,7 @@ def main():
     validator.validate(table1, table2, table3)
     get_csv.get_table4(table1, table3, table4)
     get_csv.get_monocle(table1, table2, table3, table4)
+    get_json.get_data(table1)
 
     config.LOG.info('The processing is completed. Database is validated and all files are generated.')
 
