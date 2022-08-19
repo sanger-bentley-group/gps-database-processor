@@ -66,8 +66,8 @@ def get_monocle(table1, table2, table3, table4):
     df_table4.drop(df_table4[df_table4['Published'] != 'Y'].index, inplace=True)
 
     # Relocate table4 columns to table1 and table3 due to database architecture of Monocle
-    cols_table4_to_meta = ['Public_name','Latitude','Longitude','Resolution','Vaccine_period','Introduction_year','PCV_type']
-    cols_table4_to_analysis = ['Public_name','Manifestation','Less_than_5_years_old','PCV7','PCV10_GSK','PCV10_Pneumosil','PCV13','PCV15','PCV20','PCV21','PCV24','IVT-25','Published']
+    cols_table4_to_meta = ['Public_name','Latitude','Longitude','Resolution','Manifestation','Vaccine_period','Introduction_year','PCV_type']
+    cols_table4_to_analysis = ['Public_name','Less_than_5_years_old','PCV7','PCV10_GSK','PCV10_Pneumosil','PCV13','PCV15','PCV20','PCV21','PCV24','IVT-25','Published']
     df_table4_meta = df_table4[cols_table4_to_meta].copy()
     df_table4_analysis = df_table4[cols_table4_to_analysis].copy()
     df_meta_monocle = df_meta.merge(df_table4_meta, how='right', on='Public_name', validate='one_to_one')
