@@ -210,13 +210,15 @@ def check_country(df, column_name, table):
 
     countries = get_uniques_non_empty(df, column_name)
 
+    # Check vaccine info
     no_vaccine_info = set(countries) - set(config.PCV_INTRO_YEARS.keys())
     if no_vaccine_info:
         config.LOG.warning(f'{column_name} in {table} has the following country(s) without vaccine information: {", ".join(no_vaccine_info)}. If their National Immunisation/Vaccination Programme includes PCV, please add their information to {config.PCV_INTRO_YEARS_FILE}.') 
 
+    # Check alpha2 info; database contains 'WEST AFRICA' which is not a country, therefore hard-coded for its removal
     no_alpha2 = set(countries) - set(config.COUNTRY_ALPHA2) - {'WEST AFRICA'}
     if no_alpha2:
-        config.LOG.error(f'{column_name} in {table} has the following country(s) without ISO 3166-1 alpha-2 code: {", ".join(no_alpha2)}. Please add their alpha-2 code to {config.ALPHA2_COUNTY_FILE}.')
+        config.LOG.error(f'{column_name} in {table} has the following country(s) without ISO 3166-1 alpha-2 code: {", ".join(no_alpha2)}. Please add their alpha-2 code information to {config.ALPHA2_COUNTY_FILE}.')
         found_error()
 
 
