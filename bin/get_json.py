@@ -1,9 +1,9 @@
-from multiprocessing.dummy.connection import families
 import pandas as pd
 import json
 import bin.config as config
 
 
+# Generate data.json based on Monocle table1
 def get_data(table1):
     config.LOG.info(f'Generating data.json now...')
 
@@ -27,12 +27,15 @@ def get_data(table1):
     df['Vaccine_period'] = df['Vaccine_period'].str.split('-').str[0]
     df = df.apply(simplify_age, axis=1)
 
+    # Generate summary part of data.json
+    # Sort country, vaccine period, manifestation in descending order by values; sort year of collection, age in ascending order by index with NA at the first position
     output['summary']['country'] = df.groupby('Country', dropna=False).size().sort_values(ascending=False).to_dict()
     output['summary']['vaccine_period'] = df.groupby('Vaccine_period', dropna=False).size().sort_values(ascending=False).to_dict()
     output['summary']['manifestation'] = df.groupby('Manifestation', dropna=False).size().sort_values(ascending=False).to_dict()
     output['summary']['year_of_collection'] = df.groupby('Year', dropna=False).size().sort_index(key=lambda x: x.astype('Int64'), na_position='first').to_dict()
     output['summary']['age'] = df.groupby('Simplified_age', dropna=False).size().sort_index(key=lambda x: x.astype('Int64'), na_position='first').to_dict()
 
+    # Save data.json
     with open('data.json', 'w') as f:
         json.dump(output, f, indent=4)
     
