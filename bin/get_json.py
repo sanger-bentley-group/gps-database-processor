@@ -1,3 +1,7 @@
+# This module contains 'get_data' function and its supporting functions.
+# 'get_data' function takes the generated Monocle table1 as input and generate data.json for GPS Database Overview
+
+
 import pandas as pd
 import json
 import bin.config as config
@@ -34,6 +38,14 @@ def get_data(table1):
     output['summary']['manifestation'] = df.groupby('Manifestation', dropna=False).size().sort_values(ascending=False).to_dict()
     output['summary']['year_of_collection'] = df.groupby('Year', dropna=False).size().sort_index(key=lambda x: x.astype('Int64'), na_position='first').to_dict()
     output['summary']['age'] = df.groupby('Simplified_age', dropna=False).size().sort_index(key=lambda x: x.astype('Int64'), na_position='first').to_dict()
+
+    # Generate per-country part of data.json
+    countries = sorted(df['Country'].dropna().unique().tolist())
+    for country in countries:
+        alpha2 = config.COUNTRY_ALPHA2[country]
+        output['country'][alpha2] = {'age': {}, 'manifestation': {}, 'vaccine_period': {}}
+        
+
 
     # Save data.json
     with open('data.json', 'w') as f:

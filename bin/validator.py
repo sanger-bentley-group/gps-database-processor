@@ -202,19 +202,22 @@ def check_continent(df, column_name, table):
     check_expected(df, column_name, table, expected)
 
 
-# Warn if column values contain previously unknown countries; or countries not in 'data/pcv_introduction_year.csv'
+# Warn if column values contain previously unknown countries; or countries not in 'data/pcv_introduction_year.csv'; or countries not in 'data/alpha2_country.csv'
 def check_country(df, column_name, table):
-    expected = {'ARGENTINA', 'BANGLADESH', 'BELARUS', 'BENIN', 'BOTSWANA', 'BRAZIL', 'BULGARIA', 'CAMBODIA', 'CAMEROON', 'CANADA', 'CENTRAL AFRICAN REPUBLIC', 'CHINA', 'CROATIA', 'CZECH REPUBLIC', 'DRC CONGO', 'ECUADOR', 'EGYPT', 'ETHIOPIA', 'FRANCE', 'GHANA', 'GUATEMALA', 'HUNGARY', 'INDIA', 'INDONESIA', 'IRELAND', 'ISRAEL', 'IVORY COAST', 'KENYA', 'KUWAIT', 'LATVIA', 'LITHUANIA', 'MALAWI', 'MALAYSIA', 'MONGOLIA', 'MOROCCO', 'MOZAMBIQUE', 'NEPAL', 'NETHERLANDS', 'NEW ZEALAND', 'NIGER', 'NIGERIA', 'OMAN', 'PAKISTAN', 'PAPUA NEW GUINEA', 'PERU', 'POLAND', 'QATAR', 'RUSSIAN FEDERATION', 'SENEGAL', 'SLOVENIA', 'SOUTH AFRICA', 'SPAIN', 'SWEDEN', 'TAIWAN', 'THAILAND', 'THE GAMBIA', 'TOGO', 'TRINIDAD AND TOBAGO', 'TURKEY', 'USA', 'WEST AFRICA', '_', 'UNKNOWN'}
+    expected = {'ARGENTINA', 'BANGLADESH', 'BELARUS', 'BENIN', 'BOTSWANA', 'BRAZIL', 'BULGARIA', 'CAMBODIA', 'CAMEROON', 'CANADA', 'CENTRAL AFRICAN REPUBLIC', 'CHINA', 'CROATIA', 'CZECH REPUBLIC', 'DR CONGO', 'ECUADOR', 'EGYPT', 'ETHIOPIA', 'FRANCE', 'GHANA', 'GUATEMALA', 'HUNGARY', 'INDIA', 'INDONESIA', 'IRELAND', 'ISRAEL', 'IVORY COAST', 'KENYA', 'KUWAIT', 'LATVIA', 'LITHUANIA', 'MALAWI', 'MALAYSIA', 'MONGOLIA', 'MOROCCO', 'MOZAMBIQUE', 'NEPAL', 'NETHERLANDS', 'NEW ZEALAND', 'NIGER', 'NIGERIA', 'OMAN', 'PAKISTAN', 'PAPUA NEW GUINEA', 'PERU', 'POLAND', 'QATAR', 'RUSSIAN FEDERATION', 'SENEGAL', 'SLOVENIA', 'SOUTH AFRICA', 'SPAIN', 'SWEDEN', 'TAIWAN', 'THAILAND', 'THE GAMBIA', 'TOGO', 'TRINIDAD AND TOBAGO', 'TURKEY', 'UNITED STATES', 'WEST AFRICA', '_', 'UNKNOWN'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected, absolute=False)
 
-    values = get_uniques_non_empty(df, column_name)
-    values = set(values) - set(config.PCV_INTRO_YEARS.keys())
-    
-    if len(values) == 0:
-        return 
+    countries = get_uniques_non_empty(df, column_name)
 
-    config.LOG.warning(f'{column_name} in {table} has the following country(s) without vaccine information: {", ".join(values)}. If their National Immunisation/Vaccination Programme includes PCV, please add their information to {config.PCV_INTRO_YEARS_FILE}')
+    no_vaccine_info = set(countries) - set(config.PCV_INTRO_YEARS.keys())
+    if no_vaccine_info:
+        config.LOG.warning(f'{column_name} in {table} has the following country(s) without vaccine information: {", ".join(no_vaccine_info)}. If their National Immunisation/Vaccination Programme includes PCV, please add their information to {config.PCV_INTRO_YEARS_FILE}.') 
+
+    no_alpha2 = set(countries) - set(config.COUNTRY_ALPHA2) - {'WEST AFRICA'}
+    if no_alpha2:
+        config.LOG.error(f'{column_name} in {table} has the following country(s) without ISO 3166-1 alpha-2 code: {", ".join(no_alpha2)}. Please add their alpha-2 code to {config.ALPHA2_COUNTY_FILE}.')
+        found_error()
 
 
 # Check column values is in the expected months only

@@ -41,6 +41,11 @@ def init():
     pcv_valency_file = 'data/pcv_valency.csv'
     read_pcv_valency(pcv_valency_file)
 
+    # Path to ISO 3166-1 alpha-2 code of countries file and store content as global dictionary COUNTRY_ALPHA2
+    global ALPHA2_COUNTY_FILE
+    ALPHA2_COUNTY_FILE = 'data/alpha2_country.csv'
+    read_country_alpha2()
+
     global MAPBOX_API_KEY
     MAPBOX_API_KEY = api_keys.mapbox
 
@@ -107,3 +112,14 @@ def read_pcv_valency(pcv_valency_file):
         PCV_VALENCY = {}
         for pcv, serotypes in reader:
             PCV_VALENCY[pcv] = set(serotypes.split(','))
+
+
+# Provide global dictionary for acessing ISO 3166-1 alpha-2 code of countries
+def read_country_alpha2():
+    global COUNTRY_ALPHA2
+    with open(ALPHA2_COUNTY_FILE, 'r') as f:
+        reader = csv.reader(f)
+        next(reader)
+        COUNTRY_ALPHA2 = {}
+        for alpha2, country in reader:
+            COUNTRY_ALPHA2[country.upper()] = alpha2.upper()
