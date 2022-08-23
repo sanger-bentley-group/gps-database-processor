@@ -4,7 +4,7 @@
 
 import pandas as pd
 import json
-import bin.config as config 
+import bin.config as config
 
 
 # Generate data.json based on Monocle table1
@@ -64,7 +64,22 @@ def get_data(table1):
             year_range.append(pd.NA)
         years_unique = years_series.dropna().unique().astype(int).tolist()
         if years_unique:
-            year_range.extend([str(i) for i in range(min(years_unique), max(years_unique) + 1)])
+            years_min, years_max = min(years_unique), max(years_unique)
+            year_range.extend([str(i) for i in range(years_min, years_max + 1)])
+
+            # Generate vaccine periods in country part of data.json
+            vaccine_periods = [[years_min, years_max, 'Pre-PCV']]
+            for year, pcv in config.PCV_INTRO_YEARS[country]:
+                year = int(year)
+                pre_years_min, pre_years_max = vaccine_periods[-1][0], vaccine_periods[-1][1]
+                if year < pre_years_min:
+                    vaccine_periods[-1][2] = f'Post-{pcv}'
+                elif year < vaccine_periods[-1][1]:
+                    vaccine_periods[-1][1] = year
+                    vaccine_periods.append([year + 1, pre_years_max,f'Post-{pcv}'])
+            
+            vaccine_periods = {f'{start},{end}': period for start, end, period in vaccine_periods}
+            output['country'][alpha2]['vaccine_period'] = vaccine_periods
 
         # Go through year by year
         for year in year_range:
@@ -89,6 +104,8 @@ def get_data(table1):
             # If year is NaN, change to "NaN" string to allow hashing as dictionary key
             if pd.isna(year):
                  year = 'NaN'
+
+            # Generate age group sizes and manifestation sizes per year in country part of data.json
             output['country'][alpha2]['age'][year] = age_size
             output['country'][alpha2]['manifestation'][year] = manifestation_size
 
