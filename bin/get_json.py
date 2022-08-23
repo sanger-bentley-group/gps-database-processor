@@ -4,7 +4,7 @@
 
 import pandas as pd
 import json
-import bin.config as config
+import bin.config as config 
 
 
 # Generate data.json based on Monocle table1
@@ -45,10 +45,52 @@ def get_data(table1):
 
     # Generate per-country part of data.json
     countries = sorted(df['Country'].dropna().unique().tolist())
+
+    # Set max age and bin size for grouping ages
+    max_age = 120
+    bin_size = 10
+
+    # Go through country by country
     for country in countries:
         alpha2 = config.COUNTRY_ALPHA2[country]
+        df_country = df[df['Country'] == country].copy()
+        df_country['Simplified_age'] = df_country['Simplified_age'].astype('Int64')
         output['country'][alpha2] = {'age': {}, 'manifestation': {}, 'vaccine_period': {}}
         
+        # Get all years within sample year range of that country; put NaN in the beginning of the list if exists
+        year_range = []
+        years_series = df_country['Year']
+        if years_series.isna().values.any():
+            year_range.append(pd.NA)
+        years_unique = years_series.dropna().unique().astype(int).tolist()
+        if years_unique:
+            year_range.extend([str(i) for i in range(min(years_unique), max(years_unique) + 1)])
+
+        # Go through year by year
+        for year in year_range:
+            # Get df depending on year is NaN or numeric value
+            if pd.isna(year):
+                df_country_year = df_country[pd.isna(df_country['Year'])]
+            else:
+                df_country_year = df_country[df_country['Year'] == year]
+
+            # Get binned age group size, remove age group with 0 samples, add NaN age group if having samples with unknown age
+            age_size = df_country_year.groupby(pd.cut(df_country['Simplified_age'], bins=[i for i in range(0, max_age + 1, bin_size)], labels=[f'{i} - {i + 9}' for i in range(0, max_age, bin_size)], include_lowest=True, right=False)).size().to_dict()
+            for key, value in list(age_size.items()):
+                if value == 0:
+                    del age_size[key]
+            unknown_age = len(df_country_year[pd.isna(df_country_year['Simplified_age'])])
+            if unknown_age:
+                age_size["NaN"] = unknown_age
+            
+            # Get manifestation group size
+            manifestation_size = df_country_year.groupby('Manifestation', dropna=False).size().sort_values(ascending=False).to_dict()
+            
+            # If year is NaN, change to "NaN" string to allow hashing as dictionary key
+            if pd.isna(year):
+                 year = 'NaN'
+            output['country'][alpha2]['age'][year] = age_size
+            output['country'][alpha2]['manifestation'][year] = manifestation_size
 
 
     # Save data.json
