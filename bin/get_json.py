@@ -27,6 +27,10 @@ def get_data(table1):
     table1_monocle = f'{table1[:-4]}_monocle.csv'
     df = pd.read_csv(table1_monocle, dtype=str)
 
+    # Workaround for non-country level entry that has separated PCV programmes
+    for region in {'HONG KONG'}:
+        df.loc[df['Region'] == region, 'Country'] = region
+
     # Prepare columns for groupby functions
     df['Vaccine_period'] = df['Vaccine_period'].str.split('-').str[0]
     df = df.apply(simplify_age, axis=1)
