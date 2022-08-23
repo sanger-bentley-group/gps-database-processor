@@ -90,7 +90,7 @@ def get_data(table1):
                 df_country_year = df_country[df_country['Year'] == year]
 
             # Get binned age group size, remove age group with 0 samples, add NaN age group if having samples with unknown age
-            age_size = df_country_year.groupby(pd.cut(df_country['Simplified_age'], bins=[i for i in range(0, max_age + 1, bin_size)], labels=[f'{i} - {i + 9}' for i in range(0, max_age, bin_size)], include_lowest=True, right=False)).size().to_dict()
+            age_size = df_country_year.groupby(pd.cut(df_country['Simplified_age'], bins=[i for i in range(0, max_age + 1, bin_size)], labels=[f'{i} - {i + (bin_size - 1)}' for i in range(0, max_age, bin_size)], include_lowest=True, right=False)).size().to_dict()
             for key, value in list(age_size.items()):
                 if value == 0:
                     del age_size[key]
