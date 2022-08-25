@@ -2,7 +2,6 @@
 
 
 import pandas as pd
-import numpy as np
 import csv
 import bin.config as config
 
@@ -38,7 +37,8 @@ def get_table4(table1, table3, table4):
     # Merge the partial table4 dataframes
     df_table4 = df_table4_meta.merge(df_table4_analysis, on='Public_name', how='outer', validate='one_to_one')
     # Get the published status based on the values in 'Public_name' and the 'data/published_public_names.txt' reference list.
-    df_table4['Published'] = np.where(df_table4['Public_name'].isin(config.PUBLISHED_PUBLIC_NAMES), 'Y', 'N')
+    df_table4['Published'] = 'N'
+    df_table4['Published'].where(~df_table4['Public_name'].isin(config.PUBLISHED_PUBLIC_NAMES), other='Y', inplace=True)
     # Replace all NA values with '_'
     df_table4.fillna('_', inplace=True)
 
