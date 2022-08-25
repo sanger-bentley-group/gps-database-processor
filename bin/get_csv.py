@@ -3,10 +3,8 @@
 
 import pandas as pd
 import numpy as np
-import bin.config as config
-from geopy.geocoders import MapBox
 import csv
-import sys
+import bin.config as config
 
 
 # Generate table4 based on data from table1
@@ -21,8 +19,7 @@ def get_table4(table1, table3, table4):
 
     global UPDATED_COORDINATES
     UPDATED_COORDINATES = False
-    geocoder = MapBox(api_key=config.MAPBOX_API_KEY)
-    df_table4_meta = df_table4_meta.apply(get_coordinate, geocoder=geocoder, axis=1)
+    df_table4_meta = df_table4_meta.apply(get_coordinate, axis=1)
     if UPDATED_COORDINATES:
         config.LOG.warning(f'Please verify the new coordinate(s). If any is incorrect, modify the coordinate in {config.COORDINATES_FILE} and re-run this tool.')
 
@@ -95,7 +92,7 @@ def read_tables(*arg):
 # Get coordinates based on 'Country', 'Region', 'City'.
 # Use pre-existing data in 'data/coordinates.csv' if possible,
 # otherwise search with geopy and add to 'data/coordinates.csv'
-def get_coordinate(row, geocoder):
+def get_coordinate(row):
     country, region, city = row['Country'], row['Region'], row['City']
     country_region_city = ','.join((country, region, city))
     
@@ -104,12 +101,9 @@ def get_coordinate(row, geocoder):
     elif country_region_city in config.COORDINATES:
         latitude, longitude = config.COORDINATES[country_region_city]
     else:
-        try:
-            coordinate = geocoder.geocode(country_region_city)
-        except:
-            config.LOG.critical(f'{country_region_city} has no known coordinate, but no valid Mapbox API key is provided. Please provide Mapbox API key in "data/api_keys.py" or manually enter coordinate of {country_region_city} in "data/coordinates.csv", then re-run this tool. The process will now be halted.')
-            sys.exit(1)
-        
+        # Initialise and use config.MAPBOX_GEOCODER to sesarch for coordinates
+        config.get_geocoder() 
+        coordinate = config.MAPBOX_GEOCODER.geocode(country_region_city)
         latitude, longitude = coordinate.latitude, coordinate.longitude
 
         # Save new coordinate to file and reload coordinates dictionary from file

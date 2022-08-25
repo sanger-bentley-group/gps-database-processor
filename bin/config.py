@@ -2,9 +2,10 @@
 
 
 import bin.colorlog as colorlog
-import data.api_keys as api_keys
 import csv
 from collections import defaultdict
+import geopy
+import configparser
 
 
 def init():
@@ -46,8 +47,11 @@ def init():
     ALPHA2_COUNTY_FILE = 'data/alpha2_country.csv'
     read_country_alpha2()
 
-    global MAPBOX_API_KEY
-    MAPBOX_API_KEY = api_keys.mapbox
+
+    # Path to locally saved configuration file with api keys
+    global API_KEYS_FILE
+    API_KEYS_FILE = 'config/api_keys.conf'
+    
 
 
 # Provide global dictionary for acessing pre-existing coordinates
@@ -123,3 +127,38 @@ def read_country_alpha2():
         COUNTRY_ALPHA2 = {}
         for alpha2, country in reader:
             COUNTRY_ALPHA2[country.upper()] = alpha2.upper()
+
+
+# Initialise config.MAPBOX_GEOCODER if the variable does not exist yet 
+def get_geocoder():
+    if 'MAPBOX_GEOCODER' in globals():
+        return
+
+    # Read Mapbox API key from config/api_keys.conf, create the .conf file if it does not exist yet
+    global MAPBOX_GEOCODER
+    api_keys = configparser.ConfigParser()
+    api_keys.read(API_KEYS_FILE)
+    if 'mapbox' not in api_keys:
+        LOG.warning('Please provide Mapbox API key below for Latitude and Longitude auto-assignment (it will be saved locally for future use).')
+        mapbox_api_key = input("Enter your Mapbox API key here: ")
+        api_keys['mapbox'] = {}
+    else:
+        mapbox_api_key = api_keys['mapbox'].get('api_key')
+    
+    # Mapbox API key validity check
+    while True:
+        try:
+            MAPBOX_GEOCODER = geopy.geocoders.MapBox(mapbox_api_key)
+            MAPBOX_GEOCODER.geocode('United Kingdom,Cambridgeshire,Cambridge')
+        except geopy.exc.GeocoderAuthenticationFailure:
+            LOG.warning('The provided Mapbox API key is not valid, please enter a valid Mapbox API Key.')
+            mapbox_api_key = input("Enter your Mapbox API key here: ")
+            continue
+        else:
+            break
+
+    # Update Mapbox API key in config/api_keys.conf if changed
+    if api_keys['mapbox'].get('api_key') != mapbox_api_key:
+        api_keys['mapbox']['api_key'] = mapbox_api_key
+        with open(API_KEYS_FILE, 'w') as f:
+            api_keys.write(f)
