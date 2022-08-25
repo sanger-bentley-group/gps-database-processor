@@ -1,11 +1,13 @@
 # This module saves the global variables shared by all modules.
 
 
-import bin.colorlog as colorlog
+
 import csv
+import configparser
+import os
 from collections import defaultdict
 import geopy
-import configparser
+import bin.colorlog as colorlog
 
 
 def init():
@@ -134,7 +136,7 @@ def get_geocoder():
     if 'MAPBOX_GEOCODER' in globals():
         return
 
-    # Read Mapbox API key from config/api_keys.conf, create the .conf file if it does not exist yet
+    # Read Mapbox API key from config/api_keys.conf, ask for the key if the .conf file does not exist yet
     global MAPBOX_GEOCODER
     api_keys = configparser.ConfigParser()
     api_keys.read(API_KEYS_FILE)
@@ -157,8 +159,9 @@ def get_geocoder():
         else:
             break
 
-    # Update Mapbox API key in config/api_keys.conf if changed
+    # Update Mapbox API key in config/api_keys.conf if changed; create the .conf file if it does not exist yet
     if api_keys['mapbox'].get('api_key') != mapbox_api_key:
         api_keys['mapbox']['api_key'] = mapbox_api_key
+        os.makedirs(os.path.dirname(API_KEYS_FILE), exist_ok=True)
         with open(API_KEYS_FILE, 'w') as f:
             api_keys.write(f)
