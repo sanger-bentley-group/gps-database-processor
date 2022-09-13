@@ -53,7 +53,13 @@ def get_data(table1):
     countries = sorted(df['Country'].dropna().unique().tolist())
     for country in countries:
         # Get and prepare df_country for the current country; build scaffold for output of the current country
-        alpha2 = config.COUNTRY_ALPHA2[country]
+        
+        # Skip non-country entity (e.g. West Africa)
+        try:
+            alpha2 = config.COUNTRY_ALPHA2[country]
+        except KeyError:
+            continue
+
         df_country = df[df['Country'] == country].copy()
         df_country['Simplified_age'] = df_country['Simplified_age'].astype('Int64')
         output['country'][alpha2] = {'age': {}, 'manifestation': {}, 'vaccine_period': {}}
