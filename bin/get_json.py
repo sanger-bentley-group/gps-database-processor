@@ -62,7 +62,7 @@ def get_data(table1):
 
         df_country = df[df['Country'] == country].copy()
         df_country['Simplified_age'] = df_country['Simplified_age'].astype('Int64')
-        output['country'][alpha2] = {'age': {}, 'manifestation': {}, 'vaccine_period': {}}
+        output['country'][alpha2] = {'total': len(df_country.index), 'age': {}, 'manifestation': {}, 'vaccine_period': {}}
         
         # Get all years within sample year range of that country
         # years_min and years_max would be None if there is 0 non-NaN year
