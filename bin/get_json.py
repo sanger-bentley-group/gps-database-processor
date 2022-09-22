@@ -43,7 +43,8 @@ def get_data(table1):
     # Generate summary part of data.json
     # Sort country, vaccine period, manifestation in descending order by values
     # Sort year of collection, age in ascending order by index with NaN at the first position
-    output['summary']['country'] = df.groupby('Country', dropna=False).size().sort_values(ascending=False).to_dict()
+    output_summary_country = df.groupby('Country', dropna=False).size().sort_values(ascending=False).to_dict()
+    output['summary']['country'] = {config.COUNTRY_ALPHA2.get(country, 'NaN'): val for country, val in output_summary_country.items()}
     output['summary']['vaccine_period'] = df.groupby('Vaccine_period', dropna=False).size().sort_values(ascending=False).to_dict()
     output['summary']['manifestation'] = df.groupby('Manifestation', dropna=False).size().sort_values(ascending=False).to_dict()
     output['summary']['year_of_collection'] = df.groupby('Year', dropna=False).size().sort_index(key=lambda x: x.astype('Int64'), na_position='first').to_dict()
