@@ -17,7 +17,7 @@ The tool carries out several operations in the following order:
        - The first time this is triggered, it will ask for your Mapbox API key (access token) and save it locally at `config/api_keys.confg` for future use
        - For more information on the Mapbox API key (access token), please visit [their documentation](https://docs.mapbox.com/help/glossary/access-token/)
 3. Generate [Monocle](https://github.com/sanger-pathogens/monocle)-ready `.csv` files in 3-table format
-4. Generate `data.json` for GPS Database Overview (upcoming project)
+4. Generate `data.json` for [GPS Database Overview](https://github.com/HarryHung/gps-database-overview)
 
 &nbsp;
 ## Workflow
