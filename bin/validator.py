@@ -456,7 +456,7 @@ def check_color(df, column_name, table, transparent=False):
 # Expect single serotype
 def check_in_silico_serotype(df, column_name, table):
     check_case(df, column_name, table)
-    check_regex(df, column_name, table, absolute=False, pattern=r'^(?!0)[0-9]{1,2}[A-Z]?$|^23B1$|^SWISS_NT$')
+    check_regex(df, column_name, table, absolute=False, pattern=r'^(?!0)[0-9]{1,2}[A-Z]?$|^23B1$|^SWISS_NT|^15B\/15C$')
 
 
 # Check column values contain 1 - 1000 integers or NEW, NF, ERROR only
