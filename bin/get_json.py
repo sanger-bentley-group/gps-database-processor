@@ -105,7 +105,7 @@ def simplify_age(row):
     elif pd.isna(age_years) or float(age_years) < 1:
         simplified_age = '0'
     else:
-        simplified_age = str(int(age_years))
+        simplified_age = str(int(float(age_years)))
     
     row['Simplified_age'] = simplified_age
     return row
