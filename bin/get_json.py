@@ -12,6 +12,16 @@ MAX_AGE = 120
 BIN_SIZE = 10
 
 
+# Manifestation name conversion dictionary
+MANIFESTATION_DICT = {
+    "IPD": "Invasive Disease",
+    "CARRIAGE": "Carriage (Healthy)",
+    "DIS_CAR": "Carriage (Patient)",
+    "UNKNOWN": "NaN",
+    "NONINVASIVE_DISEASE": "Non-invasive Disease"
+}
+
+
 # Generate data.json based on Monocle table1
 def get_data(table1):
     config.LOG.info(f'Generating data.json now...')
@@ -44,9 +54,11 @@ def get_data(table1):
     # Sort country, vaccine period, manifestation in descending order by values
     # Sort year of collection, age in ascending order by index with NaN at the first position
     output_summary_country = df.groupby('Country', dropna=False).size().sort_values(ascending=False).to_dict()
-    output['summary']['country'] = {config.COUNTRY_ALPHA2.get(country, country): val for country, val in output_summary_country.items()}
-    output['summary']['vaccine_period'] = df.groupby('Vaccine_period', dropna=False).size().sort_values(ascending=False).to_dict()
-    output['summary']['manifestation'] = df.groupby('Manifestation', dropna=False).size().sort_values(ascending=False).to_dict()
+    output['summary']['country'] = {get_summary_country_name(country): val for country, val in output_summary_country.items()}
+    output_summary_vaccine_period = df.groupby('Vaccine_period', dropna=False).size().sort_values(ascending=False).to_dict()
+    output['summary']['vaccine_period'] = {get_summary_vaccine_period_name(period): val for period, val in output_summary_vaccine_period.items()}
+    output_summary_manifestation = df.groupby('Manifestation', dropna=False).size().sort_values(ascending=False).to_dict()
+    output['summary']['manifestation'] = {MANIFESTATION_DICT.get(manifestation, manifestation): val for manifestation, val in output_summary_manifestation.items()}
     output['summary']['year_of_collection'] = df.groupby('Year', dropna=False).size().sort_index(key=lambda x: x.astype('Int64'), na_position='first').to_dict()
     output['summary']['age'] = df.groupby('Simplified_age', dropna=False).size().sort_index(key=lambda x: x.astype('Int64'), na_position='first').to_dict()
 
@@ -109,6 +121,20 @@ def simplify_age(row):
     
     row['Simplified_age'] = simplified_age
     return row
+
+
+# Ensure country name is in correct letter casing
+def get_summary_country_name(country):
+    return config.ALPHA2_COUNTRY.get(config.COUNTRY_ALPHA2.get(country, country), country.title() if isinstance(country, str) else country)
+
+
+# Get vaccine period name in human-readable format
+def get_summary_vaccine_period_name(period):
+    if not isinstance(period, str):
+        return period
+
+    period_split = period.split('PCV')
+    return f'{period_split[0].title()}-PCV{period_split[1]}'
 
 
 # Generate all years, min and max of years (if having at least one non-NaN) within sample year range of that country; put NaN in the beginning of the list if it exists

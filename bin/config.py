@@ -44,7 +44,7 @@ def init():
     pcv_valency_file = 'data/pcv_valency.csv'
     read_pcv_valency(pcv_valency_file)
 
-    # Path to ISO 3166-1 alpha-2 code of countries file and store content as global dictionary COUNTRY_ALPHA2
+    # Path to ISO 3166-1 alpha-2 code of countries file and store content as global dictionary COUNTRY_ALPHA2 and ALPHA2_COUNTRY
     global ALPHA2_COUNTY_FILE
     ALPHA2_COUNTY_FILE = 'data/alpha2_country.csv'
     read_country_alpha2()
@@ -123,13 +123,15 @@ def read_pcv_valency(pcv_valency_file):
 # Provide global dictionary for acessing ISO 3166-1 alpha-2 code of countries
 def read_country_alpha2():
     global COUNTRY_ALPHA2
+    global ALPHA2_COUNTRY
     with open(ALPHA2_COUNTY_FILE, 'r') as f:
         reader = csv.reader(f)
         next(reader)
         COUNTRY_ALPHA2 = {}
+        ALPHA2_COUNTRY = {}
         for alpha2, country in reader:
             COUNTRY_ALPHA2[country.upper()] = alpha2.upper()
-
+            ALPHA2_COUNTRY[alpha2.upper()] = country
 
 # Initialise config.MAPBOX_GEOCODER if the variable does not exist yet 
 def get_geocoder():
