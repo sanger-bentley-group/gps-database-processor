@@ -7,9 +7,8 @@ import json
 import bin.config as config
 
 
-# Set max age and bin size for grouping ages in country part of data.json
-MAX_AGE = 120
-BIN_SIZE = 10
+# Age bins 
+AGE_BINS = [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 10), (11, 20), (21, 30), (31, 40), (41, 50), (51, 60), (61, 70), (71, float('inf'))]
 
 
 # Manifestation name conversion dictionary
@@ -17,9 +16,10 @@ MANIFESTATION_DICT = {
     "IPD": "Invasive Disease",
     "CARRIAGE": "Carriage (Healthy)",
     "DIS_CAR": "Carriage (Patient)",
-    "UNKNOWN": "NaN",
-    "NONINVASIVE_DISEASE": "Non-invasive Disease"
+    "NONINVASIVE_DISEASE": "Non-invasive Disease",
+    "UNKNOWN": "NaN"
 }
+
 
 
 # Generate data.json based on Monocle table1
@@ -60,7 +60,7 @@ def get_data(table1):
     output_summary_manifestation = df.groupby('Manifestation', dropna=False).size().sort_values(ascending=False).to_dict()
     output['summary']['manifestation'] = {MANIFESTATION_DICT.get(manifestation, manifestation): val for manifestation, val in output_summary_manifestation.items()}
     output['summary']['year_of_collection'] = df.groupby('Year', dropna=False).size().sort_index(key=lambda x: x.astype('Int64'), na_position='first').to_dict()
-    output['summary']['age'] = df.groupby('Simplified_age', dropna=False).size().sort_index(key=lambda x: x.astype('Int64'), na_position='first').to_dict()
+    output['summary']['age'] = get_age_group_size(df)
 
     # Go through country by country to generate per-country part of data.json
     countries = sorted(df['Country'].dropna().unique().tolist())
@@ -74,7 +74,6 @@ def get_data(table1):
             continue
 
         df_country = df[df['Country'] == country].copy()
-        df_country['Simplified_age'] = df_country['Simplified_age'].astype('Int64')
         output['country'][alpha2] = {'total': len(df_country.index), 'age': {}, 'manifestation': {}, 'vaccine_period': {}}
         
         # Get all years within sample year range of that country
@@ -96,10 +95,10 @@ def get_data(table1):
                 df_country_year = df_country[df_country['Year'] == year]
             
             # Get age group sizes per year in country part of data.json
-            output['country'][alpha2]['age'][year] = get_age_size(df_country_year)
+            output['country'][alpha2]['age'][year] = get_age_group_size(df_country_year)
 
             # Generate manifestation sizes per year in country part of data.json
-            output['country'][alpha2]['manifestation'][year] = df_country_year.groupby('Manifestation', dropna=False).size().sort_values(ascending=False).to_dict()
+            output['country'][alpha2]['manifestation'][year] = get_manifestation(df_country_year)
 
     # Save data.json to file
     with open('data.json', 'w') as f:
@@ -115,9 +114,9 @@ def simplify_age(row):
     if (pd.isna(age_years) and pd.isna(age_months) and pd.isna(age_days)) or age_years in config.NON_STANDARD_AGES:
         simplified_age = pd.NA
     elif pd.isna(age_years) or float(age_years) < 1:
-        simplified_age = '0'
+        simplified_age = 0
     else:
-        simplified_age = str(int(float(age_years)))
+        simplified_age = int(float(age_years))
     
     row['Simplified_age'] = simplified_age
     return row
@@ -167,18 +166,34 @@ def get_vaccine_periods(years_min, years_max, country):
     return {f'{start},{end}': period for start, end, period in vaccine_periods}
 
 
-# Generate binned age group size, remove age group with 0 samples, add NaN age group if having samples with unknown age
-def get_age_size(df):
-    bins = [i for i in range(0, MAX_AGE + 1, BIN_SIZE)]
-    labels = [f'{i} - {i + (BIN_SIZE - 1)}' for i in range(0, MAX_AGE, BIN_SIZE)]
-    age_size = df.groupby(pd.cut(df['Simplified_age'], bins=bins, labels=labels, include_lowest=True, right=False)).size().to_dict()
+# Get size of binned age group
+def get_age_group_size(df):
+    age_group_size = df.groupby(pd.cut(df['Simplified_age'], bins=pd.IntervalIndex.from_tuples(AGE_BINS, closed='both'))).size()
+    age_group_size.index = age_group_size.index.map(interval_to_string) # Cannot convert interval to string before groupby, as conversion skips on empty dataframe
+    age_group_size = age_group_size.to_dict()
     
-    for key, value in list(age_size.items()):
-        if value == 0:
-            del age_size[key]
-    
+    # Add back count of unknown age
     unknown_age_size = len(df[pd.isna(df['Simplified_age'])])
-    if unknown_age_size:
-        age_size["NaN"] = unknown_age_size
+    age_group_size["NaN"] = unknown_age_size
     
-    return age_size
+    return age_group_size
+
+# Convert interval index into string for get_age_group_size()
+def interval_to_string(interval):
+    if interval.left == interval.right:
+        return f'{int(interval.left)}'
+    elif interval.right != float('inf'):
+        return f'{int(interval.left)}-{int(interval.right)}'
+    else:
+        return f'>{int(interval.left)}'
+
+
+# Generate manifestation in human-readable form, fill in groups without data
+def get_manifestation(df):
+    original_dict = df.groupby('Manifestation', dropna=False).size().to_dict()
+    new_dict = dict()
+
+    for key, val in MANIFESTATION_DICT.items():
+        new_dict[val] = original_dict.get(key, 0)
+
+    return new_dict
