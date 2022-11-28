@@ -73,6 +73,9 @@ def get_monocle(table1, table2, table3, table4):
     output_lane_ids = set(df_analysis_monocle['Lane_id'].tolist())
     df_qc_monocle = df_qc.drop(df_qc[~df_qc['Lane_id'].isin(output_lane_ids)].index)
 
+    # Workaround for Monocle not supporting empty Submitting_institution
+    df_meta_monocle['Submitting_institution'].replace('_', 'UNKNOWN', inplace=True)
+
     # Export Monocle tables
     for df, table in zip((df_meta_monocle, df_qc_monocle, df_analysis_monocle), (table1, table2, table3)):
         df.replace('_', '', inplace=True)
