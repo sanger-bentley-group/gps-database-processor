@@ -4,6 +4,7 @@
 
 import csv
 import configparser
+import sys
 import os
 from collections import defaultdict
 import geopy
@@ -15,44 +16,47 @@ def init():
     global LOG
     LOG = colorlog.get_log()
 
+    # Get processor.py path
+    base_path = os.path.abspath(os.path.dirname(sys.argv[0]))
+
     # Path to coordinates file and store content as global dictionary COORDINATES
     global COORDINATES_FILE
-    COORDINATES_FILE = 'data/coordinates.csv'
+    COORDINATES_FILE = f'{base_path}/data/coordinates.csv'
     read_coordinates()
 
     # Path to non-standard ages file and store content as global dictionary NON_STANDARD_AGES
     global NON_STANDARD_AGES_FILE
-    NON_STANDARD_AGES_FILE = 'data/non_standard_ages.csv'
+    NON_STANDARD_AGES_FILE = f'{base_path}/data/non_standard_ages.csv'
     read_non_standard_ages()
 
     # Path to manifestations file and store content as global dictionary MANIFESTATIONS
     global MANIFESTATIONS_FILE
-    MANIFESTATIONS_FILE = 'data/manifestations.csv'
+    MANIFESTATIONS_FILE = f'{base_path}/data/manifestations.csv'
     read_manifestations()
 
     # Path to published public names file and store content as global set PUBLISHED_PUBLIC_NAMES
     global PUBLISHED_PUBLIC_NAMES_FILE
-    PUBLISHED_PUBLIC_NAMES_FILE = 'data/published_public_names.txt'
+    PUBLISHED_PUBLIC_NAMES_FILE = f'{base_path}/data/published_public_names.txt'
     read_published_public_names()
 
     # Path to vaccines introduction year file and store content as global dictionary PCV_INTRO_YEARS
     global PCV_INTRO_YEARS_FILE
-    PCV_INTRO_YEARS_FILE = 'data/pcv_introduction_year.csv'
+    PCV_INTRO_YEARS_FILE = f'{base_path}/data/pcv_introduction_year.csv'
     read_pcv_intro_years()
 
     # Path to vaccines valency file and store content as global dictionary PCV_VALENCY
-    pcv_valency_file = 'data/pcv_valency.csv'
+    pcv_valency_file = f'{base_path}/data/pcv_valency.csv'
     read_pcv_valency(pcv_valency_file)
 
     # Path to ISO 3166-1 alpha-2 code of countries file and store content as global dictionary COUNTRY_ALPHA2 and ALPHA2_COUNTRY
     global ALPHA2_COUNTY_FILE
-    ALPHA2_COUNTY_FILE = 'data/alpha2_country.csv'
+    ALPHA2_COUNTY_FILE = f'{base_path}/data/alpha2_country.csv'
     read_country_alpha2()
 
 
     # Path to locally saved configuration file with api keys
     global API_KEYS_FILE
-    API_KEYS_FILE = 'config/api_keys.conf'
+    API_KEYS_FILE = f'{base_path}/config/api_keys.conf'
     
 
 
