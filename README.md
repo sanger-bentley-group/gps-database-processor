@@ -16,8 +16,8 @@ The tool carries out several operations in the following order:
    - If there is a location that does not exist in `data/coordinates.csv` (one of the reference tables), it will attempt the fetch the information via Mapbox API
        - The first time this is triggered, it will ask for your Mapbox API key (access token) and save it locally at `config/api_keys.confg` for future use
        - For more information on the Mapbox API key (access token), please visit [their documentation](https://docs.mapbox.com/help/glossary/access-token/)
-3. Generate [Monocle](https://github.com/sanger-pathogens/monocle)-ready `.csv` files in 3-table format
-4. Generate `data.json` for [GPS Database Overview](https://github.com/HarryHung/gps-database-overview)
+3. Generate [Monocle](https://data.monocle.sanger.ac.uk/)-ready `.csv` files in 3-table format
+4. Generate `data.json` for [GPS Database Overview](https://www.pneumogen.net/gps/gps-database-overview/)
 
 &nbsp;
 ## Workflow
@@ -25,13 +25,37 @@ The tool carries out several operations in the following order:
 
 &nbsp;
 ## Usage
-### Basic
+### Requirement
+- Conda / Mamba
+- Git
+
+### Setup
 1. Clone this repository to your machine
-2. Install `Python3`, `pandas`, `geopy` with `pip` or create a `conda` environment with these packages
+   ```
+   git clone https://github.com/HarryHung/gps-database-processor.git
+   ```
+2. Go into the local copy of the repository 
+   ```
+   cd gps-database-processor
+   ```
+3. Setup Conda Environment (If using Mamba, replace `conda` with `mamba` in the following commands) 
+   ```
+   conda env create -f environment.yml
+   ```
+
+### Run
+1. Pull any updates from remote repository
+   ```
+   git pull
+   ```
+2. Activate the Conda Environment
+   ```
+   conda activate gps-db-processor
+   ```
 3. Put the GPS database's three `.csv` source files into the directory containing the cloned repository
 4. Run the following command to validate your input files and generate the output files:
    ```
-   python processor.py
+   python3 processor.py
    ```
 5. If you or the tool have updated any of the reference tables (i.e. any file in the `data` directory), create a PR (Pull Request) on this repository
 
@@ -84,9 +108,9 @@ GPS Database requirement:
 - GPS1 v4.0+
 
 Tested on:
-- [Python](https://www.python.org/) 3.10
-- [pandas](https://pandas.pydata.org/) 1.4.2
-- [geopy](https://github.com/geopy/geopy) 2.2.0
+- [Python](https://www.python.org/) 3.11
+- [pandas](https://pandas.pydata.org/) 1.5.2
+- [geopy](https://github.com/geopy/geopy) 2.3.0
 
 
 &nbsp;
