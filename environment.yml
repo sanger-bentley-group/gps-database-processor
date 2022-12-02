@@ -1,0 +1,8 @@
+name: gps-db-processor
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas=1.5
+  - geopy=2.3.0
