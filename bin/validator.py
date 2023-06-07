@@ -432,10 +432,10 @@ def check_in_silico_st(df, column_name, table):
     check_int_range(df, column_name, table, lo=1, hi=20000, allow_empty=True, others=['NEW', 'FAILED', 'UNDETERMINABLE'])
 
 
-# Check column values contain 1 or larger integers or NEW, UNDETERMINABLE, FAILED, _ only
+# Check column values contain 1 or larger integers or NEW, UNDETERMINABLE, FAILED, PARTIAL_DELETION, ABSENT, _ only
 def check_mlst_gene_in_silico(df, column_name, table):
     check_case(df, column_name, table)
-    check_int_range(df, column_name, table, lo=1, allow_empty=True, others=['NEW', 'UNDETERMINABLE', 'FAILED'])
+    check_int_range(df, column_name, table, lo=1, allow_empty=True, others=['NEW', 'UNDETERMINABLE', 'FAILED', 'PARTIAL_DELETION', 'ABSENT'])
 
 
 # Check column values contain 1 - 2000 integers, _ only
