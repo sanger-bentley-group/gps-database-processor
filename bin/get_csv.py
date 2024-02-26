@@ -58,7 +58,8 @@ def get_monocle(table1, table2, table3, table4):
 
     df_meta, df_qc, df_analysis, df_table4 = read_tables(table1, table2, table3, table4)
 
-    # Only preserve UNIQUE and Published for Monocle tables
+    # Only preserve QC Passed, UNIQUE and Published for Monocle tables
+    df_qc.drop(df_qc[~df_qc['QC'].isin(['PASS', 'PASSPLUS'])].index, inplace=True)
     df_analysis.drop(df_analysis[df_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
     df_table4.drop(df_table4[df_table4['Published'] != 'Y'].index, inplace=True)
 
@@ -70,8 +71,12 @@ def get_monocle(table1, table2, table3, table4):
     df_meta_monocle = df_meta.merge(df_table4_meta, how='right', on='Public_name', validate='one_to_one')
     df_analysis_monocle = df_analysis.merge(df_table4_analysis, how='right', on='Public_name', validate='one_to_one')
 
-    output_lane_ids = set(df_analysis_monocle['Lane_id'].tolist())
+    # Only output samples exist in all 3 Monocle tables
+    output_lane_ids = set(df_analysis_monocle['Lane_id'].tolist()).intersection(set(df_qc['Lane_id'].tolist()))
     df_qc_monocle = df_qc.drop(df_qc[~df_qc['Lane_id'].isin(output_lane_ids)].index)
+    df_analysis_monocle = df_analysis_monocle.drop(df_analysis_monocle[~df_analysis_monocle['Lane_id'].isin(output_lane_ids)].index)
+    output_public_name = set(df_analysis_monocle['Public_name'].tolist())
+    df_meta_monocle = df_meta_monocle.drop(df_meta_monocle[~df_meta_monocle['Public_name'].isin(output_public_name)].index)
 
     # Workaround for Monocle not supporting empty Submitting_institution
     df_meta_monocle['Submitting_institution'].replace('_', 'UNKNOWN', inplace=True)
