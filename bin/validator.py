@@ -119,7 +119,7 @@ def check_qc_table(df_qc, table):
 def check_analysis_table(df_analysis, table):
     check_columns(df_analysis, ANALYSIS_COLUMNS, table)
     check_lane_id(df_analysis, 'Lane_id', table)
-    check_sanger_sample_id(df_analysis, 'Sanger_sample_id', table)
+    check_sanger_sample_id(df_analysis, 'Sample', table)
     check_public_name_analysis(df_analysis, 'Public_name', table)
     check_err(df_analysis, 'ERR', table)
     check_ers(df_analysis, 'ERS', table)
