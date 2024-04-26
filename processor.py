@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 import sys
 import bin.config as config
@@ -12,10 +14,14 @@ def main():
     args = parse_args()
     table1, table2, table3, table4 = args.table1, args.table2, args.table3, args.table4
 
+    # Default names of Monocle Table and Data JSON
+    table_monocle = 'table_monocle.csv'
+    data = 'data.json'
+
     validator.validate(table1, table2, table3)
     get_csv.get_table4(table1, table3, table4)
-    get_csv.get_monocle(table1, table2, table3, table4)
-    get_json.get_data(table1)
+    get_csv.get_monocle(table1, table2, table3, table4, table_monocle)
+    get_json.get_data(table_monocle, data)
 
     config.LOG.info('The processing is completed. Database is validated and all files are generated.')
 
@@ -24,8 +30,8 @@ def main():
 def parse_args():
     parser = argparse.ArgumentParser(
         allow_abbrev=False,
-        description='Process GPS (Global Pneumococcal Sequencing Project) database updates. This tool validates table1 (metadata), table2 (qc) and table3 (analysis) provided by the user; then generates table4, Monocle-ready tables and data.json of the GPS Database Overview.',
-        epilog='If you have updated any files (except api_keys.py) in the "data" directory, please submit a PR to github.com/HarryHung/gps-database-processor'
+        description='Process GPS (Global Pneumococcal Sequencing Project) database updates. This tool validates table1 (metadata), table2 (qc) and table3 (analysis) provided by the user; then generates table4, Monocle Table and Data JSON of the GPS Database Overview.',
+        epilog='If you have updated any files (except api_keys.py) in the "data" directory, please submit a PR to https://github.com/sanger-bentley-group/gps-database-processor'
     )
 
     parser.add_argument(

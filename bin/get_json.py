@@ -1,5 +1,5 @@
 # This module contains 'get_data' function and its supporting functions.
-# 'get_data' function takes the generated Monocle table1 as input and generate data.json for the GPS Database Overview
+# 'get_data' function takes the generated Monocle Table as input and generate Data JSON for the GPS Database Overview
 
 
 import pandas as pd
@@ -22,11 +22,11 @@ MANIFESTATION_DICT = {
 
 
 
-# Generate data.json based on Monocle table1
-def get_data(table1):
-    config.LOG.info(f'Generating data.json now...')
+# Generate Data JSON based on Monocle Table
+def get_data(table_monocle, data_json):
+    config.LOG.info(f'Generating {data_json} now...')
 
-    # Scaffold of the data.json
+    # Scaffold of the Data JSON
     output = {
         'summary': {
             'country': {},
@@ -38,9 +38,8 @@ def get_data(table1):
         'country': {},
     }
 
-    # Read generated Monocle table1
-    table1_monocle = f'{table1[:-4]}_monocle.csv'
-    df = pd.read_csv(table1_monocle, dtype=str)
+    # Read generated Monocle table
+    df = pd.read_csv(table_monocle, dtype=str)
 
     # Workaround for non-country level entry that has separated PCV programmes
     for region in {'HONG KONG'}:
@@ -50,7 +49,7 @@ def get_data(table1):
     df['Vaccine_period'] = df['Vaccine_period'].str.split('-').str[0]
     df = df.apply(simplify_age, axis=1)
 
-    # Generate summary part of data.json
+    # Generate summary part of Data JSON
     # Sort country, vaccine period, manifestation in descending order by values
     # Sort year of collection, age in ascending order by index with NaN at the first position
     output_summary_country = df.groupby('Country', dropna=False).size().sort_values(ascending=False).to_dict()
@@ -62,7 +61,7 @@ def get_data(table1):
     output['summary']['year_of_collection'] = df.groupby('Year', dropna=False).size().sort_index(key=lambda x: x.astype('Int64'), na_position='first').to_dict()
     output['summary']['age'] = get_age_group_size(df)
 
-    # Go through country by country to generate per-country part of data.json
+    # Go through country by country to generate per-country part of Data JSON
     countries = sorted(df['Country'].dropna().unique().tolist())
     for country in countries:
         # Get and prepare df_country for the current country; build scaffold for output of the current country
@@ -80,7 +79,7 @@ def get_data(table1):
         # years_min and years_max would be None if there is 0 non-NaN year
         year_range, years_min, years_max = get_year_range(df_country['Year'])
 
-        # Get vaccine periods in country part of data.json if there is at least one non-NaN year
+        # Get vaccine periods in country part of Data JSON if there is at least one non-NaN year
         if not None in (years_min, years_max):
             output['country'][alpha2]['vaccine_period'] = get_vaccine_periods(years_min, years_max, country)
 
@@ -94,17 +93,17 @@ def get_data(table1):
             else:
                 df_country_year = df_country[df_country['Year'] == year]
             
-            # Get age group sizes per year in country part of data.json
+            # Get age group sizes per year in country part of Data JSON
             output['country'][alpha2]['age'][year] = get_age_group_size(df_country_year)
 
-            # Generate manifestation sizes per year in country part of data.json
+            # Generate manifestation sizes per year in country part of Data JSON
             output['country'][alpha2]['manifestation'][year] = get_manifestation(df_country_year)
 
-    # Save data.json to file
-    with open('data.json', 'w') as f:
+    # Save Data JSON to file
+    with open(data_json, 'w') as f:
         json.dump(output, f, indent=4)
     
-    config.LOG.info('data.json is generated.')
+    config.LOG.info(f'{data_json} is generated.')
 
 
 # Simplify age to a integer value based on year, or NaN if the precise age year cannot be determined
@@ -151,7 +150,7 @@ def get_year_range(years_series):
     return year_range, years_min, years_max
 
 
-# Generate vaccine periods in country part of data.json
+# Generate vaccine periods in country part of Data JSON
 def get_vaccine_periods(years_min, years_max, country):
     vaccine_periods = [[years_min, years_max, 'Pre-PCV']]
     for year, pcv in config.PCV_INTRO_YEARS[country]:
