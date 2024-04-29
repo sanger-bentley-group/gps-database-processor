@@ -43,7 +43,7 @@ def get_table4(table1, table3, table4):
     df_table4.fillna('_', inplace=True)
 
     # Drop all columns that are not in the schema of table4
-    output_cols = ('Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifestation', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT-25', 'Published')
+    output_cols = ('Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifestation', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT25', 'Published')
     df_table4.drop(columns=[col for col in df_table4 if col not in output_cols], inplace=True)
     df_table4 = df_table4.reindex(columns = output_cols)
     
@@ -62,6 +62,12 @@ def get_monocle(table1, table2, table3, table4, table_monocle):
     df_qc.drop(df_qc[~df_qc['QC'].isin(['PASS', 'PASSPLUS'])].index, inplace=True)
     df_analysis.drop(df_analysis[df_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
     df_table4.drop(df_table4[df_table4['Published'] != 'Y'].index, inplace=True)
+
+    # Drop columns that do not exist in Monocle table
+    df_meta.drop(columns=['aroE', 'ddl', 'gdh', 'gki', 'recP', 'spi', 'xpt'], inplace=True)
+    df_qc.drop(columns=['Supplier_name'], inplace=True)
+    df_analysis.drop(columns=['No_of_genome', 'Paper_1'], inplace=True)
+    df_table4.drop(columns=['Published'], inplace=True)
 
     # Merge all 4 tables and only retain samples exist in all 4
     df = df_meta.merge(df_analysis, how='inner', on='Public_name', validate='one_to_one')
