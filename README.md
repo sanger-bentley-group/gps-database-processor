@@ -16,7 +16,7 @@ The tool carries out several operations in the following order:
    - If there is a location that does not exist in `data/coordinates.csv` (one of the reference tables), it will attempt the fetch the information via Mapbox API
        - The first time this is triggered, it will ask for your Mapbox API key (access token) and save it locally at `config/api_keys.confg` for future use
        - For more information on the Mapbox API key (access token), please visit [their documentation](https://docs.mapbox.com/help/glossary/access-token/)
-3. Generate [Monocle](https://data.monocle.sanger.ac.uk/)-ready `.csv` files in 3-table format
+3. Generate `table_monocle.csv` for [Monocle](https://data-viewer.monocle.sanger.ac.uk/)
 4. Generate `data.json` for [GPS Database Overview](https://www.pneumogen.net/gps/gps-database-overview/)
 
 &nbsp;
@@ -32,7 +32,7 @@ The tool carries out several operations in the following order:
 ### Setup
 1. Clone this repository to your machine
    ```
-   git clone https://github.com/HarryHung/gps-database-processor.git
+   git clone https://github.com/sanger-bentley-group/gps-database-processor.git
    ```
 2. Go into the local copy of the repository 
    ```
@@ -55,12 +55,12 @@ The tool carries out several operations in the following order:
 3. Put the GPS database's three `.csv` source files into the directory containing the cloned repository
 4. Run the following command to validate your input files and generate the output files:
    ```
-   python3 processor.py
+   ./processor.py
    ```
 5. If you or the tool have updated any of the reference tables (i.e. any file in the `data` directory), create a PR (Pull Request) on this repository
 
 ### Optional arguments
-- By default, this tool assumes the file names of `table1`, `table2` and `table3` to be `table1.csv`, `table2.csv`, and `table3.csv` respectively, and the output file name of `table4` will be `table4.csv`, these can be changed by using optional arguments; The 3 Monocle-ready `.csv` files will use the file names of `table1`, `table2` and `table3` with `_monocle` appended at the end; The data file for GPS Database Overview will always have the file name `data.json`
+- By default, this tool assumes the file names of `table1`, `table2` and `table3` to be `table1.csv`, `table2.csv`, and `table3.csv` respectively, and the output file name of `table4` will be `table4.csv`, these can be changed by using optional arguments; The data file for GPS Database Overview and Monocle Table will always have the file names `data.json` and `table_monocle.csv` respectively.
 - Available optional arguments:
   - `-m your_file_name.csv` or `--meta your_file_name.csv`: Override the default `table1` (metadata) file name of `table1.csv`
   - `-q your_file_name.csv` or `--qc your_file_name.csv`: Override the default `table2` (qc) file name of `table2.csv`

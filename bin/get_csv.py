@@ -43,7 +43,7 @@ def get_table4(table1, table3, table4):
     df_table4.fillna('_', inplace=True)
 
     # Drop all columns that are not in the schema of table4
-    output_cols = ('Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifestation', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT-25', 'Published')
+    output_cols = ('Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifestation', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT25', 'Published')
     df_table4.drop(columns=[col for col in df_table4 if col not in output_cols], inplace=True)
     df_table4 = df_table4.reindex(columns = output_cols)
     
@@ -52,41 +52,36 @@ def get_table4(table1, table3, table4):
     config.LOG.info(f'{table4} is generated.')
 
 
-# Generate Monocle tables based on table1 - 4
-def get_monocle(table1, table2, table3, table4):
-    config.LOG.info(f'Generating Monocle tables now...')
+# Generate Monocle table based on table1 - 4
+def get_monocle(table1, table2, table3, table4, table_monocle):
+    config.LOG.info(f'Generating Monocle table now...')
 
     df_meta, df_qc, df_analysis, df_table4 = read_tables(table1, table2, table3, table4)
 
-    # Only preserve QC Passed, UNIQUE and Published for Monocle tables
+    # Only preserve QC Passed, UNIQUE and Published for Monocle table
     df_qc.drop(df_qc[~df_qc['QC'].isin(['PASS', 'PASSPLUS'])].index, inplace=True)
     df_analysis.drop(df_analysis[df_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
     df_table4.drop(df_table4[df_table4['Published'] != 'Y'].index, inplace=True)
 
-    # Relocate table4 columns to table1 and table3 due to database architecture of Monocle
-    cols_table4_to_meta = ['Public_name','Latitude','Longitude','Resolution','Less_than_5_years_old','Manifestation','Vaccine_period','Introduction_year','PCV_type']
-    cols_table4_to_analysis = ['Public_name','PCV7','PCV10_GSK','PCV10_Pneumosil','PCV13','PCV15','PCV20','PCV21','PCV24','IVT-25','Published']
-    df_table4_meta = df_table4[cols_table4_to_meta].copy()
-    df_table4_analysis = df_table4[cols_table4_to_analysis].copy()
-    df_meta_monocle = df_meta.merge(df_table4_meta, how='right', on='Public_name', validate='one_to_one')
-    df_analysis_monocle = df_analysis.merge(df_table4_analysis, how='right', on='Public_name', validate='one_to_one')
+    # Drop columns that do not exist in Monocle table
+    df_meta.drop(columns=['aroE', 'ddl', 'gdh', 'gki', 'recP', 'spi', 'xpt'], inplace=True)
+    df_qc.drop(columns=['Supplier_name'], inplace=True)
+    df_analysis.drop(columns=['No_of_genome', 'Paper_1'], inplace=True)
+    df_table4.drop(columns=['Published'], inplace=True)
 
-    # Only output samples exist in all 3 Monocle tables
-    output_lane_ids = set(df_analysis_monocle['Lane_id'].tolist()).intersection(set(df_qc['Lane_id'].tolist()))
-    df_qc_monocle = df_qc.drop(df_qc[~df_qc['Lane_id'].isin(output_lane_ids)].index)
-    df_analysis_monocle = df_analysis_monocle.drop(df_analysis_monocle[~df_analysis_monocle['Lane_id'].isin(output_lane_ids)].index)
-    output_public_name = set(df_analysis_monocle['Public_name'].tolist())
-    df_meta_monocle = df_meta_monocle.drop(df_meta_monocle[~df_meta_monocle['Public_name'].isin(output_public_name)].index)
+    # Merge all 4 tables and only retain samples exist in all 4
+    df = df_meta.merge(df_analysis, how='inner', on='Public_name', validate='one_to_one')
+    df = df.merge(df_qc, how='inner', on='Lane_id', validate='one_to_one')
+    df = df.merge(df_table4, how='inner', on='Public_name', validate='one_to_one')
 
     # Workaround for Monocle not supporting empty Submitting_institution
-    df_meta_monocle['Submitting_institution'].replace('_', 'UNKNOWN', inplace=True)
+    df['Submitting_institution'].replace('_', 'UNKNOWN', inplace=True)
 
-    # Export Monocle tables
-    for df, table in zip((df_meta_monocle, df_qc_monocle, df_analysis_monocle), (table1, table2, table3)):
-        df.replace('_', '', inplace=True)
-        df.to_csv(f'{table[:-4]}_monocle.csv', index=False)
+    # Export Monocle Table
+    df.replace('_', '', inplace=True)
+    df.to_csv(table_monocle, index=False)
 
-    config.LOG.info('Monocle tables are generated.')
+    config.LOG.info(f'{table_monocle} is generated.')
 
 
 # Read the tables into Pandas dataframes for processing
