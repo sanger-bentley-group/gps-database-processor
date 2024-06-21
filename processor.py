@@ -18,7 +18,7 @@ def main():
     table_monocle = 'table_monocle.csv'
     data = 'data.json'
 
-    validator.validate(table1, table2, table3, version)
+    validator.validate(table1, table2, table3, version, check)
 
     if check:
         return

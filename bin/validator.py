@@ -11,7 +11,7 @@ import bin.config as config
 
 
 # The main function to perform validation on the provided GPS1 database tables.
-def validate(table1, table2, table3, version):
+def validate(table1, table2, table3, version, check=False):
     global FOUND_ERRORS
     FOUND_ERRORS = False
 
@@ -27,9 +27,10 @@ def validate(table1, table2, table3, version):
     check_analysis_table(df_index[table3], table3, version)
 
     # If there is a case conversion, save the conversion result in-place
-    for table in UPDATED_CASE:
-        df_index[table].to_csv(table, index=False)
-        config.LOG.info(f'The unexpected lowercase value(s) in {table} have been fixed in-place.')
+    if not check:
+        for table in UPDATED_CASE:
+            df_index[table].to_csv(table, index=False)
+            config.LOG.info(f'The unexpected lowercase value(s) in {table} have been fixed in-place.')
 
     if FOUND_ERRORS:
         config.LOG.error(f'The validation of the tables is completed with error(s). The process will now be halted. Please correct the error(s) and re-run the processor')
