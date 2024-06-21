@@ -287,7 +287,7 @@ def check_age_years(df, column_name, table):
 
 # Check column values is within reasonable age month 
 def check_age_months(df, column_name, table):
-    check_regex(df, column_name, table, allow_empty=True, float_range=(0, 12), no_alphabet_only_numeric=True)
+    check_regex(df, column_name, table, allow_empty=True, float_range=(0, 12))
 
 
 # Check column values contain 0 - 31 integers or _ only 
@@ -605,22 +605,11 @@ def check_regex(df, column_name, table, pattern=None, allow_empty=False, float_r
     if len(unexpected) == 0:
         return
 
-    if no_alphabet_only_numeric:
-        check_no_alphabet_only_numeric(unexpected, column_name, table)
-    elif absolute:
+    if absolute:
         config.LOG.error(f'{column_name} in {table} has the following unexpected value(s): {", ".join(unexpected)}.')
         found_error()
     else:
         config.LOG.warning(f'{column_name} in {table} has the following non-standard value(s): {", ".join(unexpected)}. Please check if they are correct.')
-
-
-# Check unexpected only contains unexpected values without alphabet, otherwise show alphabet-containing values in error
-def check_no_alphabet_only_numeric(unexpected, column_name, table):
-    found_alphabet = [n for n in unexpected if re.search(r'[a-zA-Z]', n)]
-    if len(found_alphabet) > 0:
-        config.LOG.error(f'{column_name} in {table} has the following alphabet-containing value(s): {", ".join(found_alphabet)}.')
-        found_error()
-    config.LOG.warning(f'{column_name} in {table} has the following non-standard value(s): {", ".join([n for n in unexpected if n not in found_alphabet])}. Please check if they are correct.')
 
 
 def found_error():
