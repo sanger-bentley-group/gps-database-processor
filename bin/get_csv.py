@@ -3,11 +3,14 @@
 
 import pandas as pd
 import csv
+import os
 import bin.config as config
 
 
 # Generate table4 based on data from table1
-def get_table4(table1, table3, table4):
+def get_table4(path):
+    table1, table3, table4 = (os.path.join(path, table) for table in ("table1.csv", "table3.csv", "table4.csv"))
+
     config.LOG.info(f'Generating {table4} now...')
 
     # Read table1 and table3 for inferring data in table4
