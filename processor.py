@@ -46,7 +46,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         allow_abbrev=False,
         description='Process GPS (Global Pneumococcal Sequencing Project) database updates. This tool validates data from GPS1 and/or GPS2; generates table4; generate Monocle Table and data payload of the GPS Database Overview.',
-        epilog='If you have updated any files (except api_keys.py) in the "data" directory, please submit a PR to https://github.com/sanger-bentley-group/gps-database-processor',
+        epilog='If you have updated any files in the "data" directory, please submit a PR to https://github.com/sanger-bentley-group/gps-database-processor',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
