@@ -4,11 +4,12 @@
 import pandas as pd
 import csv
 import os
+import sys
 import bin.config as config
 
 
 # Generate table4 based on data from table1
-def get_table4(path):
+def get_table4(path, location):
     table1, table3, table4 = (os.path.join(path, table) for table in ("table1.csv", "table3.csv", "table4.csv"))
 
     config.LOG.info(f'Generating {table4} now...')
@@ -21,6 +22,8 @@ def get_table4(path):
 
     global UPDATED_COORDINATES
     UPDATED_COORDINATES = False
+    global LOCATION
+    LOCATION = location
     df_table4_meta = df_table4_meta.apply(get_coordinate, axis=1)
     if UPDATED_COORDINATES:
         config.LOG.warning(f'Please verify the new coordinate(s). If any is incorrect, modify the coordinate in {config.COORDINATES_FILE} and re-run this tool.')
@@ -107,21 +110,25 @@ def get_coordinate(row):
     elif country_region_city in config.COORDINATES:
         latitude, longitude = config.COORDINATES[country_region_city]
     else:
+        if LOCATION:
         # Initialise and use config.MAPBOX_GEOCODER to sesarch for coordinates
-        config.get_geocoder() 
-        coordinate = config.MAPBOX_GEOCODER.geocode(country_region_city)
-        latitude, longitude = coordinate.latitude, coordinate.longitude
+            config.get_geocoder() 
+            coordinate = config.MAPBOX_GEOCODER.geocode(country_region_city)
+            latitude, longitude = coordinate.latitude, coordinate.longitude
 
-        # Save new coordinate to file and reload coordinates dictionary from file
-        with open(config.COORDINATES_FILE, 'a') as f:
-            writer = csv.writer(f)
-            writer.writerow([country_region_city, latitude, longitude])
-        config.read_coordinates()
+            # Save new coordinate to file and reload coordinates dictionary from file
+            with open(config.COORDINATES_FILE, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow([country_region_city, latitude, longitude])
+            config.read_coordinates()
 
-        global UPDATED_COORDINATES
-        UPDATED_COORDINATES = True
-        config.LOG.warning(f'New location {country_region_city} is found, the coordinate is determined to be {latitude}, {longitude} and added to "{config.COORDINATES_FILE}".')
-    
+            global UPDATED_COORDINATES
+            UPDATED_COORDINATES = True
+            config.LOG.warning(f'New location {country_region_city} is found, the coordinate is determined to be {latitude}, {longitude} and added to "{config.COORDINATES_FILE}".')
+        else:
+            config.LOG.error(f'New location(s) that does not exist in "{config.COORDINATES_FILE}" is found. Please re-run the processor with --location option to assign coordinate(s).')
+            sys.exit(1)
+
     row['Latitude'] = latitude
     row['Longitude'] = longitude
     return row

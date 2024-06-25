@@ -29,7 +29,7 @@ def main():
 
     # Generate table 4
     for (version, path) in gps_provided:
-        get_csv.get_table4(path)
+        get_csv.get_table4(path, args.location)
 
     # Generate Monocle data and GPS Database Overview data payload
     # WIP
@@ -74,6 +74,12 @@ def parse_arguments():
         '-m', '--monocle',
         action="store_true",
         help='generate Monocle table and GPS Database Overview data payload from both GPS1 and GPS2'
+    )
+
+    parser.add_argument(
+        '-l', '--location',
+        action="store_true",
+        help='get coordinates for locations not yet exist in data/coordinates.csv via MapBox API'
     )
 
     return parser.parse_args()
