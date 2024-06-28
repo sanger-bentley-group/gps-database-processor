@@ -180,14 +180,25 @@ def check_analysis_table(df_analysis, table, version):
     for col in pbp_columns:
         check_pbp(df_analysis, col, table)
 
-    wgs_columns = ['WGS_PEN', 'WGS_AMO', 'WGS_MER', 'WGS_TAX', 'WGS_CFT', 'WGS_CFX', 'WGS_ERY', 'WGS_CLI', 'WGS_SYN', 'WGS_LZO', 'WGS_COT', 'WGS_TET', 'WGS_DOX', 'WGS_LFX', 'WGS_CHL', 'WGS_RIF', 'WGS_VAN']
-    wgs_sir_columns = ['WGS_PEN_SIR_Meningitis', 'WGS_PEN_SIR_Nonmeningitis', 'WGS_AMO_SIR', 'WGS_MER_SIR', 'WGS_TAX_SIR_Meningitis', 'WGS_TAX_SIR_Nonmeningitis', 'WGS_CFT_SIR_Meningitis', 'WGS_CFT_SIR_Nonmeningitis', 'WGS_CFX_SIR', 'WGS_ERY_SIR', 'WGS_CLI_SIR', 'WGS_SYN_SIR', 'WGS_LZO_SIR', 'WGS_COT_SIR', 'WGS_TET_SIR', 'WGS_DOX_SIR', 'WGS_LFX_SIR', 'WGS_CHL_SIR', 'WGS_RIF_SIR', 'WGS_VAN_SIR']
+    match version:
+        case 1:
+            wgs_columns = ['WGS_PEN', 'WGS_AMO', 'WGS_MER', 'WGS_TAX', 'WGS_CFT', 'WGS_CFX', 'WGS_ERY', 'WGS_CLI', 'WGS_SYN', 'WGS_LZO', 'WGS_COT', 'WGS_TET', 'WGS_DOX', 'WGS_LFX', 'WGS_CHL', 'WGS_RIF', 'WGS_VAN']
+            wgs_invalid_columns = []
+            wgs_sir_columns = ['WGS_PEN_SIR_Meningitis', 'WGS_PEN_SIR_Nonmeningitis', 'WGS_AMO_SIR', 'WGS_MER_SIR', 'WGS_TAX_SIR_Meningitis', 'WGS_TAX_SIR_Nonmeningitis', 'WGS_CFT_SIR_Meningitis', 'WGS_CFT_SIR_Nonmeningitis', 'WGS_CFX_SIR', 'WGS_ERY_SIR', 'WGS_CLI_SIR', 'WGS_SYN_SIR', 'WGS_LZO_SIR', 'WGS_COT_SIR', 'WGS_TET_SIR', 'WGS_DOX_SIR', 'WGS_LFX_SIR', 'WGS_CHL_SIR', 'WGS_RIF_SIR', 'WGS_VAN_SIR']
+            wgs_sir_invalid_columns = []
+        case 2:
+            wgs_columns = ['WGS_PEN', 'WGS_AMO', 'WGS_MER', 'WGS_TAX', 'WGS_CFT', 'WGS_CFX', 'WGS_ERY', 'WGS_CLI', 'WGS_COT', 'WGS_TET', 'WGS_DOX', 'WGS_LFX', 'WGS_CHL', 'WGS_RIF', 'WGS_VAN']
+            wgs_invalid_columns = ['WGS_SYN', 'WGS_LZO']
+            wgs_sir_columns = ['WGS_PEN_SIR_Meningitis', 'WGS_PEN_SIR_Nonmeningitis', 'WGS_AMO_SIR', 'WGS_MER_SIR', 'WGS_TAX_SIR_Meningitis', 'WGS_TAX_SIR_Nonmeningitis', 'WGS_CFT_SIR_Meningitis', 'WGS_CFT_SIR_Nonmeningitis', 'WGS_CFX_SIR', 'WGS_ERY_SIR', 'WGS_CLI_SIR', 'WGS_COT_SIR', 'WGS_TET_SIR', 'WGS_DOX_SIR', 'WGS_LFX_SIR', 'WGS_CHL_SIR', 'WGS_RIF_SIR', 'WGS_VAN_SIR']
+            wgs_sir_invalid_columns = ['WGS_SYN_SIR', 'WGS_LZO_SIR']
     for col in wgs_columns:
         check_wgs(df_analysis, col, table)
     for col in wgs_sir_columns:
         check_wgs_sir(df_analysis, col, table)
+    for col in wgs_invalid_columns + wgs_sir_invalid_columns:
+        check_invalid_wgs_and_wgs_sir(df_analysis, col, table)
     
-    check_wgs_ery_cli(df_analysis, 'WGS_ERY_CLI', table)
+    check_wgs_ery_cli(df_analysis, 'WGS_ERY_CLI', table, version)
     check_pbp1a_2b_2x_autocolour(df_analysis, 'PBP1A_2B_2X__autocolour', table)
 
     pos_neg_columns = ['ermB', 'mefA', 'folA_I100L', 'cat']
@@ -516,9 +527,18 @@ def check_wgs_sir(df, column_name, table):
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
-# Check column values contain FLAG, NEG, POS only
-def check_wgs_ery_cli(df, column_name, table):
-    expected = {'FLAG', 'NEG', 'POS'}
+# Check column values _ only
+def check_invalid_wgs_and_wgs_sir(df, column_name, table):
+    expected = {'_'}
+    check_expected(df, column_name, table, expected)
+
+# Check column values contain FLAG, NEG, POS only for GPS1, and contain 
+def check_wgs_ery_cli(df, column_name, table, version):
+    match version:
+        case 1:
+            expected = {'FLAG', 'NEG', 'POS'}
+        case 2:
+            expected = {'R', 'S'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
