@@ -34,9 +34,8 @@ def main():
     # Generate Monocle data and GPS Database Overview data payload
     # WIP
     if args.monocle:
-        # get_csv.get_monocle(table1, table2, table3, table4, table_monocle)
-        # get_json.get_data(table_monocle, data)
-        pass
+        monocle_table = get_csv.get_monocle(args.gps1, args.gps2)
+        # get_json.get_data(monocle_table)
 
     config.LOG.info('The processing is completed. Data is validated and all files are generated.')
 
@@ -52,14 +51,12 @@ def parse_arguments():
 
     parser.add_argument(
         '-1', '--gps1',
-        dest='gps1',
         default=None,
         help='path to directory of GPS1 data'
     )
 
     parser.add_argument(
         '-2', '--gps2',
-        dest='gps2',
         default=None,
         help='path to directory of GPS2 data'
     )
