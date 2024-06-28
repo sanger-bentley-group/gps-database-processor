@@ -23,7 +23,9 @@ MANIFESTATION_DICT = {
 
 
 # Generate Data JSON based on Monocle Table
-def get_data(table_monocle, data_json):
+def get_data(df):
+    data_json = "data.json"
+
     config.LOG.info(f'Generating {data_json} now...')
 
     # Scaffold of the Data JSON
@@ -37,9 +39,6 @@ def get_data(table_monocle, data_json):
         },
         'country': {},
     }
-
-    # Read generated Monocle table
-    df = pd.read_csv(table_monocle, dtype=str)
 
     # Workaround for non-country level entry that has separated PCV programmes
     for region in {'HONG KONG'}:
