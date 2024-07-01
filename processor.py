@@ -29,7 +29,7 @@ def main():
 
     # Generate table 4
     for (version, path) in gps_provided:
-        get_csv.get_table4(path, args.location)
+        get_csv.get_table4(version, path, args.location)
 
     # Generate Monocle data and GPS Database Overview data payload
     # WIP

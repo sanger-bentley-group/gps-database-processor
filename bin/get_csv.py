@@ -9,7 +9,7 @@ import bin.config as config
 
 
 # Generate table4 based on data from table1
-def get_table4(path, location):
+def get_table4(version, path, location):
     table1, table3, table4 = (os.path.join(path, table) for table in ("table1.csv", "table3.csv", "table4.csv"))
 
     config.LOG.info(f'Generating {table4} now...')
@@ -35,6 +35,10 @@ def get_table4(path, location):
     # Get the Manifestation based on the values in 'Clinical_manifestation', 'Source' and the 'data/manifestations.csv' reference table.
     df_table4_meta['Manifestation'] = df_table4_meta.set_index(['Clinical_manifestation', 'Source']).index.map(config.MANIFESTATIONS.get)
 
+    # Add Continent information to table 4 for GPS2
+    if version == 2:
+        df_table4_meta['Continent'] = df_table4_meta['Country'].map(lambda x: config.COUNTRY_CONTINENT.get(x).upper())
+
     # Create a partial table4 dataframe based on a subset of table3
     df_table4_analysis = df_analysis[['Public_name', 'In_silico_serotype', 'Duplicate']].copy()
     df_table4_analysis.drop(df_table4_analysis[df_table4_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
@@ -49,7 +53,9 @@ def get_table4(path, location):
     df_table4.fillna('_', inplace=True)
 
     # Drop all columns that are not in the schema of table4
-    output_cols = ('Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifestation', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT25', 'Published')
+    output_cols = ['Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifestation', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT25', 'Published']
+    if version == 2:
+        output_cols.append('Continent')
     df_table4.drop(columns=[col for col in df_table4 if col not in output_cols], inplace=True)
     df_table4 = df_table4.reindex(columns = output_cols)
     
