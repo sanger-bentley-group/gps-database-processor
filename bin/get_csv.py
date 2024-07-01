@@ -58,39 +58,50 @@ def get_table4(path, location):
     config.LOG.info(f'{table4} is generated.')
 
 
-# Generate Monocle table based on table1 - 4
+# Generate Monocle table based on GPS1 and GGPS2
 def get_monocle(gps1, gps2):
-    print("WIP - Monocle")
-    return
-
     config.LOG.info(f'Generating Monocle table now...')
 
-    df_meta, df_qc, df_analysis, df_table4 = read_tables(table1, table2, table3, table4)
+    dfs = []
 
-    # Only preserve QC Passed, UNIQUE and Published for Monocle table
-    df_qc.drop(df_qc[~df_qc['QC'].isin(['PASS', 'PASSPLUS'])].index, inplace=True)
-    df_analysis.drop(df_analysis[df_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
-    df_table4.drop(df_table4[df_table4['Published'] != 'Y'].index, inplace=True)
+    # Generate dataframes for GPS1 and GPS2
+    for ver, gps_path in ((1, gps1), (2, gps2)):
+        table1, table2, table3, table4 = (os.path.join(gps_path, table) for table in ("table1.csv", "table2.csv", "table3.csv", "table4.csv")) 
+        df_meta, df_qc, df_analysis, df_table4 = read_tables(table1, table2, table3, table4)
 
-    # Drop columns that do not exist in Monocle table
-    df_meta.drop(columns=['aroE', 'ddl', 'gdh', 'gki', 'recP', 'spi', 'xpt'], inplace=True)
-    df_qc.drop(columns=['Supplier_name'], inplace=True)
-    df_analysis.drop(columns=['No_of_genome', 'Paper_1'], inplace=True)
-    df_table4.drop(columns=['Published'], inplace=True)
+        # Only preserve QC Passed, UNIQUE and Published for Monocle table
+        df_qc.drop(df_qc[~df_qc['QC'].isin(['PASS', 'PASSPLUS'])].index, inplace=True)
+        df_analysis.drop(df_analysis[df_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
+        df_table4.drop(df_table4[df_table4['Published'] != 'Y'].index, inplace=True)
 
-    # Merge all 4 tables and only retain samples exist in all 4
-    df = df_meta.merge(df_analysis, how='inner', on='Public_name', validate='one_to_one')
-    df = df.merge(df_qc, how='inner', on='Lane_id', validate='one_to_one')
-    df = df.merge(df_table4, how='inner', on='Public_name', validate='one_to_one')
+        # Drop columns that do not exist in Monocle table, and fix differences between GPS1 and GPS2
+        df_meta.drop(columns=['aroE', 'ddl', 'gdh', 'gki', 'recP', 'spi', 'xpt'], inplace=True)
 
-    # Workaround for Monocle not supporting empty Submitting_institution
-    df['Submitting_institution'].replace('_', 'UNKNOWN', inplace=True)
+        match ver:
+            case 1:
+                df_qc.drop(columns=['Supplier_name'], inplace=True)
+                df_analysis.drop(columns=['No_of_genome', 'Paper_1'], inplace=True)
+            case 2:
+                df_qc.drop(columns=['Public_name', 'Supplier_name'], inplace=True)
+                df_analysis.drop(columns=['No_of_genome'], inplace=True)
+                df_analysis.rename(columns={"Sanger_sample_id": "Sample"}, inplace=True)
 
+        df_table4.drop(columns=['Published'], inplace=True)
+
+        # Merge all 4 tables and only retain samples exist in all 4
+        df = df_meta.merge(df_analysis, how='inner', on='Public_name', validate='one_to_one')
+        df = df.merge(df_qc, how='inner', on='Lane_id', validate='one_to_one')
+        df = df.merge(df_table4, how='inner', on='Public_name', validate='one_to_one')
+        
+        dfs.append(df)
+
+    # Concat GPS1 and GPS2 Dataframe
+    df = pd.concat(dfs)
+    
     # Export Monocle Table
     df.replace('_', '', inplace=True)
-    df.to_csv(table_monocle, index=False)
-
-    config.LOG.info(f'{table_monocle} is generated.')
+    df.to_csv("table_monole.csv", index=False)
+    config.LOG.info(f'{"table_monole.csv"} is generated.')
 
 
 # Read the tables into Pandas dataframes for processing
