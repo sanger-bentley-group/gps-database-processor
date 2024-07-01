@@ -3,6 +3,7 @@
 
 
 import pandas as pd
+import numpy as np
 import json
 import bin.config as config
 
@@ -24,6 +25,8 @@ MANIFESTATION_DICT = {
 
 # Generate Data JSON based on Monocle Table
 def get_data(df):
+    df.replace("", np.nan, inplace=True)
+
     data_json = "data.json"
 
     config.LOG.info(f'Generating {data_json} now...')

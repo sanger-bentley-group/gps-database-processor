@@ -35,7 +35,7 @@ def main():
     # WIP
     if args.monocle:
         monocle_table = get_csv.get_monocle(args.gps1, args.gps2)
-        # get_json.get_data(monocle_table)
+        get_json.get_data(monocle_table)
 
     config.LOG.info('The processing is completed. Data is validated and all files are generated.')
 

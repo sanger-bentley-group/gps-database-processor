@@ -109,6 +109,8 @@ def get_monocle(gps1, gps2):
     df.to_csv("table_monole.csv", index=False)
     config.LOG.info(f'{"table_monole.csv"} is generated.')
 
+    return df
+
 
 # Read the tables into Pandas dataframes for processing
 def read_tables(*arg):
