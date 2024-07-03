@@ -150,7 +150,9 @@ def check_analysis_table(df_analysis, table, version):
             check_case(df_analysis, 'Lane_id', table)
             check_space(df_analysis, 'Lane_id', table)
     
-    # check_public_name_analysis(df_analysis, 'Public_name', table)
+    check_case(df_analysis, 'Public_name', table)
+    check_space(df_analysis, 'Public_name', table)
+
     check_err(df_analysis, 'ERR', table)
     check_ers(df_analysis, 'ERS', table)
     check_no_of_genome(df_analysis, 'No_of_genome', table)
@@ -407,20 +409,6 @@ def check_hetsites_50bp(df, column_name, table):
 def check_sanger_sample_id(df, column_name, table):
     check_case(df, column_name, table)
     check_regex(df, column_name, table, pattern=r'^[0-9]{4}STDY[0-9]{7,8}$')
-
-
-# # Check all values in PUBLISHED_PUBLIC_NAMES can be found in this column 
-# def check_public_name_analysis(df, column_name, table):
-#     check_case(df, column_name, table)
-    
-#     public_name_uniques = set(df['Public_name'].unique().tolist())
-#     unexpected = config.PUBLISHED_PUBLIC_NAMES - public_name_uniques
-#     if len(unexpected) == 0:
-#         return
-    
-#     config.LOG.error(f'The following Public_name(s) are stated to be Published in {config.PUBLISHED_PUBLIC_NAMES_FILE} but not found in {table}: {", ".join(unexpected)}.')
-#     found_error()
-
 
 # Check column values are in valid ERR format only
 def check_err(df, column_name, table):
