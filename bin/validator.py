@@ -46,11 +46,7 @@ def validate(path, version, check=False):
 def read_tables(table1, table2, table3):
     df_index = dict()
     for table in table1, table2, table3:
-        try:
-            df_index[table] = pd.read_csv(table, dtype=str, keep_default_na=False)
-        except:
-            config.LOG.critical('Unable to locate all the tables. Please provide correct file names for the tables. The process will now be halted.')
-            sys.exit(1)
+        df_index[table] = pd.read_csv(table, dtype=str, keep_default_na=False)
     return df_index
 
 
