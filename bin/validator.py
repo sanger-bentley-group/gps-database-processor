@@ -253,7 +253,7 @@ def check_country(df, column_name, table):
     # Check vaccine info
     no_vaccine_info = set(countries) - set(config.PCV_INTRO_YEARS.keys())
     if no_vaccine_info:
-        config.LOG.warning(f'{column_name} in {table} has the following country(s) without vaccine information: {", ".join(no_vaccine_info)}. If their National Immunisation/Vaccination Programme includes PCV, please add their information to {config.PCV_INTRO_YEARS_FILE}.') 
+        config.LOG.warning(f'{column_name} in {table} has the following country(s) without vaccine information: {", ".join(sorted(no_vaccine_info))}. If their National Immunisation/Vaccination Programme includes PCV, please add their information to {config.PCV_INTRO_YEARS_FILE}.') 
 
     # Check alpha2 info; database contains 'WEST AFRICA' which is not a country, therefore hard-coded for its removal
     no_alpha2 = set(countries) - set(config.COUNTRY_ALPHA2) - {'WEST AFRICA'}
