@@ -184,15 +184,19 @@ def check_analysis_table(df_analysis, table, version):
             wgs_invalid_columns = []
             wgs_sir_columns = ['WGS_PEN_SIR_Meningitis', 'WGS_PEN_SIR_Nonmeningitis', 'WGS_AMO_SIR', 'WGS_MER_SIR', 'WGS_TAX_SIR_Meningitis', 'WGS_TAX_SIR_Nonmeningitis', 'WGS_CFT_SIR_Meningitis', 'WGS_CFT_SIR_Nonmeningitis', 'WGS_CFX_SIR', 'WGS_ERY_SIR', 'WGS_CLI_SIR', 'WGS_SYN_SIR', 'WGS_LZO_SIR', 'WGS_COT_SIR', 'WGS_TET_SIR', 'WGS_DOX_SIR', 'WGS_LFX_SIR', 'WGS_CHL_SIR', 'WGS_RIF_SIR', 'WGS_VAN_SIR']
             wgs_sir_invalid_columns = []
+            ariba_sir_columns = []
         case 2:
             wgs_columns = ['WGS_PEN', 'WGS_AMO', 'WGS_MER', 'WGS_TAX', 'WGS_CFT', 'WGS_CFX', 'WGS_ERY', 'WGS_CLI', 'WGS_COT', 'WGS_TET', 'WGS_DOX', 'WGS_LFX', 'WGS_CHL', 'WGS_RIF', 'WGS_VAN']
             wgs_invalid_columns = ['WGS_SYN', 'WGS_LZO']
-            wgs_sir_columns = ['WGS_PEN_SIR_Meningitis', 'WGS_PEN_SIR_Nonmeningitis', 'WGS_AMO_SIR', 'WGS_MER_SIR', 'WGS_TAX_SIR_Meningitis', 'WGS_TAX_SIR_Nonmeningitis', 'WGS_CFT_SIR_Meningitis', 'WGS_CFT_SIR_Nonmeningitis', 'WGS_CFX_SIR', 'WGS_ERY_SIR', 'WGS_CLI_SIR', 'WGS_COT_SIR', 'WGS_TET_SIR', 'WGS_DOX_SIR', 'WGS_LFX_SIR', 'WGS_CHL_SIR', 'WGS_RIF_SIR', 'WGS_VAN_SIR']
+            wgs_sir_columns = ['WGS_PEN_SIR_Meningitis', 'WGS_PEN_SIR_Nonmeningitis', 'WGS_AMO_SIR', 'WGS_MER_SIR', 'WGS_TAX_SIR_Meningitis', 'WGS_TAX_SIR_Nonmeningitis', 'WGS_CFT_SIR_Meningitis', 'WGS_CFT_SIR_Nonmeningitis', 'WGS_CFX_SIR']
             wgs_sir_invalid_columns = ['WGS_SYN_SIR', 'WGS_LZO_SIR']
+            ariba_sir_columns = ['WGS_ERY_SIR', 'WGS_CLI_SIR', 'WGS_COT_SIR', 'WGS_TET_SIR', 'WGS_DOX_SIR', 'WGS_LFX_SIR', 'WGS_CHL_SIR', 'WGS_RIF_SIR', 'WGS_VAN_SIR']
     for col in wgs_columns:
         check_wgs(df_analysis, col, table)
     for col in wgs_sir_columns:
         check_wgs_sir(df_analysis, col, table)
+    for col in ariba_sir_columns:
+        check_ariba_sir_columns(df_analysis, col, table)
     for col in wgs_invalid_columns + wgs_sir_invalid_columns:
         check_invalid_wgs_and_wgs_sir(df_analysis, col, table)
     
@@ -506,9 +510,15 @@ def check_wgs(df, column_name, table):
     check_regex(df, column_name, table, allow_empty=True, pattern=r'^(FLAG|NF|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?))$')
 
 
-# Check column values contain NF, R, I, S, FLAG only
+# Check column values contain NF, R, I, S, FLAG, _ only
 def check_wgs_sir(df, column_name, table):
-    expected = {'NF', 'R', 'I', 'S', 'FLAG'}
+    expected = {'NF', 'R', 'I', 'S', 'FLAG', '_'}
+    check_case(df, column_name, table)
+    check_expected(df, column_name, table, expected)
+
+# Check column values contain S, I, R, INDETERMINABLE only
+def check_ariba_sir_columns(df, column_name, table):
+    expected = {'S', 'I', 'R', 'INDETERMINABLE'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
