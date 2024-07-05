@@ -161,7 +161,7 @@ def check_analysis_table(df_analysis, table, version):
 
     mlst_genes_in_silico_columns = ['aroE', 'gdh', 'gki', 'recP', 'spi', 'xpt', 'ddl']
     for col in mlst_genes_in_silico_columns:
-        check_mlst_gene_in_silico(df_analysis, col, table)
+        check_mlst_gene_in_silico(df_analysis, col, table, version)
 
     check_gpsc(df_analysis, 'GPSC', table)
 
@@ -464,11 +464,14 @@ def check_in_silico_st(df, column_name, table):
     check_int_range(df, column_name, table, lo=1, hi=20000, allow_empty=True, others=['NEW'])
 
 
-# Check column values contain 1 or larger integers or NEW, PARTIAL_DELETION, ABSENT, _ only
-def check_mlst_gene_in_silico(df, column_name, table):
-    check_case(df, column_name, table)
-    check_int_range(df, column_name, table, lo=1, allow_empty=True, others=['NEW', 'PARTIAL_DELETION', 'ABSENT'])
-
+# Check column values contain: For GPS1, 1 or larger integers or NEW, PARTIAL_DELETION, ABSENT, _ only; For GPS2, all possible mlst output
+def check_mlst_gene_in_silico(df, column_name, table, version):
+    match version:
+        case 1:
+            check_case(df, column_name, table)
+            check_int_range(df, column_name, table, lo=1, allow_empty=True, others=['NEW', 'PARTIAL_DELETION', 'ABSENT'])
+        case 2:
+            check_regex(df, column_name, table, pattern=r'^(((~?[0-9]+|[0-9]+\?)(,(~?[0-9]+|[0-9]+\?))*)|-)$')
 
 # Check column values contain 1 - 2000 integers, _ only
 def check_gpsc(df, column_name, table):
