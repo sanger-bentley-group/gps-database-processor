@@ -116,11 +116,11 @@ def check_qc_table(df_qc, table, version):
                 check_space(df_qc, col, table)
             check_assembler(df_qc, 'Assembler', table)
 
-    check_streptococcus_pneumoniae(df_qc, 'Streptococcus_pneumoniae', table)
+    check_streptococcus_pneumoniae(df_qc, 'Streptococcus_pneumoniae', table, version)
     check_total_length(df_qc, 'Total_length', table)
     check_no_of_contigs(df_qc, 'No_of_contigs', table)
     check_genome_covered(df_qc, 'Genome_covered', table)
-    check_depth_of_coverage(df_qc, 'Depth_of_coverage', table)
+    check_depth_of_coverage(df_qc, 'Depth_of_coverage', table, version)
     check_proportion_of_het_snps(df_qc, 'Proportion_of_Het_SNPs', table)
     check_qc(df_qc, 'QC', table)
     check_hetsites_50bp(df_qc, 'Hetsites_50bp', table)
@@ -142,11 +142,11 @@ def check_analysis_table(df_analysis, table, version):
 
     match version:
         case 1:
-            check_sanger_sample_id(df_analysis, 'Sample', table)
+            check_sanger_sample_id(df_analysis, 'Sample', table, version)
             check_paper_1(df_analysis, 'Paper_1', table)
             check_lane_id(df_analysis, 'Lane_id', table)
         case 2:
-            check_sanger_sample_id(df_analysis, 'Sanger_sample_id', table)
+            check_sanger_sample_id(df_analysis, 'Sanger_sample_id', table, version)
             check_case(df_analysis, 'Lane_id', table)
             check_space(df_analysis, 'Lane_id', table)
     
@@ -367,9 +367,14 @@ def check_assembler(df, column_name, table):
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
-# Check column values are float in 0 - 100 only
-def check_streptococcus_pneumoniae(df, column_name, table):
-    check_regex(df, column_name, table, float_range=(0, 100))
+# Check column values are float in 0 - 100 only. Allows to be _ in GPS2 as well.
+def check_streptococcus_pneumoniae(df, column_name, table, version):
+    float_range = (0, 100)
+    match version:
+        case 1:
+            check_regex(df, column_name, table, float_range=float_range)
+        case 2:
+            check_regex(df, column_name, table, float_range=float_range, allow_empty=True)
 
 
 # Check column values contain 1 or larger integers or _ only
@@ -387,10 +392,14 @@ def check_genome_covered(df, column_name, table):
     check_regex(df, column_name, table, float_range=(0, 100), allow_empty=True)
 
 
-# Check column values are float in 0 - infinity only
-def check_depth_of_coverage(df, column_name, table):
-    check_regex(df, column_name, table, float_range=(0, float('inf'))) 
-
+# Check column values are float in 0 - infinity only. Allows to be _ in GPS2 as well.
+def check_depth_of_coverage(df, column_name, table, version):
+    float_range = (0, float('inf'))
+    match version:
+        case 1:
+            check_regex(df, column_name, table, float_range=float_range)
+        case 2:
+            check_regex(df, column_name, table, float_range=float_range, allow_empty=True)
 
 # Check column values are float in 0 - 100 or _ only
 def check_proportion_of_het_snps(df, column_name, table):
@@ -409,10 +418,15 @@ def check_hetsites_50bp(df, column_name, table):
     check_int_range(df, column_name, table, lo=0, allow_empty=True)
 
 
-# Check column values are in Sanger sample format only
-def check_sanger_sample_id(df, column_name, table):
+# Check column values are in Sanger sample format only. Allows to be _ in GPS2 as well.
+def check_sanger_sample_id(df, column_name, table, version):
     check_case(df, column_name, table)
-    check_regex(df, column_name, table, pattern=r'^[0-9]{4}STDY[0-9]{7,8}$')
+    pattern=r'^[0-9]{4}STDY[0-9]{7,8}$'
+    match version:
+        case 1:
+            check_regex(df, column_name, table, pattern=pattern)
+        case 2:
+            check_regex(df, column_name, table, pattern=pattern, allow_empty=True)
 
 # Check column values are in valid ERR format only
 def check_err(df, column_name, table):
