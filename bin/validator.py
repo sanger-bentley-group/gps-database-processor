@@ -156,7 +156,7 @@ def check_analysis_table(df_analysis, table, version):
     check_err(df_analysis, 'ERR', table)
     check_ers(df_analysis, 'ERS', table)
     check_no_of_genome(df_analysis, 'No_of_genome', table)
-    check_duplicate(df_analysis, 'Duplicate', table)
+    check_duplicate(df_analysis, 'Duplicate', table, version)
     check_in_silico_st(df_analysis, 'In_silico_ST', table)
 
     mlst_genes_in_silico_columns = ['aroE', 'gdh', 'gki', 'recP', 'spi', 'xpt', 'ddl']
@@ -433,12 +433,16 @@ def check_no_of_genome(df, column_name, table):
 
 # Check column values contain DUPLICATE, UNIQUE only
 # Each public name should contains one UNIQUE value at most
-def check_duplicate(df, column_name, table):
+def check_duplicate(df, column_name, table, version):
     expected = {'DUPLICATE', 'UNIQUE'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
-    
-    df_uniques = df[~df['Public_name'].duplicated(keep=False)]
+
+    match version:
+        case 1:
+            df_uniques = df[~df['Public_name'].duplicated(keep=False)]
+        case 2:
+            df_uniques = df[~df['Public_name'].str.replace(r'_R[0-9]+?$', '', regex=True).duplicated(keep=False)]
 
     uniques_as_duplicate = df_uniques[df_uniques[column_name]=='DUPLICATE']['Public_name'].tolist()
     if uniques_as_duplicate:
