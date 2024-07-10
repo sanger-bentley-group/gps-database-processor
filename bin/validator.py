@@ -162,8 +162,14 @@ def check_analysis_table(df_analysis, table, version):
 
     check_gpsc(df_analysis, 'GPSC', table)
 
-    color_columns = ['GPSC__colour', 'In_silico_serotype__colour', 'ermB__colour', 'mefA__colour', 'folA_I100L__colour', 'cat__colour']
-    color_columns_with_transparent = ['WGS_PEN_SIR_Meningitis__colour', 'WGS_PEN_SIR_Nonmeningitis__colour', 'WGS_AMO_SIR__colour', 'WGS_MER_SIR__colour', 'WGS_TAX_SIR_Meningitis__colour', 'WGS_TAX_SIR_Nonmeningitis__colour', 'WGS_CFT_SIR_Meningitis__colour', 'WGS_CFT_SIR_Nonmeningitis__colour', 'WGS_CFX_SIR__colour', 'WGS_ERY_SIR__colour', 'WGS_CLI_SIR__colour', 'WGS_SYN_SIR__colour', 'WGS_LZO_SIR__colour', 'WGS_COT_SIR__colour', 'WGS_TET_SIR__colour', 'WGS_DOX_SIR__colour', 'WGS_LFX_SIR__colour', 'WGS_CHL_SIR__colour', 'WGS_RIF_SIR__colour', 'WGS_VAN_SIR__colour']
+    match version:
+        case 1:
+            color_columns = ['GPSC__colour', 'In_silico_serotype__colour', 'ermB__colour', 'mefA__colour', 'folA_I100L__colour', 'cat__colour']
+            color_columns_with_transparent = ['WGS_PEN_SIR_Meningitis__colour', 'WGS_PEN_SIR_Nonmeningitis__colour', 'WGS_AMO_SIR__colour', 'WGS_MER_SIR__colour', 'WGS_TAX_SIR_Meningitis__colour', 'WGS_TAX_SIR_Nonmeningitis__colour', 'WGS_CFT_SIR_Meningitis__colour', 'WGS_CFT_SIR_Nonmeningitis__colour', 'WGS_CFX_SIR__colour', 'WGS_ERY_SIR__colour', 'WGS_CLI_SIR__colour', 'WGS_SYN_SIR__colour', 'WGS_LZO_SIR__colour', 'WGS_COT_SIR__colour', 'WGS_TET_SIR__colour', 'WGS_DOX_SIR__colour', 'WGS_LFX_SIR__colour', 'WGS_CHL_SIR__colour', 'WGS_RIF_SIR__colour', 'WGS_VAN_SIR__colour']
+        case 2:
+            color_columns = ['ermB__colour', 'mefA__colour', 'folA_I100L__colour', 'cat__colour']
+            color_columns_with_transparent = ['GPSC__colour', 'In_silico_serotype__colour', 'WGS_PEN_SIR_Meningitis__colour', 'WGS_PEN_SIR_Nonmeningitis__colour', 'WGS_AMO_SIR__colour', 'WGS_MER_SIR__colour', 'WGS_TAX_SIR_Meningitis__colour', 'WGS_TAX_SIR_Nonmeningitis__colour', 'WGS_CFT_SIR_Meningitis__colour', 'WGS_CFT_SIR_Nonmeningitis__colour', 'WGS_CFX_SIR__colour', 'WGS_ERY_SIR__colour', 'WGS_CLI_SIR__colour', 'WGS_SYN_SIR__colour', 'WGS_LZO_SIR__colour', 'WGS_COT_SIR__colour', 'WGS_TET_SIR__colour', 'WGS_DOX_SIR__colour', 'WGS_LFX_SIR__colour', 'WGS_CHL_SIR__colour', 'WGS_RIF_SIR__colour', 'WGS_VAN_SIR__colour']
+
     for col in color_columns:
         check_color(df_analysis, col, table)
     for col in color_columns_with_transparent:
