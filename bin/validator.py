@@ -67,11 +67,8 @@ def check_meta_table(df_meta, table, version):
     if version == "1":
         check_continent(df_meta, 'Continent', table)
 
-    check_case_and_space_columns = ['Sample_name', 'Public_name']
-    for col in check_case_and_space_columns:
-        check_case(df_meta, col, table)
-        check_space(df_meta, col, table)
-
+    check_sample_name(df_meta, 'Sample_name', table)
+    check_public_name(df_meta, 'Public_name', table)
     check_selection_random(df_meta, 'Selection_random', table)
     check_country(df_meta, 'Country', table)
     check_month_collection(df_meta, 'Month', table)
@@ -233,6 +230,23 @@ def check_space(df, column_name, table):
     config.LOG.error(f'{column_name} in {table} has the following value(s) with space(s): {", ".join(unexpected)}.')
     found_error()
 
+# Check column values are in uppercase letters and have no space
+def check_sample_name(df, column_name, table):
+    check_case(df, column_name, table)
+    check_space(df, column_name, table)
+
+# Check column values are in uppercase letters, have no space, and unique
+def check_public_name(df, column_name, table):
+    check_case(df, column_name, table)
+    check_space(df, column_name, table)
+    
+    duplicated_names = df[df.duplicated(subset=[column_name], keep=False)][column_name].unique()
+    
+    if len(duplicated_names) == 0:
+        return
+    
+    config.LOG.error(f'{column_name} in {table} contains duplicate entries of the following Public_name(s): {", ".join(duplicated_names)}.')
+    found_error()
 
 # Check column values contain Y, N, _ only
 def check_selection_random(df, column_name, table):
