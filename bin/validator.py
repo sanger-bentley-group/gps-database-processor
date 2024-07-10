@@ -150,8 +150,8 @@ def check_analysis_table(df_analysis, table, version):
     check_case(df_analysis, 'Public_name', table)
     check_space(df_analysis, 'Public_name', table)
 
-    check_err(df_analysis, 'ERR', table)
-    check_ers(df_analysis, 'ERS', table)
+    check_err(df_analysis, 'ERR', table, version)
+    check_ers(df_analysis, 'ERS', table, version)
     check_no_of_genome(df_analysis, 'No_of_genome', table)
     check_duplicate(df_analysis, 'Duplicate', table, version)
     check_in_silico_st(df_analysis, 'In_silico_ST', table)
@@ -448,16 +448,30 @@ def check_sanger_sample_id(df, column_name, table, version):
         case 2:
             check_regex(df, column_name, table, pattern=pattern, allow_empty=True)
 
-# Check column values are in valid ERR format only
-def check_err(df, column_name, table):
+# Check column values are in valid ERR format only. Allows to be _ in GPS2 as well.
+def check_err(df, column_name, table, version):
     check_case(df, column_name, table)
-    check_regex(df, column_name, table, pattern=r'^(NOTFOUND|ERR[0-9]{6,8})$')
+
+    match version:
+        case 1:
+            pattern = r'^(NOTFOUND|ERR[0-9]{6,8})$'
+        case 2:
+            pattern = r'^(NOTFOUND|ERR[0-9]{6,8}|_)$'
+
+    check_regex(df, column_name, table, pattern=pattern)
 
 
-# Check column values are in valid ERS format only
-def check_ers(df, column_name, table):
+# Check column values are in valid ERS format only. Allows to be _ in GPS2 as well.
+def check_ers(df, column_name, table, version):
     check_case(df, column_name, table)
-    check_regex(df, column_name, table, pattern=r'^ERS[0-9]{6,8}$')
+    
+    match version:
+        case 1:
+            pattern = r'^ERS[0-9]{6,8}$'
+        case 2:
+            pattern = r'^(ERS[0-9]{6,8}|_)$'
+
+    check_regex(df, column_name, table, pattern=pattern)
 
 
 # Check column values contain 1 - 4 integers only
