@@ -486,24 +486,31 @@ def check_duplicate(df, column_name, table, version):
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
+    df_copy = df.copy()
+
     match version:
         case 1:
-            df_uniques = df[~df['Public_name'].duplicated(keep=False)]
+            df_copy['Public_name_no_suffix'] = df_copy['Public_name']
+            duplicate_string = "duplicates"
         case 2:
-            df_uniques = df[~df['Public_name'].str.replace(r'_R[0-9]+?$', '', regex=True).duplicated(keep=False)]
+            df_copy['Public_name_no_suffix'] = df_copy['Public_name'].str.replace(r'_R[0-9]+?$', '', regex=True)
+            duplicate_string = "duplicates (including _R* suffix variants)"
+
+    df_uniques = df_copy[~df_copy['Public_name_no_suffix'].duplicated(keep=False)]
+    df_duplicates = df_copy[df_copy['Public_name_no_suffix'].duplicated(keep=False)]
 
     uniques_as_duplicate = df_uniques[df_uniques[column_name]=='DUPLICATE']['Public_name'].tolist()
     if uniques_as_duplicate:
         config.LOG.warning(f'{table} has the following unique Public_name(s) marked as DUPLICATE in {column_name}: {", ".join(uniques_as_duplicate)}. Please check if they are correct.')
 
-    df_duplicates = df[df['Public_name'].duplicated(keep=False)]
-    df_duplicates_unique_count = df_duplicates[df_duplicates['Duplicate']=='UNIQUE'].groupby(['Public_name']).size()
-    duplicates_no_unique = df_duplicates_unique_count.index[df_duplicates_unique_count == 0].tolist()
+    duplicates_no_unique = set(df_duplicates['Public_name_no_suffix']) - set(df_duplicates[df_duplicates['Duplicate']=='UNIQUE']['Public_name_no_suffix'])
     if duplicates_no_unique:
-        config.LOG.warning(f'{table} has the following duplicated Public_name(s) with none of their duplicates marked as UNIQUE in {column_name}: {", ".join(duplicates_no_unique)}. Please check if they are correct.')
+        config.LOG.warning(f'{table} has the following duplicated Public_name(s) with none of their {duplicate_string} marked as UNIQUE in {column_name}: {", ".join(duplicates_no_unique)}. Please check if they are correct.')
+    
+    df_duplicates_unique_count = df_duplicates[df_duplicates['Duplicate']=='UNIQUE'].groupby(['Public_name_no_suffix']).size()
     duplicates_more_than_one_unique = df_duplicates_unique_count.index[df_duplicates_unique_count > 1].tolist()
     if duplicates_more_than_one_unique:
-        config.LOG.error(f'{table} has the following duplicated Public_name(s) with more than one of their duplicates marked as UNIQUE in {column_name}: {", ".join(duplicates_more_than_one_unique)}.')
+        config.LOG.error(f'{table} has the following duplicated Public_name(s) with more than one of their {duplicate_string} marked as UNIQUE in {column_name}: {", ".join(duplicates_more_than_one_unique)}.')
         found_error()
 
 
@@ -547,7 +554,7 @@ def check_color(df, column_name, table, transparent=False):
 # Expect single serotype
 def check_in_silico_serotype(df, column_name, table):
     check_case(df, column_name, table)
-    check_regex(df, column_name, table, absolute=False, pattern=r'^(?!0)[0-9]{1,2}[A-Z]?$|^23B1$|^SWISS_NT|^15B\/15C$')
+    check_regex(df, column_name, table, absolute=False, pattern=r'^((?!0)[0-9]{1,2}[A-Z]?|23B1|SWISS_NT|15B\/15C|POSSIBLE 6[A-Z]|UNTYPABLE|COVERAGE TOO LOW|ALTERNATIVE_ALIB_NT|SEROBA FAILURE|6E\(6A\)|6E\(6B\)|SEROGROUP 24|19AF)$')
 
 
 # Check column values contain 1 - 1000 integers or NEW, NF, ERROR only
