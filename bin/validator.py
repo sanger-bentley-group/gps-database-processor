@@ -563,10 +563,10 @@ def check_pbp(df, column_name, table):
     check_int_range(df, column_name, table, lo=0, hi=1000, others=['NEW', 'NF', 'ERROR'])
 
 
-# Check column values are numeric values (can be a range: >, <, >=, <=) or FLAG, NF only
+# Check column values are numeric values (can be a range: >, <, >=, <=, or value - value), FLAG, NF, or NA only
 def check_wgs(df, column_name, table):
     check_case(df, column_name, table)
-    check_regex(df, column_name, table, allow_empty=True, pattern=r'^(FLAG|NF|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?))$')
+    check_regex(df, column_name, table, allow_empty=True, pattern=r'^(NA|FLAG|NF|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?)|(?!0[0-9])([0-9]+([.][0-9]+)?)-(?!0[0-9])([0-9]+([.][0-9]+)?))$')
 
 
 # Check column values contain NF, R, I, S, FLAG, _ only
