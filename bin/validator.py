@@ -554,7 +554,7 @@ def check_color(df, column_name, table, transparent=False):
 # Expect single serotype
 def check_in_silico_serotype(df, column_name, table):
     check_case(df, column_name, table)
-    check_regex(df, column_name, table, absolute=False, pattern=r'^((?!0)[0-9]{1,2}[A-Z]?|23B1|SWISS_NT|15B\/15C|POSSIBLE 6[A-Z]|UNTYPABLE|COVERAGE TOO LOW|ALTERNATIVE_ALIB_NT|SEROBA FAILURE|6E\(6A\)|6E\(6B\)|SEROGROUP 24|19AF)$')
+    check_regex(df, column_name, table, absolute=False, pattern=r'^((?!0)([0-9]{1,2})[A-Z]?(\/\2[A-Z])*|POSSIBLE 6[A-Z]|6E\(6A\)|6E\(6B\)|23B1|SEROGROUP 24|19AF|SWISS_NT|ALTERNATIVE_ALIB_NT|UNTYPABLE|COVERAGE TOO LOW|SEROBA FAILURE)$')
 
 
 # Check column values contain 1 - 1000 integers or NEW, NF, ERROR only
