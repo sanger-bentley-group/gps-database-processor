@@ -493,7 +493,7 @@ def check_duplicate(df, column_name, table, version):
             df_copy['Public_name_no_suffix'] = df_copy['Public_name']
             duplicate_string = "duplicates"
         case 2:
-            df_copy['Public_name_no_suffix'] = df_copy['Public_name'].str.replace(r'_R[0-9]+?$', '', regex=True)
+            df_copy['Public_name_no_suffix'] = df_copy['Public_name'].str.replace(r'_R[1-9]$', '', regex=True)
             duplicate_string = "duplicates (including _R* suffix variants)"
 
     df_uniques = df_copy[~df_copy['Public_name_no_suffix'].duplicated(keep=False)]
