@@ -367,13 +367,13 @@ def check_sequence_type(df, column_name, table):
 # Check column values contain 1 or larger integers or UNKNOWN, _ only
 def check_mlst_gene(df, column_name, table):
     check_case(df, column_name, table)
-    check_int_range(df, column_name, table, lo=1, allow_empty=True, others=['UNKNOWN'])
+    check_int_range(df, column_name, table, lo=1, allow_empty=True, others=['UNKNOWN'], absolute=False)
 
 
 # Check column values contain numeric values (can be a range: >, <, >=, <=) or I, R, S, NS, _ only 
 def check_antibiotic_ast(df, column_name, table):
     check_case(df, column_name, table)
-    check_regex(df, column_name, table, allow_empty=True, pattern=r'^([IRS]|NS|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?))$')
+    check_regex(df, column_name, table, allow_empty=True, pattern=r'^([IRS]|NS|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?))$', absolute=False)
 
 
 # Check column values are in Sanger Lane ID format only
@@ -644,7 +644,7 @@ def get_uniques_non_empty(df, column_name):
 
 
 # Check column values contain integers in specific range (if no hi value is provided, it assume no upper limit) or values in the others list only
-def check_int_range(df, column_name, table, lo, hi=float('inf'), others=None, allow_empty=False):
+def check_int_range(df, column_name, table, lo, hi=float('inf'), others=None, allow_empty=False, absolute=True):
     if allow_empty:
         values = get_uniques_non_empty(df, column_name)
     else:
@@ -658,8 +658,11 @@ def check_int_range(df, column_name, table, lo, hi=float('inf'), others=None, al
     if len(unexpected) == 0:
         return
     
-    config.LOG.error(f'{column_name} in {table} has the following unexpected value(s): {", ".join(unexpected)}.')
-    found_error()
+    if absolute:
+        config.LOG.error(f'{column_name} in {table} has the following unexpected value(s): {", ".join(unexpected)}.')
+        found_error()
+    else:
+        config.LOG.warning(f'{column_name} in {table} has the following non-standard value(s): {", ".join(unexpected)}. Please check if they are correct.')
 
 
 # Check column values is between specific year and now or _
