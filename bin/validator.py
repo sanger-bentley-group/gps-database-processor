@@ -210,7 +210,7 @@ def check_analysis_table(df_analysis, table, version):
     for col in pos_neg_columns:
         check_pos_neg(df_analysis, col, table)
 
-    check_case_only_columns = ['Cot']
+    check_case_only_columns = ['Cot', 'Tet__autocolour', 'FQ__autocolour', 'folP__autocolour', 'Other']
     for col in check_case_only_columns:
         check_case(df_analysis, col, table)
 
