@@ -668,7 +668,7 @@ def check_year(df, column_name, table, lo):
 
 
 # Check regex pattern or float range, optional: allow empty, float range, no alphabet only numeric, absolute
-def check_regex(df, column_name, table, pattern=None, allow_empty=False, float_range=None, no_alphabet_only_numeric=False, absolute=True):
+def check_regex(df, column_name, table, pattern=None, allow_empty=False, float_range=None, absolute=True):
     if allow_empty:
         values = get_uniques_non_empty(df, column_name)
     else:
