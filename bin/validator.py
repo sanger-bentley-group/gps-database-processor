@@ -22,18 +22,26 @@ def validate(path, version, check=False):
     global INSERTED_METADATA
     INSERTED_METADATA = set()
 
-    config.LOG.info(f'Validating the tables at {path} now...')
+    config.LOG.info(f'Loading the tables at {path} now...')
 
     table1, table2, table3 = (os.path.join(path, table) for table in ("table1.csv", "table2.csv", "table3.csv"))
 
     df_index = read_tables(table1, table2, table3)
 
+    config.LOG.info(f'Validating {table1} now...')
     check_meta_table(df_index[table1], table1, version)
+
+    config.LOG.info(f'Validating {table2} now...')
     check_qc_table(df_index[table2], table2, version)
+
+    config.LOG.info(f'Validating {table3} now...')
     check_analysis_table(df_index[table3], table3, version)
 
     if version == 2:
+        config.LOG.info(f'Cross-checking {table1} and {table3} now...')
         add_unique_repeat_to_metadata(df_index, table1, table3)
+
+        config.LOG.info(f'Cross-checking {table2} and {table3} now...')
         crosscheck_public_name(df_index[table2], table2, df_index[table3], table3)
 
     # If not in check mode, and there is a case conversion or repeat addition, save the result
@@ -46,10 +54,10 @@ def validate(path, version, check=False):
                 config.LOG.info(f'The missing repeat(s) which marked as UNIQUE and have their original(s) available have been inserted into {table} based on their original(s).')
 
     if FOUND_ERRORS:
-        config.LOG.error(f'The validation of the tables at {path} is completed with error(s). The process will now be halted. Please correct the error(s) and re-run the processor')
+        config.LOG.error(f'The validation of the tables at {path} completed with error(s). The process will now be halted. Please correct the error(s) and re-run the processor')
         sys.exit(1)
     else:
-        config.LOG.info(f'The validation of the tables at {path} is completed.')
+        config.LOG.info(f'The validation of the tables at {path} completed without error.')
 
 
 # Read the tables into Pandas dataframes for processing
