@@ -34,6 +34,7 @@ def validate(path, version, check=False):
 
     if version == 2:
         add_unique_repeat_to_metadata(df_index, table1, table3)
+        crosscheck_public_name(df_index[table2], table2, df_index[table3], table3)
 
     # If not in check mode, and there is a case conversion or repeat addition, save the result
     if not check:
@@ -730,6 +731,16 @@ def add_unique_repeat_to_metadata(df_index, table1, table3):
         config.LOG.info(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, but their original(s) are: {", ".join(repeats_inserted)}')
     if repeats_without_original:
         config.LOG.warning(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, nor their original(s): {", ".join(repeats_without_original)}')
+
+
+# Check if Public_names in table2 and table3 are the same for the same Lane_id
+def crosscheck_public_name(df_table2, table2, df_table3, table3):
+    df_merged = df_table2[['Lane_id', 'Public_name']].merge(df_table3[['Lane_id', 'Public_name']], on='Lane_id', suffixes=('_table2', '_table3'))
+    laneids_different_public_name = df_merged[df_merged['Public_name_table2'] != df_merged['Public_name_table3']]['Lane_id'].unique().tolist()
+
+    if laneids_different_public_name:
+        config.LOG.error(f'The following Lane_id(s) have different Public_name(s) in {table2} and {table3}: {", ".join(sorted(laneids_different_public_name))}.')
+        found_error()
 
 
 def found_error():
