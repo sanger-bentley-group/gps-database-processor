@@ -50,35 +50,6 @@ def validate(path, version, check=False):
     else:
         config.LOG.info(f'The validation of the tables at {path} is completed.')
 
-def add_unique_repeat_to_metadata(df_index, table1, table3):
-    df_meta = df_index[table1]
-    df_analysis = df_index[table3]
-    repeats_to_add = set(df_analysis[(df_analysis['Duplicate'] == 'UNIQUE') & (df_analysis['Public_name'].str.contains(r'_R[1-9]$'))]['Public_name']) - set(df_meta['Public_name'])
-
-    repeats_inserted = []
-    repeats_without_original = []
-
-    for repeat in repeats_to_add:
-        original = re.search(r'^(.+)_R[1-9]$', repeat).group(1)
-        df_original = df_meta[df_meta['Public_name'] == original]
-        if not df_original.empty:
-            repeats_inserted.append(repeat)
-            
-            row_to_insert_index = df_original.index[0]
-            row_to_insert = df_meta.iloc[row_to_insert_index].copy()
-            row_to_insert['Public_name'] = repeat
-            df_index[table1] = pd.concat([df_meta.iloc[:row_to_insert_index + 1], pd.DataFrame([row_to_insert]), df_meta.iloc[row_to_insert_index + 1:]]).reset_index(drop=True)
-            
-            global INSERTED_METADATA
-            INSERTED_METADATA.add(table1)
-        else:
-            repeats_without_original.append(repeat)
-
-    if repeats_inserted:
-        config.LOG.info(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, but their original(s) are: {", ".join(repeats_inserted)}')
-    if repeats_without_original:
-        config.LOG.warning(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, nor their original(s): {", ".join(repeats_without_original)}')
-
 
 # Read the tables into Pandas dataframes for processing
 def read_tables(table1, table2, table3):
@@ -728,6 +699,37 @@ def check_regex(df, column_name, table, pattern=None, allow_empty=False, float_r
         found_error()
     else:
         config.LOG.warning(f'{column_name} in {table} has the following non-standard value(s): {", ".join(unexpected)}. Please check if they are correct.')
+
+
+# If there is a repeat (Public_name with _R* suffix) marked as UNIQUE in Duplicate but does not exist in table1, attempt to create an entry in table1 based on its original metadata
+def add_unique_repeat_to_metadata(df_index, table1, table3):
+    df_meta = df_index[table1]
+    df_analysis = df_index[table3]
+    repeats_to_add = set(df_analysis[(df_analysis['Duplicate'] == 'UNIQUE') & (df_analysis['Public_name'].str.contains(r'_R[1-9]$'))]['Public_name']) - set(df_meta['Public_name'])
+
+    repeats_inserted = []
+    repeats_without_original = []
+
+    for repeat in repeats_to_add:
+        original = re.search(r'^(.+)_R[1-9]$', repeat).group(1)
+        df_original = df_meta[df_meta['Public_name'] == original]
+        if not df_original.empty:
+            repeats_inserted.append(repeat)
+            
+            row_to_insert_index = df_original.index[0]
+            row_to_insert = df_meta.iloc[row_to_insert_index].copy()
+            row_to_insert['Public_name'] = repeat
+            df_index[table1] = pd.concat([df_meta.iloc[:row_to_insert_index + 1], pd.DataFrame([row_to_insert]), df_meta.iloc[row_to_insert_index + 1:]]).reset_index(drop=True)
+            
+            global INSERTED_METADATA
+            INSERTED_METADATA.add(table1)
+        else:
+            repeats_without_original.append(repeat)
+
+    if repeats_inserted:
+        config.LOG.info(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, but their original(s) are: {", ".join(repeats_inserted)}')
+    if repeats_without_original:
+        config.LOG.warning(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, nor their original(s): {", ".join(repeats_without_original)}')
 
 
 def found_error():
