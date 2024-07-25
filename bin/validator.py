@@ -19,6 +19,9 @@ def validate(path, version, check=False):
     global UPDATED_CASE 
     UPDATED_CASE = set()
 
+    global INSERTED_METADATA
+    INSERTED_METADATA = set()
+
     config.LOG.info(f'Validating the tables at {path} now...')
 
     table1, table2, table3 = (os.path.join(path, table) for table in ("table1.csv", "table2.csv", "table3.csv"))
@@ -29,17 +32,52 @@ def validate(path, version, check=False):
     check_qc_table(df_index[table2], table2, version)
     check_analysis_table(df_index[table3], table3, version)
 
-    # If there is a case conversion, save the conversion result in-place
+    if version == 2:
+        add_unique_repeat_to_metadata(df_index, table1, table3)
+
+    # If not in check mode, and there is a case conversion or repeat addition, save the result
     if not check:
-        for table in UPDATED_CASE:
+        for table in sorted(UPDATED_CASE | INSERTED_METADATA):
             df_index[table].to_csv(table, index=False)
-            config.LOG.info(f'The unexpected lowercase value(s) in {table} have been fixed in-place.')
+            if table in UPDATED_CASE:
+                config.LOG.info(f'The unexpected lowercase value(s) in {table} have been fixed in-place.')
+            if table in INSERTED_METADATA:
+                config.LOG.info(f'The missing repeat(s) which marked as UNIQUE and have their original(s) available have been inserted into {table} based on their original(s).')
 
     if FOUND_ERRORS:
         config.LOG.error(f'The validation of the tables at {path} is completed with error(s). The process will now be halted. Please correct the error(s) and re-run the processor')
         sys.exit(1)
     else:
         config.LOG.info(f'The validation of the tables at {path} is completed.')
+
+def add_unique_repeat_to_metadata(df_index, table1, table3):
+    df_meta = df_index[table1]
+    df_analysis = df_index[table3]
+    repeats_to_add = set(df_analysis[(df_analysis['Duplicate'] == 'UNIQUE') & (df_analysis['Public_name'].str.contains(r'_R[1-9]$'))]['Public_name']) - set(df_meta['Public_name'])
+
+    repeats_inserted = []
+    repeats_without_original = []
+
+    for repeat in repeats_to_add:
+        original = re.search(r'^(.+)_R[1-9]$', repeat).group(1)
+        df_original = df_meta[df_meta['Public_name'] == original]
+        if not df_original.empty:
+            repeats_inserted.append(repeat)
+            
+            row_to_insert_index = df_original.index[0]
+            row_to_insert = df_meta.iloc[row_to_insert_index].copy()
+            row_to_insert['Public_name'] = repeat
+            df_index[table1] = pd.concat([df_meta.iloc[:row_to_insert_index + 1], pd.DataFrame([row_to_insert]), df_meta.iloc[row_to_insert_index + 1:]]).reset_index(drop=True)
+            
+            global INSERTED_METADATA
+            INSERTED_METADATA.add(table1)
+        else:
+            repeats_without_original.append(repeat)
+
+    if repeats_inserted:
+        config.LOG.info(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, but their original(s) are: {", ".join(repeats_inserted)}')
+    if repeats_without_original:
+        config.LOG.warning(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, nor their original(s): {", ".join(repeats_without_original)}')
 
 
 # Read the tables into Pandas dataframes for processing
@@ -494,7 +532,7 @@ def check_duplicate(df, column_name, table, version):
             duplicate_string = "duplicates"
         case 2:
             df_copy['Public_name_no_suffix'] = df_copy['Public_name'].str.replace(r'_R[1-9]$', '', regex=True)
-            duplicate_string = "duplicates (including _R* suffix variants)"
+            duplicate_string = "duplicates (including _R* suffix repeats)"
 
     df_uniques = df_copy[~df_copy['Public_name_no_suffix'].duplicated(keep=False)]
     df_duplicates = df_copy[df_copy['Public_name_no_suffix'].duplicated(keep=False)]
