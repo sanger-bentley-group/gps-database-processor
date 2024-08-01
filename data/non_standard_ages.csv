@@ -11,3 +11,4 @@ value,less_than_5years_old
 ">44<=65",N
 ">15<=24",N
 ">24<=44",N
+"<5",Y

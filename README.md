@@ -1,23 +1,27 @@
 # GPS Database Processor
 
-GPS Database Processor is an all-in-one tool for processing GPS ([Global Pneumococcal Sequencing Project](https://www.pneumogen.net/gps/)) database updates. 
+GPS Database Processor is designed for database validation, update and publication for the GPS ([Global Pneumococcal Sequencing Project](https://www.pneumogen.net/gps/)). 
 
-This tool takes the GPS database's three `.csv` (comma-separated values) source files as input:
-- `table1` - metadata
-- `table2` - QC
-- `table3` - analysis
+This tool takes the path(s) of GPS1 or GPS2 database as input:
+- `-1`, `--gps1` - path to directory of GPS1 data 
+- `-2`, `--gps2` - path to directory of GPS2 data
 
-The tool carries out several operations in the following order:
-1. Validation of columns and values in the `.csv` input files
+It only takes one of the above in default or `--check` mode, and requires both in `--monocle` mode
+
+It carries out several operations in the following order:
+1. Validation of columns and values of the specified directory
    - The terminal output displays any unexpected or erroneous values
-   - For columns that should only contain UPPERCASE strings, any lowercase value will be converted to UPPERCASE; if a case conversion occurs in a table, a copy of the original file will be saved with `_original` at the end, and then the updated table will be saved in-place
+   - For columns that should only contain UPPERCASE strings, any lowercase value will be converted, and the updated table will be saved in-place (unless `--check` mode is used)
    - If there are any critical errors, the tool will terminate its process and will not carry out the subsequent operations
-2. Generate `table4` using inferred data based on `table1`, `table3` and reference tables in the `data` directory
-   - If there is a location that does not exist in `data/coordinates.csv` (one of the reference tables), it will attempt the fetch the information via Mapbox API
-       - The first time this is triggered, it will ask for your Mapbox API key (access token) and save it locally at `config/api_keys.confg` for future use
-       - For more information on the Mapbox API key (access token), please visit [their documentation](https://docs.mapbox.com/help/glossary/access-token/)
-3. Generate `table_monocle.csv` for [Monocle](https://data-viewer.monocle.sanger.ac.uk/)
-4. Generate `data.json` for [GPS Database Overview](https://www.pneumogen.net/gps/gps-database-overview/)
+2. If run in `--check` mode, the operation stops here, and any case conversion will not be saved
+3. Generate `table4` using inferred data based on `table1`, `table3` and reference tables in the `data` directory
+   - If there is a location that does not exist in `data/coordinates.csv` (one of the reference tables), it will stop the process
+     - Except if it is running in `--location` mode, then it will attempt the fetch the information via Mapbox API
+         - The first time this is triggered, it will ask for your Mapbox API key (access token) and save it locally at `config/api_keys.confg` for future use
+         - For more information on the Mapbox API key (access token), please visit [their documentation](https://docs.mapbox.com/help/glossary/access-token/)
+4. If not running in `--monocle` mode, the operation stops here
+5. Generate `table_monocle.csv` for [Monocle](https://data-viewer.monocle.sanger.ac.uk/)
+6. Generate `data.json` for [GPS Database Overview](https://www.pneumogen.net/gps/gps-database-overview/)
 
 &nbsp;
 ## Workflow
@@ -26,7 +30,7 @@ The tool carries out several operations in the following order:
 &nbsp;
 ## Usage
 ### Requirement
-- Conda / Mamba
+- Conda
 - Git
 
 ### Setup
@@ -38,7 +42,7 @@ The tool carries out several operations in the following order:
    ```
    cd gps-database-processor
    ```
-3. Setup Conda Environment (If using Mamba, replace `conda` with `mamba` in the following commands) 
+3. Setup Conda Environment
    ```
    conda env create -f environment.yml
    ```
@@ -59,16 +63,19 @@ The tool carries out several operations in the following order:
    ```
 5. If you or the tool have updated any of the reference tables (i.e. any file in the `data` directory), create a PR (Pull Request) on this repository
 
-### Optional arguments
-- By default, this tool assumes the file names of `table1`, `table2` and `table3` to be `table1.csv`, `table2.csv`, and `table3.csv` respectively, and the output file name of `table4` will be `table4.csv`, these can be changed by using optional arguments; The data file for GPS Database Overview and Monocle Table will always have the file names `data.json` and `table_monocle.csv` respectively.
-- Available optional arguments:
-  - `-m your_file_name.csv` or `--meta your_file_name.csv`: Override the default `table1` (metadata) file name of `table1.csv`
-  - `-q your_file_name.csv` or `--qc your_file_name.csv`: Override the default `table2` (qc) file name of `table2.csv`
-  - `-a your_file_name.csv` or `--analysis your_file_name.csv`: Override the default `table3` (analysis) file name of `table3.csv`
-  - `-o your_file_name.csv` or `--output your_file_name.csv`: Override the default `table4` (inferred data) file name of `table4.csv`
-- Example command using optional arguments:
+### Options
+- `-1`, `--gps1`: path to directory of GPS1 data (should contain `table1.csv`, `table2.csv`, and `table3.csv` of GPS1)
+- `-2`, `--gps2`: path to directory of GPS2 data (should contain `table1.csv`, `table2.csv`, and `table3.csv` of GPS2)
+- `-c`, `--check`: perform validation only
+- `-m`, `--monocle`: generate Monocle table and GPS Database Overview data payload from both GPS1 and GPS2
+- `-l`, `--location`: get coordinates for locations not yet exist in `data/coordinates.csv` via MapBox API
+
+- Example commands:
   ```
-  python processor.py -m table1_meta.csv -q table2_qc.csv -a table3_analysis.csv -o table4_inferred.csv
+  ./processor.py --gps1 gps-data --check
+  ```
+  ```
+  ./processor.py -1 gps-data -2 gps2-data -m
   ```
 
 ### Reference Tables (files in the `data` directory)
@@ -105,7 +112,8 @@ The tool carries out several operations in the following order:
 &nbsp;
 ## Requirements & Compatibility
 GPS Database requirement:
-- GPS1 v4.0+
+- GPS1 v5.0+
+- GPS2 v5.0+
 
 Tested on:
 - [Python](https://www.python.org/) 3.11

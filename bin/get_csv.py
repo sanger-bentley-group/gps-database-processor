@@ -3,11 +3,16 @@
 
 import pandas as pd
 import csv
+import os
+import sys
+import re
 import bin.config as config
 
 
 # Generate table4 based on data from table1
-def get_table4(table1, table3, table4):
+def get_table4(version, path, location):
+    table1, table3, table4 = (os.path.join(path, table) for table in ("table1.csv", "table3.csv", "table4.csv"))
+
     config.LOG.info(f'Generating {table4} now...')
 
     # Read table1 and table3 for inferring data in table4
@@ -18,6 +23,8 @@ def get_table4(table1, table3, table4):
 
     global UPDATED_COORDINATES
     UPDATED_COORDINATES = False
+    global LOCATION
+    LOCATION = location
     df_table4_meta = df_table4_meta.apply(get_coordinate, axis=1)
     if UPDATED_COORDINATES:
         config.LOG.warning(f'Please verify the new coordinate(s). If any is incorrect, modify the coordinate in {config.COORDINATES_FILE} and re-run this tool.')
@@ -29,6 +36,10 @@ def get_table4(table1, table3, table4):
     # Get the Manifestation based on the values in 'Clinical_manifestation', 'Source' and the 'data/manifestations.csv' reference table.
     df_table4_meta['Manifestation'] = df_table4_meta.set_index(['Clinical_manifestation', 'Source']).index.map(config.MANIFESTATIONS.get)
 
+    # Add Continent information to table 4 for GPS2
+    if version == 2:
+        df_table4_meta['Continent'] = df_table4_meta['Country'].map(lambda x: config.COUNTRY_CONTINENT.get(x).upper())
+
     # Create a partial table4 dataframe based on a subset of table3
     df_table4_analysis = df_analysis[['Public_name', 'In_silico_serotype', 'Duplicate']].copy()
     df_table4_analysis.drop(df_table4_analysis[df_table4_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
@@ -36,14 +47,20 @@ def get_table4(table1, table3, table4):
 
     # Merge the partial table4 dataframes
     df_table4 = df_table4_meta.merge(df_table4_analysis, on='Public_name', how='outer', validate='one_to_one')
-    # Get the published status based on the values in 'Public_name' and the 'data/published_public_names.txt' reference list.
+    
+    # Get the published status based on the values in 'Public_name' and the 'data/published_public_names.txt' reference list; All repeats (_R* suffix) are marked as published if the reference list does not state a specific repeat
+    published_public_names_with_repeats = config.PUBLISHED_PUBLIC_NAMES.copy()
+    published_public_names_with_repeats.update(f"{public_name}_R{i}" for public_name in config.PUBLISHED_PUBLIC_NAMES if not re.search(r'_R[1-9]$', public_name) for i in range(1, 10))
     df_table4['Published'] = 'N'
-    df_table4['Published'].where(~df_table4['Public_name'].isin(config.PUBLISHED_PUBLIC_NAMES), other='Y', inplace=True)
+    df_table4.loc[df_table4['Public_name'].isin(published_public_names_with_repeats), 'Published'] = 'Y'
+    
     # Replace all NA values with '_'
     df_table4.fillna('_', inplace=True)
 
     # Drop all columns that are not in the schema of table4
-    output_cols = ('Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifestation', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT25', 'Published')
+    output_cols = ['Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifestation', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT25', 'Published']
+    if version == 2:
+        output_cols.append('Continent')
     df_table4.drop(columns=[col for col in df_table4 if col not in output_cols], inplace=True)
     df_table4 = df_table4.reindex(columns = output_cols)
     
@@ -52,36 +69,52 @@ def get_table4(table1, table3, table4):
     config.LOG.info(f'{table4} is generated.')
 
 
-# Generate Monocle table based on table1 - 4
-def get_monocle(table1, table2, table3, table4, table_monocle):
+# Generate Monocle table based on GPS1 and GGPS2
+def get_monocle(gps1, gps2):
     config.LOG.info(f'Generating Monocle table now...')
 
-    df_meta, df_qc, df_analysis, df_table4 = read_tables(table1, table2, table3, table4)
+    dfs = []
 
-    # Only preserve QC Passed, UNIQUE and Published for Monocle table
-    df_qc.drop(df_qc[~df_qc['QC'].isin(['PASS', 'PASSPLUS'])].index, inplace=True)
-    df_analysis.drop(df_analysis[df_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
-    df_table4.drop(df_table4[df_table4['Published'] != 'Y'].index, inplace=True)
+    # Generate dataframes for GPS1 and GPS2
+    for ver, gps_path in ((1, gps1), (2, gps2)):
+        table1, table2, table3, table4 = (os.path.join(gps_path, table) for table in ("table1.csv", "table2.csv", "table3.csv", "table4.csv")) 
+        df_meta, df_qc, df_analysis, df_table4 = read_tables(table1, table2, table3, table4)
 
-    # Drop columns that do not exist in Monocle table
-    df_meta.drop(columns=['aroE', 'ddl', 'gdh', 'gki', 'recP', 'spi', 'xpt'], inplace=True)
-    df_qc.drop(columns=['Supplier_name'], inplace=True)
-    df_analysis.drop(columns=['No_of_genome', 'Paper_1'], inplace=True)
-    df_table4.drop(columns=['Published'], inplace=True)
+        # Only preserve QC Passed, UNIQUE and Published for Monocle table
+        df_qc.drop(df_qc[~df_qc['QC'].isin(['PASS', 'PASSPLUS'])].index, inplace=True)
+        df_analysis.drop(df_analysis[df_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
+        df_table4.drop(df_table4[df_table4['Published'] != 'Y'].index, inplace=True)
 
-    # Merge all 4 tables and only retain samples exist in all 4
-    df = df_meta.merge(df_analysis, how='inner', on='Public_name', validate='one_to_one')
-    df = df.merge(df_qc, how='inner', on='Lane_id', validate='one_to_one')
-    df = df.merge(df_table4, how='inner', on='Public_name', validate='one_to_one')
+        # Drop columns that do not exist in Monocle table, and fix differences between GPS1 and GPS2
+        df_meta.drop(columns=['aroE', 'ddl', 'gdh', 'gki', 'recP', 'spi', 'xpt'], inplace=True)
 
-    # Workaround for Monocle not supporting empty Submitting_institution
-    df['Submitting_institution'].replace('_', 'UNKNOWN', inplace=True)
+        match ver:
+            case 1:
+                df_qc.drop(columns=['Supplier_name'], inplace=True)
+                df_analysis.drop(columns=['No_of_genome', 'Paper_1'], inplace=True)
+            case 2:
+                df_qc.drop(columns=['Public_name', 'Supplier_name'], inplace=True)
+                df_analysis.drop(columns=['No_of_genome'], inplace=True)
+                df_analysis.rename(columns={"Sanger_sample_id": "Sample"}, inplace=True)
 
+        df_table4.drop(columns=['Published'], inplace=True)
+
+        # Merge all 4 tables and only retain samples exist in all 4
+        df = df_meta.merge(df_analysis, how='inner', on='Public_name', validate='one_to_one')
+        df = df.merge(df_qc, how='inner', on='Lane_id', validate='one_to_one')
+        df = df.merge(df_table4, how='inner', on='Public_name', validate='one_to_one')
+        
+        dfs.append(df)
+
+    # Concat GPS1 and GPS2 Dataframe
+    df = pd.concat(dfs)
+    
     # Export Monocle Table
     df.replace('_', '', inplace=True)
-    df.to_csv(table_monocle, index=False)
+    df.to_csv("table_monole.csv", index=False)
+    config.LOG.info(f'{"table_monole.csv"} is generated.')
 
-    config.LOG.info(f'{table_monocle} is generated.')
+    return df
 
 
 # Read the tables into Pandas dataframes for processing
@@ -104,21 +137,25 @@ def get_coordinate(row):
     elif country_region_city in config.COORDINATES:
         latitude, longitude = config.COORDINATES[country_region_city]
     else:
+        if LOCATION:
         # Initialise and use config.MAPBOX_GEOCODER to sesarch for coordinates
-        config.get_geocoder() 
-        coordinate = config.MAPBOX_GEOCODER.geocode(country_region_city)
-        latitude, longitude = coordinate.latitude, coordinate.longitude
+            config.get_geocoder() 
+            coordinate = config.MAPBOX_GEOCODER.geocode(country_region_city)
+            latitude, longitude = coordinate.latitude, coordinate.longitude
 
-        # Save new coordinate to file and reload coordinates dictionary from file
-        with open(config.COORDINATES_FILE, 'a') as f:
-            writer = csv.writer(f)
-            writer.writerow([country_region_city, latitude, longitude])
-        config.read_coordinates()
+            # Save new coordinate to file and reload coordinates dictionary from file
+            with open(config.COORDINATES_FILE, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow([country_region_city, latitude, longitude])
+            config.read_coordinates()
 
-        global UPDATED_COORDINATES
-        UPDATED_COORDINATES = True
-        config.LOG.warning(f'New location {country_region_city} is found, the coordinate is determined to be {latitude}, {longitude} and added to "{config.COORDINATES_FILE}".')
-    
+            global UPDATED_COORDINATES
+            UPDATED_COORDINATES = True
+            config.LOG.warning(f'New location {country_region_city} is found, the coordinate is determined to be {latitude}, {longitude} and added to "{config.COORDINATES_FILE}".')
+        else:
+            config.LOG.error(f'New location(s) that does not exist in "{config.COORDINATES_FILE}" is found. Please re-run the processor with --location option to assign coordinate(s).')
+            sys.exit(1)
+
     row['Latitude'] = latitude
     row['Longitude'] = longitude
     return row
