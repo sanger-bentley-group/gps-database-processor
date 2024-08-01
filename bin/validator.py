@@ -19,6 +19,9 @@ def validate(path, version, check=False):
     global UPDATED_CASE 
     UPDATED_CASE = set()
 
+    global STRIPPED_WHITESPACE
+    STRIPPED_WHITESPACE = set()
+
     global INSERTED_METADATA
     INSERTED_METADATA = set()
 
@@ -44,12 +47,14 @@ def validate(path, version, check=False):
         config.LOG.info(f'Cross-checking {table2} and {table3} now...')
         crosscheck_public_name(df_index[table2], table2, df_index[table3], table3)
 
-    # If not in check mode, and there is a case conversion or repeat addition, save the result
+    # If not in check mode, and there is a case conversion, whitespace stripping, or repeat addition, save the result
     if not check:
-        for table in sorted(UPDATED_CASE | INSERTED_METADATA):
+        for table in sorted(UPDATED_CASE | STRIPPED_WHITESPACE | INSERTED_METADATA):
             df_index[table].to_csv(table, index=False)
             if table in UPDATED_CASE:
                 config.LOG.info(f'The unexpected lowercase value(s) in {table} have been fixed in-place.')
+            if table in STRIPPED_WHITESPACE:
+                config.LOG.info(f'The leading/trailing whitespace(s) in value(s) in {table} have been fixed in-place.')
             if table in INSERTED_METADATA:
                 config.LOG.info(f'The missing repeat(s) which marked as UNIQUE and have their original(s) available have been inserted into {table} based on their original(s).')
 
@@ -81,6 +86,8 @@ def check_meta_table(df_meta, table, version):
             check_case_only_columns = ['Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution', 'Underlying_conditions', 'Phenotypic_serotype_method', 'AST_method_Penicillin', 'AST_method_Amoxicillin', 'AST_method_Cefotaxime', 'AST_method_Ceftriaxone', 'AST_method_Cefuroxime', 'AST_method_Meropenem', 'AST_method_Erythromycin', 'AST_method_Clindamycin', 'AST_method_COT', 'AST_method_Vancomycin', 'AST_method_Linezolid', 'AST_method_Ciprofloxacin', 'AST_method_Chloramphenicol', 'AST_method_Tetracycline', 'AST_method_Levofloxacin', 'AST_method_Synercid', 'AST_method_Rifampin', 'AST_method_Oxacillin', 'Accession_number']
 
     check_columns(df_meta, meta_columns, table)
+
+    check_whitespace(df_meta, table)
 
     if version == "1":
         check_continent(df_meta, 'Continent', table)
@@ -241,6 +248,21 @@ def check_columns(df, columns, table):
     if (diff := set(list(columns)) - set(df)):
         config.LOG.critical(f'{table} is missing the following column(s): {", ".join(diff)}. Incorrect or incompatible table is used and cannot be validated. The process will now be halted.')
         sys.exit(1)
+
+
+# Check column values contain no leading or trailing whitespace; remove all leading or trailing whitespace if found
+def check_whitespace(df, table):
+    for column_name, column in df.items():
+        stripped_column = column.str.strip()
+
+        if column.equals(stripped_column):
+            continue
+
+        df[column_name] = stripped_column
+
+        global STRIPPED_WHITESPACE
+        STRIPPED_WHITESPACE.add(table)
+        config.LOG.info(f'{column_name} in {table} contains value(s) with leading/trailing whitespace(s).')
 
 
 # Check column values contain no space at any position in the string
