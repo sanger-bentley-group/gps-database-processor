@@ -5,6 +5,7 @@ import pandas as pd
 import csv
 import os
 import sys
+import re
 import bin.config as config
 
 
@@ -46,9 +47,13 @@ def get_table4(version, path, location):
 
     # Merge the partial table4 dataframes
     df_table4 = df_table4_meta.merge(df_table4_analysis, on='Public_name', how='outer', validate='one_to_one')
-    # Get the published status based on the values in 'Public_name' and the 'data/published_public_names.txt' reference list.
+    
+    # Get the published status based on the values in 'Public_name' and the 'data/published_public_names.txt' reference list; All repeats (_R* suffix) are marked as published if the reference list does not state a specific repeat
+    published_public_names_with_repeats = config.PUBLISHED_PUBLIC_NAMES.copy()
+    published_public_names_with_repeats.update(f"{public_name}_R{i}" for public_name in config.PUBLISHED_PUBLIC_NAMES if not re.search(r'_R[1-9]$', public_name) for i in range(1, 10))
     df_table4['Published'] = 'N'
-    df_table4['Published'].where(~df_table4['Public_name'].isin(config.PUBLISHED_PUBLIC_NAMES), other='Y', inplace=True)
+    df_table4.loc[df_table4['Public_name'].isin(published_public_names_with_repeats), 'Published'] = 'Y'
+    
     # Replace all NA values with '_'
     df_table4.fillna('_', inplace=True)
 
