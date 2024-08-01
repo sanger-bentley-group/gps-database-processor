@@ -32,7 +32,6 @@ def main():
         get_csv.get_table4(version, path, args.location)
 
     # Generate Monocle data and GPS Database Overview data payload
-    # WIP
     if args.monocle:
         monocle_table = get_csv.get_monocle(args.gps1, args.gps2)
         get_json.get_data(monocle_table)
