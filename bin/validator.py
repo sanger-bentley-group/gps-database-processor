@@ -387,7 +387,7 @@ def check_clinical_manifestation_and_source(df, clinical_manifestation, source, 
         return
 
     unexpected = [f'{n}' for n in unexpected]
-    config.LOG.error(f'{table} has the following unexpected Clinical_manifestation and Source combinations(s): {", ".join(unexpected)}. Please add the combination(s) to {config.MANIFESTATIONS_FILE} and state the resulting Manifestation.')
+    config.LOG.error(f'{table} has the following unexpected Clinical_manifestation and Source combination(s): {", ".join(unexpected)}. Please add the combination(s) to {config.MANIFESTATIONS_FILE} and state the resulting Manifestation.')
     found_error()
 
 
