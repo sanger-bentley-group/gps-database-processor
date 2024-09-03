@@ -138,6 +138,7 @@ def check_qc_table(df_qc, table, version):
                 check_space(df_qc, col, table)
             check_assembler(df_qc, 'Assembler', table)
 
+    check_lane_id_is_unqiue(df_qc, 'Lane_id', table)
     check_streptococcus_pneumoniae(df_qc, 'Streptococcus_pneumoniae', table, version)
     check_total_length(df_qc, 'Total_length', table)
     check_no_of_contigs(df_qc, 'No_of_contigs', table)
@@ -175,6 +176,7 @@ def check_analysis_table(df_analysis, table, version):
     check_case(df_analysis, 'Public_name', table)
     check_space(df_analysis, 'Public_name', table)
 
+    check_lane_id_is_unqiue(df_analysis, 'Lane_id', table)
     check_err(df_analysis, 'ERR', table, version)
     check_ers(df_analysis, 'ERS', table, version)
     check_no_of_genome(df_analysis, 'No_of_genome', table)
@@ -770,6 +772,14 @@ def crosscheck_public_name(df_table2, table2, df_table3, table3):
 
     if laneids_different_public_name:
         config.LOG.error(f'The following Lane_id(s) have different Public_name(s) in {table2} and {table3}: {", ".join(sorted(laneids_different_public_name))}.')
+        found_error()
+
+# Check if Lane_ids are unique
+def check_lane_id_is_unqiue(df, column_name, table):
+    duplicated_lane_ids = df[df[column_name].duplicated()][column_name].tolist()
+
+    if duplicated_lane_ids:
+        config.LOG.error(f'The following Lane_id(s) are duplicated in {table}: {", ".join(sorted(duplicated_lane_ids))}.')
         found_error()
 
 
