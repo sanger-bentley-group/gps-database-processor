@@ -110,9 +110,10 @@ def get_monocle(gps1, gps2):
     df = pd.concat(dfs)
     
     # Export Monocle Table
+    monocle_csv = 'table_monocle.csv'
     df.replace('_', '', inplace=True)
-    df.to_csv("table_monole.csv", index=False)
-    config.LOG.info(f'{"table_monole.csv"} is generated.')
+    df.to_csv(monocle_csv, index=False)
+    config.LOG.info(f'{monocle_csv} is generated.')
 
     return df
 
