@@ -75,6 +75,14 @@ def get_monocle(gps1, gps2):
 
     dfs = []
 
+    # Ensure the same Public_name is not used in both GPS1 and GPS2
+    set_gps1_meta_public_name = set(read_tables(os.path.join(gps1, "table1.csv"))[0]["Public_name"])
+    set_gps2_meta_public_name = set(read_tables(os.path.join(gps2, "table1.csv"))[0]["Public_name"])
+    if (reused_public_name := set_gps1_meta_public_name.intersection(set_gps2_meta_public_name)):
+        config.LOG.error(f'The following Public_name(s) are used in both GPS1 and GPS2: {", ".join(sorted(reused_public_name))}.')
+        config.LOG.error(f'The process will now be halted. Please correct the above error and re-run the processor.')
+        sys.exit(1)
+
     # Generate dataframes for GPS1 and GPS2
     for ver, gps_path in ((1, gps1), (2, gps2)):
         table1, table2, table3, table4 = (os.path.join(gps_path, table) for table in ("table1.csv", "table2.csv", "table3.csv", "table4.csv")) 
