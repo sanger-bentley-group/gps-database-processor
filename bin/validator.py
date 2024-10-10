@@ -46,6 +46,7 @@ def validate(path, version, check=False):
 
         config.LOG.info(f'Cross-checking {table2} and {table3} now...')
         crosscheck_public_name(df_index[table2], table2, df_index[table3], table3)
+        crosscheck_qc_and_insilico(df_index[table2], table2, df_index[table3], table3)
 
     # If not in check mode, and there is a case conversion, whitespace stripping, or repeat addition, save the result
     if not check:
@@ -773,6 +774,27 @@ def crosscheck_public_name(df_table2, table2, df_table3, table3):
     if laneids_different_public_name:
         config.LOG.error(f'The following Lane_id(s) have different Public_name(s) in {table2} and {table3}: {", ".join(sorted(laneids_different_public_name))}.')
         found_error()
+
+
+# Check that table3 is a subset of table2, and all and only genomes passed QC in table2 should be in table3
+def crosscheck_qc_and_insilico(df_table2, table2, df_table3, table3):
+    set_table2_laneid = set(df_table2["Lane_id"])
+    set_table2_laneid_passed = set(df_table2[df_table2["QC"] == "PASS"]["Lane_id"])
+    set_table2_laneid_failed  = set(df_table2[df_table2["QC"] == "FAIL"]["Lane_id"])
+    set_table3_laneid = set(df_table3["Lane_id"])
+
+    if (set_laneid_table3_only := set_table3_laneid - set_table2_laneid):
+        config.LOG.error(f'The following Lane_id(s) are found in {table3} but not {table2}: {", ".join(sorted(set_laneid_table3_only))}.')
+        found_error()
+
+    if (set_table3_missing_passed_laneid := set_table2_laneid_passed - set_table3_laneid):
+        config.LOG.error(f'The following QC passed Lane_id(s) are missing in {table3}: {", ".join(sorted(set_table3_missing_passed_laneid))}.')
+        found_error()
+
+    if (set_table3_failed_laneid := set_table2_laneid_failed.intersection(set_table3_laneid)):
+        config.LOG.error(f'The following QC failed Lane_id(s) are found in {table3}: {", ".join(sorted(set_table3_failed_laneid))}.')
+        found_error()
+
 
 # Check if Lane_ids are unique
 def check_lane_id_is_unqiue(df, column_name, table):
