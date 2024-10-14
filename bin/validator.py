@@ -749,16 +749,17 @@ def add_unique_repeat_to_metadata(df_index, table1, table3):
     for repeat in repeats_to_add:
         original = re.search(r'^(.+)_R[1-9]$', repeat).group(1)
         df_original = df_meta[df_meta['Public_name'] == original]
-        if not df_original.empty:
-            repeats_inserted.append(repeat)
-            
+        if not df_original.empty:         
             row_to_insert_index = df_original.index[0]
             row_to_insert = df_meta.iloc[row_to_insert_index].copy()
             row_to_insert['Public_name'] = repeat
-            df_index[table1] = pd.concat([df_meta.iloc[:row_to_insert_index + 1], pd.DataFrame([row_to_insert]), df_meta.iloc[row_to_insert_index + 1:]]).reset_index(drop=True)
-            
+            df_meta = pd.concat([df_meta.iloc[:row_to_insert_index + 1], pd.DataFrame([row_to_insert]), df_meta.iloc[row_to_insert_index + 1:]]).reset_index(drop=True)
+            df_index[table1] = df_meta
+
             global INSERTED_METADATA
             INSERTED_METADATA.add(table1)
+
+            repeats_inserted.append(repeat)
         else:
             repeats_without_original.append(repeat)
 
