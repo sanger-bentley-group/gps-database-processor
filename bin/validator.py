@@ -534,9 +534,11 @@ def check_duplicate(df, column_name, table, version):
     match version:
         case 1:
             df_copy['Public_name_no_suffix'] = df_copy['Public_name']
+            unique_public_name_string = "unique Public_name(s)"
             duplicate_string = "duplicates"
         case 2:
             df_copy['Public_name_no_suffix'] = df_copy['Public_name'].str.replace(r'_R[1-9]$', '', regex=True)
+            unique_public_name_string = "unique Public_name(s) (_R* suffix repeats considered)"
             duplicate_string = "duplicates (including _R* suffix repeats)"
 
     df_uniques = df_copy[~df_copy['Public_name_no_suffix'].duplicated(keep=False)]
@@ -544,7 +546,7 @@ def check_duplicate(df, column_name, table, version):
 
     uniques_as_duplicate = df_uniques[df_uniques[column_name]=='DUPLICATE']['Public_name'].tolist()
     if uniques_as_duplicate:
-        config.LOG.warning(f'{table} has the following unique Public_name(s) marked as DUPLICATE in {column_name}: {", ".join(uniques_as_duplicate)}. Please check if they are correct.')
+        config.LOG.warning(f'{table} has the following {unique_public_name_string} marked as DUPLICATE in {column_name}: {", ".join(uniques_as_duplicate)}. Please check if they are correct.')
 
     duplicates_no_unique = set(df_duplicates['Public_name_no_suffix']) - set(df_duplicates[df_duplicates['Duplicate']=='UNIQUE']['Public_name_no_suffix'])
     if duplicates_no_unique:
