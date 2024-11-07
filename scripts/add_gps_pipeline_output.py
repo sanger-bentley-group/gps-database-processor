@@ -89,6 +89,9 @@ def generate_table3_data(df_results, df_info):
 
 
 def integrate_table2(df_table2_new_data, df_table2, table2_path):
+    if already_exist_lane_id := set(df_table2["Lane_id"]).intersection(df_table2_new_data["Lane_id"]):
+        sys.exit(f"Error: The following Lane_ID(s) already exist in {table2_path}: {', '.join(sorted(already_exist_lane_id))}.")
+
     pd.concat([df_table2, df_table2_new_data], axis=0).to_csv(table2_path, index=False)
 
 
