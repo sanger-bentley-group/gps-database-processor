@@ -17,6 +17,7 @@ def main():
     integrate_table2(df_table2_new_data, df_table2, table2_path)
 
 
+# Check files/paths actually exist, and load them into dataframes and save paths
 def args_check(args):
     try:
         df_results = pd.read_csv(args.results, dtype=str, keep_default_na=False)
@@ -53,6 +54,7 @@ def args_check(args):
     return df_results, df_info, table2_path, table3_path, df_table2, df_table3
 
 
+# Generate table2 data for integration
 def generate_table2_data(df_results, df_info, assembler):
     df_table2_new_data = df_results.copy()
 
@@ -62,9 +64,6 @@ def generate_table2_data(df_results, df_info, assembler):
     df_table2_new_data["Assembler"] = assembler
     # Add legacy column
     df_table2_new_data["Proportion_of_Het_SNPs"] = "_"
-
-    # Extract and reorder relevant columns
-    df_table2_new_data = df_table2_new_data[["Lane_id", "Public_name" ,"Assembler", "S.Pneumo_%", "Assembly_Length", "Contigs#", "Ref_Cov_%", "Seq_Depth", "Proportion_of_Het_SNPs", "Overall_QC", "Supplier_name", "Het-SNP#"]]
 
     # Rename columns that are not in table2 format
     df_table2_new_data.rename(
@@ -80,6 +79,9 @@ def generate_table2_data(df_results, df_info, assembler):
         inplace=True
     )
 
+    # Extract and reorder relevant columns
+    df_table2_new_data = df_table2_new_data[["Lane_id", "Public_name" ,"Assembler", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "Proportion_of_Het_SNPs", "QC", "Supplier_name", "Hetsites_50bp"]]
+
     return df_table2_new_data
 
 
@@ -89,6 +91,7 @@ def generate_table3_data(df_results, df_info):
 
 
 def integrate_table2(df_table2_new_data, df_table2, table2_path):
+    # Ensure new Lane_id(s) do not exist in the existing table2
     if already_exist_lane_id := set(df_table2["Lane_id"]).intersection(df_table2_new_data["Lane_id"]):
         sys.exit(f"Error: The following Lane_ID(s) already exist in {table2_path}: {', '.join(sorted(already_exist_lane_id))}.")
 
