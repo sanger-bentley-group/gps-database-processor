@@ -3,6 +3,7 @@
 import pandas as pd
 import argparse
 import sys
+import os
 
 
 def main():
@@ -15,31 +16,53 @@ def main():
     
     try:
         df_info = pd.read_csv(args.info, dtype=str, keep_default_na=False)
+        
+        if (missing_laneids := (set(df_results["Sample_ID"]) - set(df_info["Lane_id"]))):
+            sys.exit(f"Error: Information of the following Lane ID(s) are not provided: {', '.join(missing_laneids)}")
+
+        optional_columns = ["Supplier_name", "Sanger_sample_id", "ERR", "ERS"]
+        for col in optional_columns:
+            if col not in df_info.columns:
+                df_info[col] = "_"
+            else:
+                df_info[col].replace("", "_", inplace=True)
     except FileNotFoundError:
         sys.exit(f"Error: {args.info} is not found!")
 
-    generate_table2(df_results, df_info, args.assembler)
-    generate_table3(df_results)
+
+    if not os.path.isdir(args.data):
+        sys.exit(f"Error: {args.data} is not a valid directory path!")
+    try:
+        table2_path = os.path.join(args.data, "table2.csv")
+        table3_path = os.path.join(args.data, "table3.csv")
+
+        df_table2 = pd.read_csv(table2_path, dtype=str, keep_default_na=False)
+        df_table3 = pd.read_csv(table3_path, dtype=str, keep_default_na=False)
+    except FileNotFoundError:
+        sys.exit(f"Error: table2.csv and/or table3.csv are not found in {args.data}!")
 
 
-def generate_table2(df_results, df_info, assembler):
-    df_table2 = df_results.copy()
+    df_table2_new_data = generate_table2_data(df_results, df_info, args.assembler)
+    df_table3_new_data = generate_table3_data(df_results, df_info)
 
-    if (missing_laneids := (set(df_table2["Sample_ID"]) - set(df_info["Lane_id"]))):
-        sys.exit(f"Error: Information of the following Lane ID(s) are not provided: {', '.join(missing_laneids)}")
+    integrate_table2(df_table2_new_data, df_table2, table2_path)
 
-    df_table2 = df_table2.merge(df_info, left_on="Sample_ID", right_on="Lane_id", how="left")
+
+def generate_table2_data(df_results, df_info, assembler):
+    df_table2_new_data = df_results.copy()
+
+    df_table2_new_data = df_table2_new_data.merge(df_info, left_on="Sample_ID", right_on="Lane_id", how="left")
 
     # Add used assembler based on user input
-    df_table2["Assembler"] = assembler
+    df_table2_new_data["Assembler"] = assembler
     # Add legacy column
-    df_table2["Proportion_of_Het_SNPs"] = "_"
+    df_table2_new_data["Proportion_of_Het_SNPs"] = "_"
 
     # Extract and reorder relevant columns
-    df_table2 = df_table2[["Lane_id", "Public_name" ,"Assembler", "S.Pneumo_%", "Assembly_Length", "Contigs#", "Ref_Cov_%", "Seq_Depth", "Proportion_of_Het_SNPs", "Overall_QC", "Supplier_name", "Het-SNP#"]]
+    df_table2_new_data = df_table2_new_data[["Lane_id", "Public_name" ,"Assembler", "S.Pneumo_%", "Assembly_Length", "Contigs#", "Ref_Cov_%", "Seq_Depth", "Proportion_of_Het_SNPs", "Overall_QC", "Supplier_name", "Het-SNP#"]]
 
     # Rename columns that are not in table2 format
-    df_table2.rename(
+    df_table2_new_data.rename(
         columns = {
             "S.Pneumo_%":  "Streptococcus_pneumoniae",
             "Assembly_Length":  "Total_length",
@@ -52,18 +75,22 @@ def generate_table2(df_results, df_info, assembler):
         inplace=True
     )
 
-    # Output table2 for integration
-    df_table2.to_csv("add_to_table2.csv", index=False)
+    return df_table2_new_data
 
 
-def generate_table3(df_input):
+def generate_table3_data(df_results, df_info):
+    df_table3_new_data = df_results[df_results["Overall_QC"] == "PASS"].copy()
     pass
+
+
+def integrate_table2(df_table2_new_data, df_table2, table2_path):
+    pd.concat([df_table2, df_table2_new_data], axis=0).to_csv(table2_path, index=False)
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
         allow_abbrev=False,
-        description='Convert GPS Pipeline results.csv into a gps2-data compatible table2.csv and table3.csv',
+        description='Integrate GPS Pipeline results into gps2-data compatible table2.csv and table3.csv',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
@@ -76,7 +103,13 @@ def parse_arguments():
     parser.add_argument(
         '-i', '--info',
         default='info.csv',
-        help='path to info.csv which contain 3 comma-separated columns: Lane_id, Public_name, Supplier_name'
+        help='path to info.csv which contain at least 2 comma-separated columns (first two are required, others are optional): Lane_id, Public_name, Supplier_name, Sanger_sample_id, ERR, ERS'
+    )
+
+    parser.add_argument(
+        '-d', '--data',
+        default=os.getcwd(),
+        help='path to gps2-data compatible directory that is holding table2.csv and table3.csv'
     )
 
     parser.add_argument(
