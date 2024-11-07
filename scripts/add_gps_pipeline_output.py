@@ -9,6 +9,15 @@ import os
 def main():
     args = parse_arguments()
     
+    df_results, df_info, table2_path, table3_path, df_table2, df_table3 = args_check(args)
+    
+    df_table2_new_data = generate_table2_data(df_results, df_info, args.assembler)
+    df_table3_new_data = generate_table3_data(df_results, df_info)
+
+    integrate_table2(df_table2_new_data, df_table2, table2_path)
+
+
+def args_check(args):
     try:
         df_results = pd.read_csv(args.results, dtype=str, keep_default_na=False)
     except FileNotFoundError:
@@ -41,11 +50,7 @@ def main():
     except FileNotFoundError:
         sys.exit(f"Error: table2.csv and/or table3.csv are not found in {args.data}!")
 
-
-    df_table2_new_data = generate_table2_data(df_results, df_info, args.assembler)
-    df_table3_new_data = generate_table3_data(df_results, df_info)
-
-    integrate_table2(df_table2_new_data, df_table2, table2_path)
+    return df_results, df_info, table2_path, table3_path, df_table2, df_table3
 
 
 def generate_table2_data(df_results, df_info, assembler):
