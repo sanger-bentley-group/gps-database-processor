@@ -190,7 +190,15 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
                 ret.append(f"FOLP_{determinant.split(' ')[-1]}_{determinant.split(' ')[-3]}")
             
         return ":".join(ret) if ret else "NEG"
+    
     df_table3_new_data["Cot"] = df_table3_new_data["COT_Determinant"].apply(cot_format_convert)
+
+    # Generate Tet__autocolour based on TET_Determinant with table3 format
+    def tet_format_convert(determinants):
+        ret = set(determinant.split("_")[0] for determinant in determinants.split("; ") if determinant != "_")
+        return ":".join(ret) if ret else "NEG"
+    
+    df_table3_new_data["Tet__autocolour"] = df_table3_new_data["TET_Determinant"].apply(tet_format_convert)
 
     # Generate PBP1A_2B_2X__autocolour based on existing columns
     df_table3_new_data["PBP1A_2B_2X__autocolour"] = df_table3_new_data["pbp1a"] + "__" + df_table3_new_data["pbp2b"] + "__" + df_table3_new_data["pbp2x"]
@@ -223,7 +231,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "WGS_VAN", "WGS_VAN_SIR", 
         "EC", 
         "Cot", 
-        # "Tet__autocolour", 
+        "Tet__autocolour", 
         # "FQ__autocolour", 
         # "Other", 
         "PBP1A_2B_2X__autocolour", 
