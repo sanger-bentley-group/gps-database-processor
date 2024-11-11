@@ -176,7 +176,25 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     for col in df_table3_new_data.columns:
         if col.startswith("WGS_") and "_SIR" not in col:
             df_table3_new_data[col] = df_table3_new_data[col].str.replace(" ", "").str.replace(r"^(NF){2,}$", "NF", regex=True).str.replace(r"^$", "_", regex=True)
+    
+    # Generate Cot based on COT_Determinant with table3 format and LOW COVERAGE warnings removed
+    def cot_format_convert(determinants):
+        ret = []
+
+        for determinant in determinants.split("; "):
+            if "LOW COVERAGE" in determinant:
+                continue
+            if determinant.startswith("FOLA"):
+                ret.append(f"FOLA_{determinant.split(' ')[-1]}")
+            elif determinant.startswith("FOLP"):
+                ret.append(f"FOLP_{determinant.split(' ')[-1]}_{determinant.split(' ')[-3]}")
             
+        return ":".join(ret) if ret else "NEG"
+    df_table3_new_data["Cot"] = df_table3_new_data["COT_Determinant"].apply(cot_format_convert)
+
+    # Generate PBP1A_2B_2X__autocolour based on existing columns
+    df_table3_new_data["PBP1A_2B_2X__autocolour"] = df_table3_new_data["pbp1a"] + "__" + df_table3_new_data["pbp2b"] + "__" + df_table3_new_data["pbp2x"]
+
     # Extract and reorder relevant columns
     # No_of_genome and Duplicate columns will be inserted in integrate_table3 function
     df_table3_new_data = df_table3_new_data[[
@@ -204,11 +222,11 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "WGS_RIF", "WGS_RIF_SIR", 
         "WGS_VAN", "WGS_VAN_SIR", 
         "EC", 
-        # "Cot", 
+        "Cot", 
         # "Tet__autocolour", 
         # "FQ__autocolour", 
         # "Other", 
-        # "PBP1A_2B_2X__autocolour", 
+        "PBP1A_2B_2X__autocolour", 
         # "WGS_PEN_SIR_Meningitis__col our", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
         # "ermB", "ermB__colour", 
         # "mefA", "mefA__colour", 
