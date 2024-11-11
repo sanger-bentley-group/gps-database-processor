@@ -37,7 +37,7 @@ def args_check(args):
             if col not in df_info.columns:
                 df_info[col] = "_"
             else:
-                df_info[col].replace("", "_", inplace=True)
+                df_info[col] = df_info[col].replace("", "_")
     except FileNotFoundError:
         sys.exit(f"Error: {args.info} is not found!")
 
@@ -157,10 +157,13 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         inplace=True
     )
 
-    # Check all GPSCs have colours assigned, then assign those colours 
-    if gpsc_no_colour := (set(df_table3_new_data["GPSC"]) - set(df_gpsc_colour["GPSC"])):
+    # Check all GPSCs have colours assigned, then assign those colours
+    # No GPSC assignment as TRANSPARENT
+    dict_gpsc_colour = df_gpsc_colour.set_index("GPSC")["GPSC__colour"].to_dict()
+    dict_gpsc_colour["_"] = "TRANSPARENT"
+    if gpsc_no_colour := (set(df_table3_new_data["GPSC"]) - set(dict_gpsc_colour)):
         sys.exit(f"Error: The following GPSC(s) are not found in the selected GPSC colour assignment file: {', '.join(sorted(gpsc_no_colour))}")
-    df_table3_new_data["GPSC__colour"] = df_table3_new_data["GPSC"].map(df_gpsc_colour.set_index("GPSC")["GPSC__colour"])
+    df_table3_new_data["GPSC__colour"] = df_table3_new_data["GPSC"].map(dict_gpsc_colour)
 
     # Strip leading 0 in serotype
     # Check all serotypes have colours assigned, then assign those colours 
