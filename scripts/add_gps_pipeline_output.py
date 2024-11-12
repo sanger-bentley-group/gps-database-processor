@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import pandas as pd
+import numpy as np
 import argparse
 import sys
 import os
@@ -159,20 +160,23 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         inplace=True
     )
 
+    # Add all new columns in one go to avoid performance issue
+    columns_to_add = []
+
     # Check all GPSCs have colours assigned, then assign those colours
     # No GPSC assignment as TRANSPARENT
     dict_gpsc_colour = df_gpsc_colour.set_index("GPSC")["GPSC__colour"].to_dict()
     dict_gpsc_colour["_"] = "TRANSPARENT"
     if gpsc_no_colour := (set(df_table3_new_data["GPSC"]) - set(dict_gpsc_colour)):
         sys.exit(f"Error: The following GPSC(s) are not found in the selected GPSC colour assignment file: {', '.join(sorted(gpsc_no_colour))}")
-    df_table3_new_data["GPSC__colour"] = df_table3_new_data["GPSC"].map(dict_gpsc_colour)
+    columns_to_add.append(df_table3_new_data["GPSC"].map(dict_gpsc_colour).rename("GPSC__colour"))
 
     # Strip leading 0 in serotype
     # Check all serotypes have colours assigned, then assign those colours 
     df_table3_new_data["In_silico_serotype"] = df_table3_new_data["In_silico_serotype"].str.replace(r"^0+", "", regex=True)
     if serotype_no_colour := (set(df_table3_new_data["In_silico_serotype"]) - set(df_serotype_colour["In_silico_serotype"])):
         sys.exit(f"Error: The following serotype(s) are not found in the selected serotype colour assignment file: {', '.join(sorted(serotype_no_colour))}")
-    df_table3_new_data["In_silico_serotype__colour"] = df_table3_new_data["In_silico_serotype"].map(df_serotype_colour.set_index("In_silico_serotype")["In_silico_serotype__colour"])
+    columns_to_add.append(df_table3_new_data["In_silico_serotype"].map(df_serotype_colour.set_index("In_silico_serotype")["In_silico_serotype__colour"]).rename("In_silico_serotype__colour"))
 
     # Remove remove spaces and duplicated NF (happen in PBP AMR), and fill empty as _ in WGS columns
     for col in df_table3_new_data.columns:
@@ -203,15 +207,16 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
 
         return ":".join(ret_list) if ret_list else "NEG"
     
-    df_table3_new_data["Cot"] = df_table3_new_data["COT_Determinant"].apply(cot_format_convert)
+    columns_to_add.append(df_table3_new_data["COT_Determinant"].apply(cot_format_convert).rename("Cot"))
 
     # Generate Tet__autocolour based on TET_Determinant with table3 format
     def tet_format_convert(determinants):
         ret = set(determinant.split("_")[0] for determinant in determinants.split("; ") if determinant != "_")
         return ":".join(ret) if ret else "NEG"
     
-    df_table3_new_data["Tet__autocolour"] = df_table3_new_data["TET_Determinant"].apply(tet_format_convert)
+    columns_to_add.append(df_table3_new_data["TET_Determinant"].apply(tet_format_convert).rename("Tet__autocolour"))
 
+    # Generate FQ__autocolour based on FQ_Determinant with table3 format
     def fq_format_convert(determinants):
         dict_determinants = defaultdict(set)
 
@@ -226,10 +231,20 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
 
         return ":".join(sorted(ret_list)) if ret_list else "NEG"
     
-    df_table3_new_data["FQ__autocolour"] = df_table3_new_data["FQ_Determinant"].apply(fq_format_convert)
+    columns_to_add.append(df_table3_new_data["FQ_Determinant"].apply(fq_format_convert).rename("FQ__autocolour"))
 
     # Generate PBP1A_2B_2X__autocolour based on existing columns
     df_table3_new_data["PBP1A_2B_2X__autocolour"] = df_table3_new_data["pbp1a"] + "__" + df_table3_new_data["pbp2b"] + "__" + df_table3_new_data["pbp2x"]
+
+    pos_neg_colour = {
+        "POS": "#FF2722",
+        "NEG": "#0069EC"
+    }
+
+    columns_to_add.append(s_ermb := (pd.Series(np.where(df_table3_new_data["ERY_CLI_Determinant"].str.contains("ERMB"), "POS", "NEG"), name="ermB")))
+    df_table3_new_data["ermB__colour"] = s_ermb.map(pos_neg_colour)
+
+    df_table3_new_data = pd.concat([df_table3_new_data, *columns_to_add], axis=1)
 
     # Extract and reorder relevant columns
     # No_of_genome and Duplicate columns will be inserted in integrate_table3 function
@@ -263,8 +278,8 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "FQ__autocolour", 
         # "Other", 
         "PBP1A_2B_2X__autocolour", 
-        # "WGS_PEN_SIR_Meningitis__col our", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
-        # "ermB", "ermB__colour", 
+        # "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
+        "ermB", "ermB__colour", 
         # "mefA", "mefA__colour", 
         # "folA_I100L", "folA_I100L__colour", 
         # "folP__autocolour", 
