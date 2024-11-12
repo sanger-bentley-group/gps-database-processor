@@ -5,6 +5,7 @@ import argparse
 import sys
 import os
 import re
+from collections import defaultdict
 
 
 def main():
@@ -211,6 +212,22 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     
     df_table3_new_data["Tet__autocolour"] = df_table3_new_data["TET_Determinant"].apply(tet_format_convert)
 
+    def fq_format_convert(determinants):
+        dict_determinants = defaultdict(set)
+
+        for determinant in determinants.split("; "):
+            matches = re.match(r"^(.+)_.+ VARIANT (.+)$", determinant)
+            if not matches:
+                continue
+            gene, variant =  matches.groups()
+            dict_determinants[gene].add(variant)
+        
+        ret_list = [f"{gene}_{';'.join(sorted(determinants))}" for gene, determinants in dict_determinants.items()]
+
+        return ":".join(sorted(ret_list)) if ret_list else "NEG"
+    
+    df_table3_new_data["FQ__autocolour"] = df_table3_new_data["FQ_Determinant"].apply(fq_format_convert)
+
     # Generate PBP1A_2B_2X__autocolour based on existing columns
     df_table3_new_data["PBP1A_2B_2X__autocolour"] = df_table3_new_data["pbp1a"] + "__" + df_table3_new_data["pbp2b"] + "__" + df_table3_new_data["pbp2x"]
 
@@ -243,7 +260,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         # "EC", 
         "Cot", 
         "Tet__autocolour", 
-        # "FQ__autocolour", 
+        "FQ__autocolour", 
         # "Other", 
         "PBP1A_2B_2X__autocolour", 
         # "WGS_PEN_SIR_Meningitis__col our", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
