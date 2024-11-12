@@ -4,6 +4,7 @@ import pandas as pd
 import argparse
 import sys
 import os
+import re
 
 
 def main():
@@ -110,7 +111,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         df_table3_new_data[col] = df_table3_new_data[col].str.upper()
 
     # Add legacy column
-    legacy_columns = ["WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR", "EC"]
+    legacy_columns = ["WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR"]
     for col in legacy_columns:
         df_table3_new_data[col] = "_"
 
@@ -179,17 +180,27 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     
     # Generate Cot based on COT_Determinant with table3 format and LOW COVERAGE warnings removed
     def cot_format_convert(determinants):
-        ret = []
+        fola_determinants = set()
+        folp_determinants = set()
 
         for determinant in determinants.split("; "):
-            if "LOW COVERAGE" in determinant:
+            matches = re.match(r"^(FOL[AP])_.+ (?>(.+) AT ([0-9-]+))?(?>VARIANT (.+))?$", determinant)
+            if not matches:
                 continue
-            if determinant.startswith("FOLA"):
-                ret.append(f"FOLA_{determinant.split(' ')[-1]}")
-            elif determinant.startswith("FOLP"):
-                ret.append(f"FOLP_{determinant.split(' ')[-1]}_{determinant.split(' ')[-3]}")
-            
-        return ":".join(ret) if ret else "NEG"
+            gene, disruption, location, variant =  matches.groups()
+            if gene == "FOLA":
+                fola_determinants.add(variant)
+            elif gene == "FOLP":
+                folp_determinants.add(f"{location}_{disruption}")
+        
+        ret_list = []
+
+        if fola_determinants:
+            ret_list.append(f"FOLA_{'_'.join(sorted(fola_determinants))}")
+        if folp_determinants:
+            ret_list.append(':'.join(f"FOLP_{determinant}" for determinant in sorted(folp_determinants)))
+
+        return ":".join(ret_list) if ret_list else "NEG"
     
     df_table3_new_data["Cot"] = df_table3_new_data["COT_Determinant"].apply(cot_format_convert)
 
@@ -229,7 +240,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "WGS_CHL", "WGS_CHL_SIR", 
         "WGS_RIF", "WGS_RIF_SIR", 
         "WGS_VAN", "WGS_VAN_SIR", 
-        "EC", 
+        # "EC", 
         "Cot", 
         "Tet__autocolour", 
         # "FQ__autocolour", 
