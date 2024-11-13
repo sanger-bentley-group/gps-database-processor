@@ -245,6 +245,10 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     columns_to_add.append(s_ermb := (pd.Series(np.where(df_table3_new_data["ERY_CLI_Determinant"].str.contains("ERMB"), "POS", "NEG"), name="ermB")))
     columns_to_add.append(s_ermb.map(pos_neg_colour).rename("ermB__colour"))
 
+    # Generate mefA and mefA__colour based on ERY_Determinant with table3 format
+    columns_to_add.append(s_mefa := (pd.Series(np.where(df_table3_new_data["ERY_Determinant"].str.contains("MEFA"), "POS", "NEG"), name="mefA")))
+    columns_to_add.append(s_mefa.map(pos_neg_colour).rename("mefA__colour"))
+
     # Add all new columns
     df_table3_new_data = pd.concat([df_table3_new_data, *columns_to_add], axis=1)
 
@@ -282,7 +286,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "PBP1A_2B_2X__autocolour", 
         # "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
         "ermB", "ermB__colour", 
-        # "mefA", "mefA__colour", 
+        "mefA", "mefA__colour", 
         # "folA_I100L", "folA_I100L__colour", 
         # "folP__autocolour", 
         # "cat", "cat__colour"
