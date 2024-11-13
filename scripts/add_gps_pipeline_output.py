@@ -212,7 +212,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     # Generate Tet__autocolour based on TET_Determinant with table3 format
     def tet_format_convert(determinants):
         ret = set(determinant.split("_")[0] for determinant in determinants.split("; ") if determinant != "_")
-        return ":".join(ret) if ret else "NEG"
+        return ":".join(sorted(ret)) if ret else "NEG"
     
     columns_to_add.append(df_table3_new_data["TET_Determinant"].apply(tet_format_convert).rename("Tet__autocolour"))
 
