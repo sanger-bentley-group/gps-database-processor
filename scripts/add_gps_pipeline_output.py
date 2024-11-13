@@ -183,6 +183,13 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         if col.startswith("WGS_") and "_SIR" not in col:
             df_table3_new_data[col] = df_table3_new_data[col].str.replace(" ", "").str.replace(r"^(NF){2,}$", "NF", regex=True).str.replace(r"^$", "_", regex=True)
     
+    # Generate EC based on ERY_Determinant with table3 
+    def ec_format_convert(determinants):
+        ret = set(determinant.split("_")[0] for determinant in determinants.split("; ") if determinant != "_")
+        return ":".join(sorted(ret)) if ret else "NEG"
+
+    columns_to_add.append(df_table3_new_data["ERY_Determinant"].apply(ec_format_convert).rename("EC"))
+
     # Generate Cot based on COT_Determinant with table3 format and LOW COVERAGE warnings removed
     def cot_format_convert(determinants):
         fola_determinants = set()
@@ -293,7 +300,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "WGS_CHL", "WGS_CHL_SIR", 
         "WGS_RIF", "WGS_RIF_SIR", 
         "WGS_VAN", "WGS_VAN_SIR", 
-        # "EC", 
+        "EC", 
         "Cot", 
         "Tet__autocolour", 
         "FQ__autocolour", 
