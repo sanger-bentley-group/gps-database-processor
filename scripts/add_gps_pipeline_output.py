@@ -260,6 +260,10 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     
     columns_to_add.append(s_cot.apply(folp_autocolour_format_convert).rename("folP__autocolour"))
 
+    # Generate cat and cat__colour based on CHL_Determinant with table3 format
+    columns_to_add.append(s_cat := (pd.Series(np.where(df_table3_new_data["CHL_Determinant"].str.contains("CAT"), "POS", "NEG"), name="cat")))
+    columns_to_add.append(s_cat.map(pos_neg_colour).rename("cat__colour"))
+
     # Add all new columns
     df_table3_new_data = pd.concat([df_table3_new_data, *columns_to_add], axis=1)
 
@@ -300,7 +304,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "mefA", "mefA__colour", 
         "folA_I100L", "folA_I100L__colour", 
         "folP__autocolour", 
-        # "cat", "cat__colour"
+        "cat", "cat__colour"
     ]]
 
 
