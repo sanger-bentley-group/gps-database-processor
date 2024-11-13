@@ -253,6 +253,13 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     columns_to_add.append(s_mefa := (pd.Series(np.where(s_cot.str.contains("FOLA_I100L"), "POS", "NEG"), name="folA_I100L")))
     columns_to_add.append(s_mefa.map(pos_neg_colour).rename("folA_I100L__colour"))
 
+    # Generate Tet__autocolour based on Series s_cot with table3 format
+    def folp_autocolour_format_convert(determinants):
+        ret = set(determinant for determinant in determinants.split(":") if "FOLP" in determinant)
+        return ":".join(sorted(ret)) if ret else "NEG"
+    
+    columns_to_add.append(s_cot.apply(folp_autocolour_format_convert).rename("folP__autocolour"))
+
     # Add all new columns
     df_table3_new_data = pd.concat([df_table3_new_data, *columns_to_add], axis=1)
 
@@ -292,7 +299,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "ermB", "ermB__colour", 
         "mefA", "mefA__colour", 
         "folA_I100L", "folA_I100L__colour", 
-        # "folP__autocolour", 
+        "folP__autocolour", 
         # "cat", "cat__colour"
     ]]
 
