@@ -207,7 +207,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
 
         return ":".join(ret_list) if ret_list else "NEG"
     
-    columns_to_add.append(df_table3_new_data["COT_Determinant"].apply(cot_format_convert).rename("Cot"))
+    columns_to_add.append(s_cot := df_table3_new_data["COT_Determinant"].apply(cot_format_convert).rename("Cot"))
 
     # Generate Tet__autocolour based on TET_Determinant with table3 format
     def tet_format_convert(determinants):
@@ -249,6 +249,10 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     columns_to_add.append(s_mefa := (pd.Series(np.where(df_table3_new_data["ERY_Determinant"].str.contains("MEFA"), "POS", "NEG"), name="mefA")))
     columns_to_add.append(s_mefa.map(pos_neg_colour).rename("mefA__colour"))
 
+    # Generate folA_I100L and folA_I100L__colour based on Series s_cot with table3 format
+    columns_to_add.append(s_mefa := (pd.Series(np.where(s_cot.str.contains("FOLA_I100L"), "POS", "NEG"), name="folA_I100L")))
+    columns_to_add.append(s_mefa.map(pos_neg_colour).rename("folA_I100L__colour"))
+
     # Add all new columns
     df_table3_new_data = pd.concat([df_table3_new_data, *columns_to_add], axis=1)
 
@@ -287,7 +291,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         # "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
         "ermB", "ermB__colour", 
         "mefA", "mefA__colour", 
-        # "folA_I100L", "folA_I100L__colour", 
+        "folA_I100L", "folA_I100L__colour", 
         # "folP__autocolour", 
         # "cat", "cat__colour"
     ]]
