@@ -244,9 +244,23 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     
     columns_to_add.append(df_table3_new_data["FQ_Determinant"].apply(fq_format_convert).rename("FQ__autocolour"))
 
+    # Lookup table for S/I/R colours
+    sir_colour = {
+        "S": "#0069EC",
+        "I": "#F797B1",
+        "R": "#FF2722"
+    }
+
+    # Generate all SIR colours based on their respective SIR columns, assign TRANSPARENT to non-SIR values
+    for col in df_table3_new_data.columns:
+        if "SIR" not in col:
+            continue
+        columns_to_add.append(df_table3_new_data[col].map(sir_colour).fillna("TRANSPARENT").rename(f"{col}__colour"))
+
     # Generate PBP1A_2B_2X__autocolour based on pbp1a, pbp2b and pbp2x with table3 format
     df_table3_new_data["PBP1A_2B_2X__autocolour"] = df_table3_new_data["pbp1a"] + "__" + df_table3_new_data["pbp2b"] + "__" + df_table3_new_data["pbp2x"]
 
+    # Lookup table for POS and NEG colours
     pos_neg_colour = {
         "POS": "#FF2722",
         "NEG": "#0069EC"
@@ -310,7 +324,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "FQ__autocolour", 
         # "Other", 
         "PBP1A_2B_2X__autocolour", 
-        # "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
+        "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
         "ermB", "ermB__colour", 
         "mefA", "mefA__colour", 
         "folA_I100L", "folA_I100L__colour", 
