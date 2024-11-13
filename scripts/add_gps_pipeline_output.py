@@ -32,7 +32,7 @@ def args_check(args):
     try:
         df_info = pd.read_csv(args.info, dtype=str, keep_default_na=False)
         
-        if (missing_laneids := (set(df_results["Sample_ID"]) - set(df_info["Lane_id"]))):
+        if missing_laneids := (set(df_results["Sample_ID"]) - set(df_info["Lane_id"])):
             sys.exit(f"Error: Information of the following Lane ID(s) are not provided: {', '.join(sorted(missing_laneids))}")
 
         optional_columns = ["Supplier_name", "Sanger_sample_id", "ERR", "ERS"]
