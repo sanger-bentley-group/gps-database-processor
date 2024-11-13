@@ -233,7 +233,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     
     columns_to_add.append(df_table3_new_data["FQ_Determinant"].apply(fq_format_convert).rename("FQ__autocolour"))
 
-    # Generate PBP1A_2B_2X__autocolour based on existing columns
+    # Generate PBP1A_2B_2X__autocolour based on pbp1a, pbp2b and pbp2x with table3 format
     df_table3_new_data["PBP1A_2B_2X__autocolour"] = df_table3_new_data["pbp1a"] + "__" + df_table3_new_data["pbp2b"] + "__" + df_table3_new_data["pbp2x"]
 
     pos_neg_colour = {
@@ -241,9 +241,11 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "NEG": "#0069EC"
     }
 
+    # Generate ermB and ermB__colour based on ERY_CLI_Determinant with table3 format
     columns_to_add.append(s_ermb := (pd.Series(np.where(df_table3_new_data["ERY_CLI_Determinant"].str.contains("ERMB"), "POS", "NEG"), name="ermB")))
-    df_table3_new_data["ermB__colour"] = s_ermb.map(pos_neg_colour)
+    columns_to_add.append(s_ermb.map(pos_neg_colour).rename("ermB__colour"))
 
+    # Add all new columns
     df_table3_new_data = pd.concat([df_table3_new_data, *columns_to_add], axis=1)
 
     # Extract and reorder relevant columns
