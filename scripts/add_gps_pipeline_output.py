@@ -17,9 +17,10 @@ def main():
     df_table2_new_data = generate_table2_data(df_results, df_info, args.assembler)
     df_table3_new_data = generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour)
 
-    # TODO - Re-enable when ready
-    # integrate_table2(df_table2_new_data, df_table2, table2_path)
-    # integrate_table3(df_table3_new_data, df_table3, table3_path)
+    df_table2_updated = integrate_table2(df_table2_new_data, df_table2, table2_path)
+    df_table3_updated = integrate_table3(df_table3_new_data, df_table3, table3_path)
+
+    save_tables(df_table2_updated, table2_path, df_table3_updated, table3_path)
 
 
 # Check files/paths actually exist, and load them into dataframes and save paths
@@ -96,9 +97,6 @@ def generate_table2_data(df_results, df_info, assembler):
 
     # Extract and reorder relevant columns
     df_table2_new_data = df_table2_new_data[["Lane_id", "Public_name" ,"Assembler", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "Proportion_of_Het_SNPs", "QC", "Supplier_name", "Hetsites_50bp"]]
-
-    # TODO - Remove test line when done
-    df_table2_new_data.to_csv("table2_test.csv", index=False) 
 
     return df_table2_new_data
 
@@ -360,11 +358,6 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "cat", "cat__colour"
     ]]
 
-
-
-    # TODO - Remove test line when done
-    df_table3_new_data.to_csv("table3_test.csv", index=False)    
-
     return df_table3_new_data
 
 
@@ -373,12 +366,20 @@ def integrate_table2(df_table2_new_data, df_table2, table2_path):
     if already_exist_lane_id := set(df_table2["Lane_id"]).intersection(df_table2_new_data["Lane_id"]):
         sys.exit(f"Error: The following Lane_ID(s) already exist in {table2_path}: {', '.join(sorted(already_exist_lane_id))}.")
 
-    pd.concat([df_table2, df_table2_new_data], axis=0).to_csv(table2_path, index=False)
+    return pd.concat([df_table2, df_table2_new_data], axis=0)
 
 
 def integrate_table3(df_table3_new_data, df_table3, table3_path):
-    # TODO - To be completed
-    pass
+    # Ensure new Lane_id(s) do not exist in the existing table2
+    if already_exist_lane_id := set(df_table3["Lane_id"]).intersection(df_table3_new_data["Lane_id"]):
+        sys.exit(f"Error: The following Lane_ID(s) already exist in {table3_path}: {', '.join(sorted(already_exist_lane_id))}.")
+
+    return pd.concat([df_table3, df_table3_new_data], axis=0)
+
+
+def save_tables(df_table2_updated, table2_path, df_table3_updated, table3_path):
+    df_table2_updated.to_csv(table2_path, index=False)
+    df_table3_updated.to_csv(table3_path, index=False)
 
 
 def parse_arguments():
