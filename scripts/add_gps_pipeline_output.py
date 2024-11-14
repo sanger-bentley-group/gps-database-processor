@@ -257,6 +257,28 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
             continue
         columns_to_add.append(df_table3_new_data[col].map(sir_colour).fillna("TRANSPARENT").rename(f"{col}__colour"))
 
+    # Generate Other based on KAN_Determinant, RIF_Determinant, VAN_Determinant with table3 format
+    def other_format_convert(row):
+        determinants_set = set()
+
+        for determinants in (row["KAN_Determinant"], row["VAN_Determinant"]):
+            if determinants == '_':
+                continue
+            determinants_set.update(set(determinant.split("_")[0] for determinant in determinants.split("; ")))
+
+        dict_rif_determinants = defaultdict(set)
+        for determinant in row["RIF_Determinant"].split("; "):
+            matches = re.match(r"^(.+)_.+ VARIANT (.+)$", determinant)
+            if not matches:
+                continue
+            gene, variant =  matches.groups()
+            dict_rif_determinants[gene].add(variant)
+        determinants_set.update(set(f"{gene}_{';'.join(sorted(determinants))}" for gene, determinants in dict_rif_determinants.items()))
+
+        return ":".join(sorted(determinants_set)) if determinants_set else "NEG"
+    
+    columns_to_add.append(df_table3_new_data[["KAN_Determinant", "RIF_Determinant", "VAN_Determinant"]].apply(other_format_convert, axis=1).rename("Other"))
+
     # Generate PBP1A_2B_2X__autocolour based on pbp1a, pbp2b and pbp2x with table3 format
     df_table3_new_data["PBP1A_2B_2X__autocolour"] = df_table3_new_data["pbp1a"] + "__" + df_table3_new_data["pbp2b"] + "__" + df_table3_new_data["pbp2x"]
 
@@ -278,7 +300,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     columns_to_add.append(s_mefa := (pd.Series(np.where(s_cot.str.contains("FOLA_I100L"), "POS", "NEG"), name="folA_I100L")))
     columns_to_add.append(s_mefa.map(pos_neg_colour).rename("folA_I100L__colour"))
 
-    # Generate Tet__autocolour based on Series s_cot with table3 format
+    # Generate folP__autocolour based on Series s_cot with table3 format
     def folp_autocolour_format_convert(determinants):
         ret = set(determinant for determinant in determinants.split(":") if "FOLP" in determinant)
         return ":".join(sorted(ret)) if ret else "NEG"
@@ -322,7 +344,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "Cot", 
         "Tet__autocolour", 
         "FQ__autocolour", 
-        # "Other", 
+        "Other", 
         "PBP1A_2B_2X__autocolour", 
         "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
         "ermB", "ermB__colour", 
