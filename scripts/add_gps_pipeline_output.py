@@ -112,6 +112,11 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     for col in df_table3_new_data.columns:
         df_table3_new_data[col] = df_table3_new_data[col].str.upper()
 
+    # Add No_of_genome and Duplicate columns with placeholders values
+    # Values will be updated by the GPS Database Processor
+    df_table3_new_data["No_of_genome"] = 1
+    df_table3_new_data["Duplicate"] = "UNIQUE"
+
     # Add legacy column
     legacy_columns = ["WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR"]
     for col in legacy_columns:
@@ -318,6 +323,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     # No_of_genome and Duplicate columns will be inserted in integrate_table3 function
     df_table3_new_data = df_table3_new_data[[
         "Lane_id", "Public_name", "Sanger_sample_id", "ERR", "ERS", 
+        "No_of_genome", "Duplicate",
         "In_silico_ST", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", 
         "GPSC", "GPSC__colour", 
         "In_silico_serotype", "In_silico_serotype__colour", 
