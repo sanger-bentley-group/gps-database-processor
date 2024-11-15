@@ -174,9 +174,9 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         sys.exit(f"Error: The following GPSC(s) are not found in the selected GPSC colour assignment file: {', '.join(sorted(gpsc_no_colour))}")
     columns_to_add.append(df_table3_new_data["GPSC"].map(dict_gpsc_colour).rename("GPSC__colour"))
 
-    # Strip leading 0 in serotype
+    # Strip leading 0 anywhere in serotype
     # Check all serotypes have colours assigned, then assign those colours 
-    df_table3_new_data["In_silico_serotype"] = df_table3_new_data["In_silico_serotype"].str.replace(r"^0+", "", regex=True)
+    df_table3_new_data["In_silico_serotype"] = df_table3_new_data["In_silico_serotype"].str.replace(r"0([1-9])", r"\1", regex=True)
     if serotype_no_colour := (set(df_table3_new_data["In_silico_serotype"]) - set(df_serotype_colour["In_silico_serotype"])):
         sys.exit(f"Error: The following serotype(s) are not found in the selected serotype colour assignment file: {', '.join(sorted(serotype_no_colour))}")
     columns_to_add.append(df_table3_new_data["In_silico_serotype"].map(df_serotype_colour.set_index("In_silico_serotype")["In_silico_serotype__colour"]).rename("In_silico_serotype__colour"))
