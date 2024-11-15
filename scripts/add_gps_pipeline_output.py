@@ -370,7 +370,7 @@ def integrate_table2(df_table2_new_data, df_table2, table2_path):
 
 
 def integrate_table3(df_table3_new_data, df_table3, table3_path):
-    # Ensure new Lane_id(s) do not exist in the existing table2
+    # Ensure new Lane_id(s) do not exist in the existing table3
     if already_exist_lane_id := set(df_table3["Lane_id"]).intersection(df_table3_new_data["Lane_id"]):
         sys.exit(f"Error: The following Lane_ID(s) already exist in {table3_path}: {', '.join(sorted(already_exist_lane_id))}.")
 
