@@ -25,6 +25,9 @@ def validate(path, version, check=False):
     global INSERTED_METADATA
     INSERTED_METADATA = set()
 
+    global UPDATED_NO_OF_GENOME
+    UPDATED_NO_OF_GENOME = set()
+
     config.LOG.info(f'Loading the tables at {path} now...')
 
     table1, table2, table3 = (os.path.join(path, table) for table in ("table1.csv", "table2.csv", "table3.csv"))
@@ -48,9 +51,9 @@ def validate(path, version, check=False):
         crosscheck_public_name(df_index[table2], table2, df_index[table3], table3)
         crosscheck_qc_and_insilico(df_index[table2], table2, df_index[table3], table3)
 
-    # If not in check mode, and there is a case conversion, whitespace stripping, or repeat addition, save the result
+    # If not in check mode, and there is a case conversion, whitespace stripping, repeat addition, or updated No of genome, save the result
     if not check:
-        for table in sorted(UPDATED_CASE | STRIPPED_WHITESPACE | INSERTED_METADATA):
+        for table in sorted(UPDATED_CASE | STRIPPED_WHITESPACE | INSERTED_METADATA | UPDATED_NO_OF_GENOME):
             df_index[table].to_csv(table, index=False)
             if table in UPDATED_CASE:
                 config.LOG.info(f'The unexpected lowercase value(s) in {table} have been fixed in-place.')
@@ -58,6 +61,8 @@ def validate(path, version, check=False):
                 config.LOG.info(f'The leading/trailing whitespace(s) in value(s) in {table} have been fixed in-place.')
             if table in INSERTED_METADATA:
                 config.LOG.info(f'The missing repeat(s) which marked as UNIQUE and have their original(s) available have been inserted into {table} based on their original(s).')
+            if table in UPDATED_NO_OF_GENOME:
+                config.LOG.info(f'The incorrect values in No_of_genome in {table} have been fixed in-place.')
 
     if FOUND_ERRORS:
         config.LOG.error(f'The validation of the tables at {path} completed with error(s). The process will now be halted. Please correct the error(s) and re-run the processor')
@@ -180,7 +185,7 @@ def check_analysis_table(df_analysis, table, version):
     check_lane_id_is_unqiue(df_analysis, 'Lane_id', table)
     check_err(df_analysis, 'ERR', table, version)
     check_ers(df_analysis, 'ERS', table, version)
-    check_no_of_genome(df_analysis, 'No_of_genome', table)
+    check_no_of_genome(df_analysis, 'No_of_genome', table, version)
     check_duplicate(df_analysis, 'Duplicate', table, version)
     check_in_silico_st(df_analysis, 'In_silico_ST', table)
 
@@ -517,9 +522,29 @@ def check_ers(df, column_name, table, version):
     check_regex(df, column_name, table, pattern=pattern)
 
 
-# Check column values contain 1 - 4 integers only
-def check_no_of_genome(df, column_name, table):
-    check_int_range(df, column_name, table, lo=1, hi=4)
+# Check values in No_of_genome match actual statistic. If not, attempt to update the values
+def check_no_of_genome(df, column_name, table, version):
+    df_copy = df.copy()
+
+    match version:
+        case 1:
+            df_copy['Public_name_no_suffix'] = df_copy['Public_name']
+            public_name_string = "Public_name(s)"
+        case 2:
+            df_copy['Public_name_no_suffix'] = df_copy['Public_name'].str.replace(r'_R[1-9]$', '', regex=True)
+            public_name_string = "Public_name(s) (_R* suffix repeats considered)"
+
+    dict_calculated_no_of_genome = df_copy.groupby("Public_name_no_suffix", dropna=False).size().to_dict()
+    df_copy["calculated_no_of_genome"] = df_copy["Public_name_no_suffix"].map(dict_calculated_no_of_genome).astype(str)
+
+    mask_updated_no_of_genome = df_copy["calculated_no_of_genome"] != df_copy["No_of_genome"]
+    if any(mask_updated_no_of_genome):
+        df.loc[mask_updated_no_of_genome, "No_of_genome"] = df_copy.loc[mask_updated_no_of_genome, "calculated_no_of_genome"]
+
+        global UPDATED_NO_OF_GENOME
+        UPDATED_NO_OF_GENOME.add(table)
+
+        config.LOG.info(f'{table} has the following {public_name_string} with incorrect value(s) in {column_name} that do not match the actual statistic: {", ".join(df.loc[mask_updated_no_of_genome, "Public_name"])}.')
 
 
 # Check column values contain DUPLICATE, UNIQUE only
