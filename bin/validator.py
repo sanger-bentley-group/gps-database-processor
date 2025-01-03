@@ -44,7 +44,7 @@ def validate(path, version, check=False):
     check_qc_table(df_index[table2], table2, version)
 
     config.LOG.info(f'Validating {table3} now...')
-    check_analysis_table(df_index[table3], table3, version)
+    check_analysis_table(df_index[table3], table3, version, df_index[table2])
 
     if version == 2:
         config.LOG.info(f'Cross-checking {table1} and {table3} now...')
@@ -165,7 +165,8 @@ def check_qc_table(df_qc, table, version):
 
 
 # Check whether analysis table only contains expected values / patterns
-def check_analysis_table(df_analysis, table, version):
+# Take QC table for Duplicate auto-assignment
+def check_analysis_table(df_analysis, table, version, df_qc):
     match version:
         case 1:
             analysis_columns = ["Lane_id", "Sample", "Public_name", "ERR", "ERS", "No_of_genome", "Duplicate", "Paper_1", "In_silico_ST", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "GPSC", "GPSC__colour", "In_silico_serotype", "In_silico_serotype__colour", "pbp1a", "pbp2b", "pbp2x", "WGS_PEN", "WGS_PEN_SIR_Meningitis", "WGS_PEN_SIR_Nonmeningitis", "WGS_AMO", "WGS_AMO_SIR", "WGS_MER", "WGS_MER_SIR", "WGS_TAX", "WGS_TAX_SIR_Meningitis", "WGS_TAX_SIR_Nonmeningitis", "WGS_CFT", "WGS_CFT_SIR_Meningitis", "WGS_CFT_SIR_Nonmeningitis", "WGS_CFX", "WGS_CFX_SIR", "WGS_ERY", "WGS_ERY_SIR", "WGS_CLI", "WGS_CLI_SIR", "WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR", "WGS_ERY_CLI", "WGS_COT", "WGS_COT_SIR", "WGS_TET", "WGS_TET_SIR", "WGS_DOX", "WGS_DOX_SIR", "WGS_LFX", "WGS_LFX_SIR", "WGS_CHL", "WGS_CHL_SIR", "WGS_RIF", "WGS_RIF_SIR", "WGS_VAN", "WGS_VAN_SIR", "EC", "Cot", "Tet__autocolour", "FQ__autocolour", "Other", "PBP1A_2B_2X__autocolour", "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", "ermB", "ermB__colour", "mefA", "mefA__colour", "folA_I100L", "folA_I100L__colour", "folP__autocolour", "cat", "cat__colour"]
@@ -191,7 +192,7 @@ def check_analysis_table(df_analysis, table, version):
     check_err(df_analysis, 'ERR', table, version)
     check_ers(df_analysis, 'ERS', table, version)
     check_no_of_genome(df_analysis, 'No_of_genome', table, version)
-    check_duplicate(df_analysis, 'Duplicate', table, version)
+    check_duplicate(df_analysis, 'Duplicate', table, version, df_qc)
     check_in_silico_st(df_analysis, 'In_silico_ST', table)
 
     mlst_genes_in_silico_columns = ['aroE', 'gdh', 'gki', 'recP', 'spi', 'xpt', 'ddl']
@@ -555,7 +556,7 @@ def check_no_of_genome(df, column_name, table, version):
 # Check column values contain DUPLICATE, UNIQUE only
 # Each public name should contains one UNIQUE value at most
 # Attempt to auto-assign UNIQUE when there is none for a public name
-def check_duplicate(df, column_name, table, version):
+def check_duplicate(df, column_name, table, version, df_qc):
     expected = {'DUPLICATE', 'UNIQUE'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
@@ -580,17 +581,35 @@ def check_duplicate(df, column_name, table, version):
     df_uniques_as_duplicate = df_uniques[df_uniques[column_name]=='DUPLICATE']
     if len(df_uniques_as_duplicate) > 0:
         config.LOG.info(f'{table} has the following {unique_public_name_string} marked as DUPLICATE in {column_name}: {", ".join(df_uniques_as_duplicate["Public_name"].tolist())}.')
+        
         df.loc[df_uniques_as_duplicate.index, column_name] = "UNIQUE"
         UPDATED_DUPLICATE.add(table)
 
     duplicates_no_unique = set(df_duplicates['Public_name_no_suffix']) - set(df_duplicates[df_duplicates['Duplicate']=='UNIQUE']['Public_name_no_suffix'])
     if duplicates_no_unique:
-        config.LOG.warning(f'{table} has the following duplicated Public_name(s) with none of their {duplicate_string} marked as UNIQUE in {column_name}: {", ".join(duplicates_no_unique)}. Please check if they are correct.')
+        config.LOG.info(f'{table} has the following duplicated Public_name(s) with none of their {duplicate_string} marked as UNIQUE in {column_name}: {", ".join(duplicates_no_unique)}.')
+
+        for duplicate in duplicates_no_unique:
+            candidate_lane_ids = df_duplicates[df_duplicates["Public_name_no_suffix"] == duplicate]["Lane_id"].tolist()
+            candidate_qc_scores = {lane_id: 0 for lane_id in candidate_lane_ids}
+    
+            df_qc_candidate = df_qc[df_qc["Lane_id"].isin(candidate_lane_ids)].copy().reset_index(drop=True)
+            for high_metric in ("Streptococcus_pneumoniae", "Genome_covered", "Depth_of_coverage"):
+                winner_lane_id = df_qc_candidate.iloc[df_qc_candidate[high_metric].astype(float).idxmax()]["Lane_id"]
+                candidate_qc_scores[winner_lane_id] += 1
+            for low_metric in ("No_of_contigs", "Hetsites_50bp"):
+                winner_lane_id = df_qc_candidate.iloc[df_qc_candidate[low_metric].astype(int).idxmin()]["Lane_id"]
+                candidate_qc_scores[winner_lane_id] += 1
+            
+            selected_lane_id = max(candidate_qc_scores, key=candidate_qc_scores.get)
+            df.loc[df["Lane_id"] == selected_lane_id, column_name] = "UNIQUE"
+        
+        UPDATED_DUPLICATE.add(table)
     
     df_duplicates_unique_count = df_duplicates[df_duplicates['Duplicate']=='UNIQUE'].groupby(['Public_name_no_suffix']).size()
     duplicates_more_than_one_unique = df_duplicates_unique_count.index[df_duplicates_unique_count > 1].tolist()
     if duplicates_more_than_one_unique:
-        config.LOG.error(f'{table} has the following duplicated Public_name(s) with more than one of their {duplicate_string} marked as UNIQUE in {column_name}: {", ".join(duplicates_more_than_one_unique)}.')
+        config.LOG.error(f'{table} has the following duplicated Public_name(s) with more than one of their {duplicate_string} marked as UNIQUE in {column_name}: {", ".join(duplicates_more_than_one_unique)}. Fix them manually or change all to DUPLICATE for auto-assignment.')
         found_error()
 
 
