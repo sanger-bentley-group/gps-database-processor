@@ -28,6 +28,9 @@ def validate(path, version, check=False):
     global UPDATED_NO_OF_GENOME
     UPDATED_NO_OF_GENOME = set()
 
+    global UPDATED_DUPLICATE
+    UPDATED_DUPLICATE = set()
+
     config.LOG.info(f'Loading the tables at {path} now...')
 
     table1, table2, table3 = (os.path.join(path, table) for table in ("table1.csv", "table2.csv", "table3.csv"))
@@ -51,9 +54,9 @@ def validate(path, version, check=False):
         crosscheck_public_name(df_index[table2], table2, df_index[table3], table3)
         crosscheck_qc_and_insilico(df_index[table2], table2, df_index[table3], table3)
 
-    # If not in check mode, and there is a case conversion, whitespace stripping, repeat addition, or updated No of genome, save the result
+    # If not in check mode, and there is a case conversion, whitespace stripping, repeat addition, updated No of genome, or updated Duplicate save the result
     if not check:
-        for table in sorted(UPDATED_CASE | STRIPPED_WHITESPACE | INSERTED_METADATA | UPDATED_NO_OF_GENOME):
+        for table in sorted(UPDATED_CASE | STRIPPED_WHITESPACE | INSERTED_METADATA | UPDATED_NO_OF_GENOME | UPDATED_DUPLICATE):
             df_index[table].to_csv(table, index=False)
             if table in UPDATED_CASE:
                 config.LOG.info(f'The unexpected lowercase value(s) in {table} have been fixed in-place.')
@@ -63,6 +66,8 @@ def validate(path, version, check=False):
                 config.LOG.info(f'The missing repeat(s) which marked as UNIQUE and have their original(s) available have been inserted into {table} based on their original(s).')
             if table in UPDATED_NO_OF_GENOME:
                 config.LOG.info(f'The incorrect values in No_of_genome in {table} have been fixed in-place.')
+            if table in UPDATED_DUPLICATE:
+                config.LOG.info(f'UNIQUE has been auto-assign to Duplicate in {table} for Public_name(s) with no UNIQUE assignment.')
 
     if FOUND_ERRORS:
         config.LOG.error(f'The validation of the tables at {path} completed with error(s). The process will now be halted. Please correct the error(s) and re-run the processor')
@@ -549,6 +554,7 @@ def check_no_of_genome(df, column_name, table, version):
 
 # Check column values contain DUPLICATE, UNIQUE only
 # Each public name should contains one UNIQUE value at most
+# Attempt to auto-assign UNIQUE when there is none for a public name
 def check_duplicate(df, column_name, table, version):
     expected = {'DUPLICATE', 'UNIQUE'}
     check_case(df, column_name, table)
@@ -569,9 +575,13 @@ def check_duplicate(df, column_name, table, version):
     df_uniques = df_copy[~df_copy['Public_name_no_suffix'].duplicated(keep=False)]
     df_duplicates = df_copy[df_copy['Public_name_no_suffix'].duplicated(keep=False)]
 
-    uniques_as_duplicate = df_uniques[df_uniques[column_name]=='DUPLICATE']['Public_name'].tolist()
-    if uniques_as_duplicate:
-        config.LOG.warning(f'{table} has the following {unique_public_name_string} marked as DUPLICATE in {column_name}: {", ".join(uniques_as_duplicate)}. Please check if they are correct.')
+    global UPDATED_DUPLICATE
+
+    df_uniques_as_duplicate = df_uniques[df_uniques[column_name]=='DUPLICATE']
+    if len(df_uniques_as_duplicate) > 0:
+        config.LOG.info(f'{table} has the following {unique_public_name_string} marked as DUPLICATE in {column_name}: {", ".join(df_uniques_as_duplicate["Public_name"].tolist())}.')
+        df.loc[df_uniques_as_duplicate.index, column_name] = "UNIQUE"
+        UPDATED_DUPLICATE.add(table)
 
     duplicates_no_unique = set(df_duplicates['Public_name_no_suffix']) - set(df_duplicates[df_duplicates['Duplicate']=='UNIQUE']['Public_name_no_suffix'])
     if duplicates_no_unique:
