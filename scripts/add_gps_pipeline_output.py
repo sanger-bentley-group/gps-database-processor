@@ -113,7 +113,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     # Add No_of_genome and Duplicate columns with placeholders values
     # Values will be updated by the GPS Database Processor
     df_table3_new_data["No_of_genome"] = 1
-    df_table3_new_data["Duplicate"] = "UNIQUE"
+    df_table3_new_data["Duplicate"] = "DUPLICATE"
 
     # Add legacy column
     legacy_columns = ["WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR"]
