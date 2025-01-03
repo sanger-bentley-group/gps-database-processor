@@ -578,6 +578,7 @@ def check_duplicate(df, column_name, table, version, df_qc):
 
     global UPDATED_DUPLICATE
 
+    # Check and assign UNIQUE to unique public name marked as DUPLICATE
     df_uniques_as_duplicate = df_uniques[df_uniques[column_name]=='DUPLICATE']
     if len(df_uniques_as_duplicate) > 0:
         config.LOG.info(f'{table} has the following {unique_public_name_string} marked as DUPLICATE in {column_name}: {", ".join(df_uniques_as_duplicate["Public_name"].tolist())}.')
@@ -585,6 +586,7 @@ def check_duplicate(df, column_name, table, version, df_qc):
         df.loc[df_uniques_as_duplicate.index, column_name] = "UNIQUE"
         UPDATED_DUPLICATE.add(table)
 
+    # Check, select and assign UNIQUE to duplicated public name with none marked as UNIQUE
     duplicates_no_unique = set(df_duplicates['Public_name_no_suffix']) - set(df_duplicates[df_duplicates['Duplicate']=='UNIQUE']['Public_name_no_suffix'])
     if duplicates_no_unique:
         config.LOG.info(f'{table} has the following duplicated Public_name(s) with none of their {duplicate_string} marked as UNIQUE in {column_name}: {", ".join(duplicates_no_unique)}.')
@@ -606,6 +608,7 @@ def check_duplicate(df, column_name, table, version, df_qc):
         
         UPDATED_DUPLICATE.add(table)
     
+    # Check duplicated public name with more than one marked as UNIQUE
     df_duplicates_unique_count = df_duplicates[df_duplicates['Duplicate']=='UNIQUE'].groupby(['Public_name_no_suffix']).size()
     duplicates_more_than_one_unique = df_duplicates_unique_count.index[df_duplicates_unique_count > 1].tolist()
     if duplicates_more_than_one_unique:
