@@ -76,6 +76,10 @@ def generate_table2_data(df_results, df_info, assembler):
 
     df_table2_new_data = df_table2_new_data.merge(df_info, left_on="Sample_ID", right_on="Lane_id", how="left")
 
+    # Convert all content to UPPER case
+    for col in df_table2_new_data.columns:
+        df_table2_new_data[col] = df_table2_new_data[col].str.upper()
+
     # Add used assembler based on user input
     df_table2_new_data["Assembler"] = assembler
     # Add legacy column
