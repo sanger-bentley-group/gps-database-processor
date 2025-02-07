@@ -171,8 +171,9 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     columns_to_add = []
 
     # Check all GPSCs have colours assigned, then assign those colours
-    # No GPSC assignment as TRANSPARENT
+    # No GPSC assignment as TRANSPARENT, also change no assignment value from NA to _
     dict_gpsc_colour = df_gpsc_colour.set_index("GPSC")["GPSC__colour"].to_dict()
+    df_table3_new_data["GPSC"] = df_table3_new_data["GPSC"].replace("NA", "_")
     dict_gpsc_colour["_"] = "TRANSPARENT"
     if gpsc_no_colour := (set(df_table3_new_data["GPSC"]) - set(dict_gpsc_colour)):
         sys.exit(f"Error: The following GPSC(s) are not found in the selected GPSC colour assignment file: {', '.join(sorted(gpsc_no_colour))}")
