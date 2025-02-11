@@ -241,10 +241,13 @@ def get_less_than_5_years_old(row):
 
 # Get whether the in silico serotype of the row is targeted by each vaccine.
 def get_vaccines_covered(row):
-    serotype = row['In_silico_serotype']
+    # For 6E(6*), capture content in bracket; 
+    # then for all, remove bracket and content within
+    stripped_serotype = re.sub(r'^6E\((6[A-Z])\)$', r'\1', row['In_silico_serotype'])
+    stripped_serotype = re.sub(r'\(.*\)$', '', stripped_serotype)
 
     for pcv, serotypes in config.PCV_VALENCY.items():
-        if serotype in serotypes:
+        if stripped_serotype in serotypes:
             row[pcv] = 'Y'
         else:
             row[pcv] = 'N'
