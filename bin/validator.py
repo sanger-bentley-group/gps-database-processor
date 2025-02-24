@@ -46,13 +46,14 @@ def validate(path, version, check=False):
     config.LOG.info(f'Validating {table3} now...')
     check_analysis_table(df_index[table3], table3, version, df_index[table2])
 
+    config.LOG.info(f'Cross-checking {table2} and {table3} now...')
+    crosscheck_public_name(df_index[table2], table2, df_index[table3], table3)
+
     if version == 2:
+        crosscheck_qc_and_insilico(df_index[table2], table2, df_index[table3], table3)
+
         config.LOG.info(f'Cross-checking {table1} and {table3} now...')
         add_unique_repeat_to_metadata(df_index, table1, table3)
-
-        config.LOG.info(f'Cross-checking {table2} and {table3} now...')
-        crosscheck_public_name(df_index[table2], table2, df_index[table3], table3)
-        crosscheck_qc_and_insilico(df_index[table2], table2, df_index[table3], table3)
 
     # If not in check mode, and there is a case conversion, whitespace stripping, repeat addition, updated No of genome, or updated Duplicate save the result
     if not check:
@@ -133,7 +134,7 @@ def check_meta_table(df_meta, table, version):
 def check_qc_table(df_qc, table, version):
     match version:
         case 1:
-            qc_columns = ["Lane_id", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "Proportion_of_Het_SNPs", "QC", "Supplier_name", "Hetsites_50bp"]
+            qc_columns = ["Lane_id", "Public_name", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "Proportion_of_Het_SNPs", "QC", "Supplier_name", "Hetsites_50bp"]
         case 2:
             qc_columns = ["Lane_id", "Public_name", "Assembler", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "Proportion_of_Het_SNPs", "QC", "Supplier_name", "Hetsites_50bp"]
 
@@ -142,6 +143,8 @@ def check_qc_table(df_qc, table, version):
     match version:
         case 1:
             check_lane_id(df_qc, 'Lane_id', table)
+            check_case(df_qc, 'Public_name', table)
+            check_space(df_qc, 'Public_name', table)
         case 2:
             check_case_and_space_columns = ['Lane_id', 'Public_name']
             for col in check_case_and_space_columns:
