@@ -95,16 +95,15 @@ def get_monocle(gps1, gps2):
 
         # Drop columns that do not exist in Monocle table, and fix differences between GPS1 and GPS2
         df_meta.drop(columns=['aroE', 'ddl', 'gdh', 'gki', 'recP', 'spi', 'xpt'], inplace=True)
+        df_qc.drop(columns=['Public_name', 'Supplier_name'], inplace=True)
 
         match ver:
             case 1:
-                df_qc.drop(columns=['Supplier_name'], inplace=True)
                 df_analysis.drop(columns=['No_of_genome', 'Paper_1'], inplace=True)
             case 2:
-                df_qc.drop(columns=['Public_name', 'Supplier_name'], inplace=True)
                 df_analysis.drop(columns=['No_of_genome'], inplace=True)
                 df_analysis.rename(columns={"Sanger_sample_id": "Sample"}, inplace=True)
-
+        
         df_table4.drop(columns=['Published'], inplace=True)
 
         # Merge all 4 tables and only retain samples exist in all 4
