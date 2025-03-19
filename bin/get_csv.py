@@ -94,7 +94,7 @@ def get_monocle(gps1, gps2):
         df_table4.drop(df_table4[df_table4['Published'] != 'Y'].index, inplace=True)
 
         # Drop columns that do not exist in Monocle table, and fix differences between GPS1 and GPS2
-        df_meta.drop(columns=['aroE', 'ddl', 'gdh', 'gki', 'recP', 'spi', 'xpt'], inplace=True)
+        df_meta.drop(columns=['Sequence_Type', 'aroE', 'ddl', 'gdh', 'gki', 'recP', 'spi', 'xpt'], inplace=True)
         df_qc.drop(columns=['Public_name', 'Supplier_name'], inplace=True)
 
         match ver:
