@@ -101,6 +101,7 @@ def get_monocle(gps1, gps2):
             case 1:
                 df_analysis.drop(columns=['No_of_genome', 'Paper_1'], inplace=True)
             case 2:
+                df_meta.drop(columns=['Accession_number'], inplace=True)
                 df_analysis.drop(columns=['No_of_genome'], inplace=True)
                 df_analysis.rename(columns={"Sanger_sample_id": "Sample"}, inplace=True)
         
