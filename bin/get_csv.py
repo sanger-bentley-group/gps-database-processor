@@ -91,7 +91,6 @@ def get_monocle(gps1, gps2):
         # Only preserve QC Passed, UNIQUE and Published for Monocle table
         df_qc.drop(df_qc[~df_qc['QC'].isin(['PASS', 'PASSPLUS'])].index, inplace=True)
         df_analysis.drop(df_analysis[df_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
-        df_table4.drop(df_table4[df_table4['Published'] != 'Y'].index, inplace=True)
 
         # Drop columns that do not exist in Monocle table, and fix differences between GPS1 and GPS2
         df_meta.drop(columns=['Sequence_Type', 'aroE', 'ddl', 'gdh', 'gki', 'recP', 'spi', 'xpt'], inplace=True)
@@ -105,8 +104,6 @@ def get_monocle(gps1, gps2):
                 df_analysis.drop(columns=['No_of_genome'], inplace=True)
                 df_analysis.rename(columns={"Sanger_sample_id": "Sample"}, inplace=True)
         
-        df_table4.drop(columns=['Published'], inplace=True)
-
         # Merge all 4 tables and only retain samples exist in all 4
         df = df_meta.merge(df_analysis, how='inner', on='Public_name', validate='one_to_one')
         df = df.merge(df_qc, how='inner', on='Lane_id', validate='one_to_one')
@@ -115,7 +112,7 @@ def get_monocle(gps1, gps2):
         dfs.append(df)
 
     # Concat GPS1 and GPS2 Dataframe
-    df = pd.concat(dfs)
+    df = pd.concat(dfs, ignore_index=True)
     
     # Export Monocle Table
     monocle_csv = 'table_monocle.csv'
