@@ -1,4 +1,4 @@
-# This module contains functions for generating various .csv. 
+# This module contains functions for generating various .csv and .txt.
 
 
 import pandas as pd
@@ -69,7 +69,7 @@ def get_table4(version, path, location):
     config.LOG.info(f'{table4} is generated.')
 
 
-# Generate Monocle table based on GPS1 and GGPS2
+# Generate Monocle table based on GPS1 and GPS2, and Published Public Name list
 def get_monocle(gps1, gps2):
     config.LOG.info(f'Generating Monocle table now...')
 
@@ -119,6 +119,12 @@ def get_monocle(gps1, gps2):
     df.replace('_', '', inplace=True)
     df.to_csv(monocle_csv, index=False)
     config.LOG.info(f'{monocle_csv} is generated.')
+
+    # Save Published Public Name list to file
+    published_public_name_list = "published_public_names.txt"
+    config.LOG.info(f'Generating {published_public_name_list} now...')
+    df.loc[df["Published"] == "Y", "Public_name"].sort_values().to_csv(published_public_name_list, index=False, header=False)
+    config.LOG.info(f'{published_public_name_list} is generated.')
 
     return df
 
