@@ -25,6 +25,9 @@ MANIFESTATION_DICT = {
 
 # Generate Data JSON based on Monocle Table
 def get_data(df):
+    # Only account for public data 
+    df.drop(df[df['Published'] != 'Y'].index, inplace=True)
+
     df.replace("", np.nan, inplace=True)
 
     data_json = "data.json"
