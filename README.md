@@ -20,7 +20,7 @@ It carries out several operations in the following order:
          - The first time this is triggered, it will ask for your Mapbox API key (access token) and save it locally at `config/api_keys.confg` for future use
          - For more information on the Mapbox API key (access token), please visit [their documentation](https://docs.mapbox.com/help/glossary/access-token/)
 4. If not running in `--monocle` mode, the operation stops here
-5. Generate `table_monocle.csv` for [Monocle](https://data-viewer.monocle.sanger.ac.uk/)
+5. Generate `table_monocle.csv` and `published_public_names.txt` for [Monocle](https://data-viewer.monocle.sanger.ac.uk/)
 6. Generate `data.json` for [GPS Database Overview](https://www.pneumogen.net/gps/gps-database-overview/)
 
 &nbsp;

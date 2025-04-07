@@ -1,4 +1,4 @@
-# This module contains functions for generating various .csv. 
+# This module contains functions for generating various .csv and .txt.
 
 
 import pandas as pd
@@ -69,7 +69,7 @@ def get_table4(version, path, location):
     config.LOG.info(f'{table4} is generated.')
 
 
-# Generate Monocle table based on GPS1 and GGPS2
+# Generate Monocle table based on GPS1 and GPS2, and Published Public Name list
 def get_monocle(gps1, gps2):
     config.LOG.info(f'Generating Monocle table now...')
 
@@ -91,7 +91,6 @@ def get_monocle(gps1, gps2):
         # Only preserve QC Passed, UNIQUE and Published for Monocle table
         df_qc.drop(df_qc[~df_qc['QC'].isin(['PASS', 'PASSPLUS'])].index, inplace=True)
         df_analysis.drop(df_analysis[df_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
-        df_table4.drop(df_table4[df_table4['Published'] != 'Y'].index, inplace=True)
 
         # Drop columns that do not exist in Monocle table, and fix differences between GPS1 and GPS2
         df_meta.drop(columns=['Sequence_Type', 'aroE', 'ddl', 'gdh', 'gki', 'recP', 'spi', 'xpt'], inplace=True)
@@ -101,11 +100,10 @@ def get_monocle(gps1, gps2):
             case 1:
                 df_analysis.drop(columns=['No_of_genome', 'Paper_1'], inplace=True)
             case 2:
+                df_meta.drop(columns=['Accession_number'], inplace=True)
                 df_analysis.drop(columns=['No_of_genome'], inplace=True)
                 df_analysis.rename(columns={"Sanger_sample_id": "Sample"}, inplace=True)
         
-        df_table4.drop(columns=['Published'], inplace=True)
-
         # Merge all 4 tables and only retain samples exist in all 4
         df = df_meta.merge(df_analysis, how='inner', on='Public_name', validate='one_to_one')
         df = df.merge(df_qc, how='inner', on='Lane_id', validate='one_to_one')
@@ -114,13 +112,19 @@ def get_monocle(gps1, gps2):
         dfs.append(df)
 
     # Concat GPS1 and GPS2 Dataframe
-    df = pd.concat(dfs)
+    df = pd.concat(dfs, ignore_index=True)
     
     # Export Monocle Table
     monocle_csv = 'table_monocle.csv'
     df.replace('_', '', inplace=True)
     df.to_csv(monocle_csv, index=False)
     config.LOG.info(f'{monocle_csv} is generated.')
+
+    # Save Published Public Name list to file
+    published_public_name_list = "published_public_names.txt"
+    config.LOG.info(f'Generating {published_public_name_list} now...')
+    df.loc[df["Published"] == "Y", "Public_name"].sort_values().to_csv(published_public_name_list, index=False, header=False)
+    config.LOG.info(f'{published_public_name_list} is generated.')
 
     return df
 
