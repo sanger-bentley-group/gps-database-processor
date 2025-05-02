@@ -88,7 +88,7 @@ def get_monocle(gps1, gps2):
         table1, table2, table3, table4 = (os.path.join(gps_path, table) for table in ("table1.csv", "table2.csv", "table3.csv", "table4.csv")) 
         df_meta, df_qc, df_analysis, df_table4 = read_tables(table1, table2, table3, table4)
 
-        # Only preserve QC Passed, UNIQUE and Published for Monocle table
+        # Only preserve QC Passed and UNIQUE for Monocle table
         df_qc.drop(df_qc[~df_qc['QC'].isin(['PASS', 'PASSPLUS'])].index, inplace=True)
         df_analysis.drop(df_analysis[df_analysis['Duplicate'] != 'UNIQUE'].index, inplace=True)
 
