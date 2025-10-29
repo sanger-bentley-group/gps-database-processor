@@ -54,6 +54,7 @@ def validate(path, version, check=False):
 
         config.LOG.info(f'Cross-checking {table1} and {table3} now...')
         add_unique_repeat_to_metadata(df_index, table1, table3)
+        check_missing_metadata(df_index, table1, table3)
 
     # If not in check mode, and there is a case conversion, whitespace stripping, repeat addition, updated No of genome, or updated Duplicate save the result
     if not check:
@@ -824,9 +825,18 @@ def add_unique_repeat_to_metadata(df_index, table1, table3):
             repeats_without_original.append(repeat)
 
     if repeats_inserted:
-        config.LOG.info(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, but their original(s) are: {", ".join(repeats_inserted)}')
+        config.LOG.info(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, but their original(s) are: {", ".join(sorted(repeats_inserted))}')
     if repeats_without_original:
-        config.LOG.warning(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, nor their original(s): {", ".join(repeats_without_original)}')
+        config.LOG.warning(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, nor their original(s): {", ".join(sorted(repeats_without_original))}')
+
+
+# Check if there is an original Public_name (Public_name without _R* suffix) marked as UNIQUE in Duplicate but does not exist in table1
+def check_missing_metadata(df_index, table1, table3):
+    df_meta = df_index[table1]
+    df_analysis = df_index[table3]
+    missing_metadata = set(df_analysis[(df_analysis['Duplicate'] == 'UNIQUE') & ~(df_analysis['Public_name'].str.contains(r'_R[1-9]$'))]['Public_name']) - set(df_meta['Public_name'])
+    if missing_metadata:
+        config.LOG.warning(f'The following original Public_name(s) which marked as UNIQUE in {table3} are not in {table1}: {", ".join(sorted(missing_metadata))}')
 
 
 # Check if Public_names in table2 and table3 are the same for the same Lane_id
