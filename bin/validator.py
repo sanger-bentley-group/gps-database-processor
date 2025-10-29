@@ -824,9 +824,9 @@ def add_unique_repeat_to_metadata(df_index, table1, table3):
             repeats_without_original.append(repeat)
 
     if repeats_inserted:
-        config.LOG.info(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, but their original(s) are: {", ".join(repeats_inserted)}')
+        config.LOG.info(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, but their original(s) are: {", ".join(sorted(repeats_inserted))}')
     if repeats_without_original:
-        config.LOG.warning(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, nor their original(s): {", ".join(repeats_without_original)}')
+        config.LOG.warning(f'The following repeats which marked as UNIQUE in {table3} are not in {table1}, nor their original(s): {", ".join(sorted(repeats_without_original))}')
 
 
 # Check if Public_names in table2 and table3 are the same for the same Lane_id
