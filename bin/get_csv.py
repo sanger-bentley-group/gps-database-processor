@@ -113,6 +113,9 @@ def get_monocle(gps1, gps2):
 
     # Concat GPS1 and GPS2 Dataframe
     df = pd.concat(dfs, ignore_index=True)
+
+    # Remove Age_months and Age_days information from CDC data
+    remove_age_months_days_information(df, ["CDC"])
     
     # Export Monocle Table
     monocle_csv = 'table_monocle.csv'
@@ -256,3 +259,9 @@ def get_vaccines_covered(row):
             row[pcv] = 'N'
 
     return row
+
+# Ensure Age_months and Age_days information are removed from selected institutes, Age_years is set to 0 for thos known to be younger than 1 yo
+def remove_age_months_days_information(df, institutes_list):
+    for institute in institutes_list:
+        df.loc[(df["Submitting_institution"] == institute) & (df["Age_years"] == "_") & ((df["Age_months"].str.isnumeric()) | (df["Age_days"].str.isnumeric())), "Age_years"] = "0"
+        df.loc[(df["Submitting_institution"] == institute) & ((df["Age_months"].str.isnumeric()) | (df["Age_days"].str.isnumeric())), ["Age_months", "Age_days"]] = ["_", "_"]
