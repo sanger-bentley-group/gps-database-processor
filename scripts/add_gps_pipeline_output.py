@@ -108,6 +108,10 @@ def generate_table2_data(df_results, df_info, assembler):
 def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour):
     df_table3_new_data = df_results[df_results["Overall_QC"] == "PASS"].copy()
 
+    # Return None if all samples failed QC
+    if df_table3_new_data.empty:
+        return None
+
     df_table3_new_data = df_table3_new_data.merge(df_info, left_on="Sample_ID", right_on="Lane_id", how="left")
 
     # Convert all content to UPPER case
@@ -186,7 +190,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         sys.exit(f"Error: The following serotype(s) are not found in the selected serotype colour assignment file: {', '.join(sorted(serotype_no_colour))}")
     columns_to_add.append(df_table3_new_data["In_silico_serotype"].map(df_serotype_colour.set_index("In_silico_serotype")["In_silico_serotype__colour"]).rename("In_silico_serotype__colour"))
 
-    # Remove remove spaces, leading = and duplicated NF (happen in PBP AMR), and fill empty as _ in WGS columns
+    # Remove spaces, leading = and duplicated NF (happen in PBP AMR), and fill empty as _ in WGS columns
     for col in df_table3_new_data.columns:
         if col.startswith("WGS_") and "_SIR" not in col:
             df_table3_new_data[col] = df_table3_new_data[col].str.replace(" ", "").str.replace("^=", "", regex=True).str.replace(r"^(NF){2,}$", "NF", regex=True).str.replace(r"^$", "_", regex=True)
@@ -375,6 +379,10 @@ def integrate_table2(df_table2_new_data, df_table2, table2_path):
 
 
 def integrate_table3(df_table3_new_data, df_table3, table3_path):
+    # Return original table if there is no QC passed samples
+    if df_table3_new_data is None:
+        return df_table3
+
     # Ensure new Lane_id(s) do not exist in the existing table3
     if already_exist_lane_id := set(df_table3["Lane_id"]).intersection(df_table3_new_data["Lane_id"]):
         sys.exit(f"Error: The following Lane_ID(s) already exist in {table3_path}: {', '.join(sorted(already_exist_lane_id))}.")
