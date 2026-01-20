@@ -527,7 +527,7 @@ def check_ers(df, column_name, table, version):
         case 1:
             pattern = r'^[ESD]RS[0-9]{6,8}$'
         case 2:
-            pattern = r'^([ESD]RS[0-9]{6,8}|_)$'
+            pattern = r'^([ESD]RS[0-9]{6,8}|_|SAM[DEN][A-Z]?[0-9]{6,})$'
 
     check_regex(df, column_name, table, pattern=pattern)
 
