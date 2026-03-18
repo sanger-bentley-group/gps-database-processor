@@ -90,7 +90,7 @@ def read_tables(table1, table2, table3):
 def check_meta_table(df_meta, table, version):
     match version:
         case 1:
-            meta_columns = ["Sample_name", "Public_name", "Study_name", "Selection_random", "Continent", "Country", "Region", "City", "Facility_where_collected", "Submitting_institution", "Month", "Year", "Gender", "Age_years", "Age_months", "Age_days", "Clinical_manifestation", "Source", "HIV_status", "Underlying_conditions", "Phenotypic_serotype_method", "Phenotypic_serotype", "Sequence_Type", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "AST_method_Penicillin", "Penicillin", "AST_method_Amoxicillin", "Amoxicillin", "AST_method_Cefotaxime", "Cefotaxime", "AST_method_Ceftriaxone", "Ceftriaxone", "AST_method_Cefuroxime", "Cefuroxime", "AST_method_Meropenem", "Meropenem", "AST_method_Erythromycin", "Erythromycin", "AST_method_Clindamycin", "Clindamycin", "AST_method_COT", "COT", "AST_method_Vancomycin", "Vancomycin", "AST_method_Linezolid", "Linezolid", "AST_method_Ciprofloxacin", "Ciprofloxacin", "AST_method_Chloramphenicol", "Chloramphenicol", "AST_method_Tetracycline", "Tetracycline", "AST_method_Levofloxacin", "Levofloxacin", "AST_method_Synercid", "Synercid", "AST_method_Rifampin", "Rifampin", "Comments"]
+            meta_columns = ["Sample_name", "Public_name", "Study_name", "Selection_random", "Country", "Region", "City", "Facility_where_collected", "Submitting_institution", "Month", "Year", "Gender", "Age_years", "Age_months", "Age_days", "Clinical_manifestation", "Source", "HIV_status", "Underlying_conditions", "Phenotypic_serotype_method", "Phenotypic_serotype", "Sequence_Type", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "AST_method_Penicillin", "Penicillin", "AST_method_Amoxicillin", "Amoxicillin", "AST_method_Cefotaxime", "Cefotaxime", "AST_method_Ceftriaxone", "Ceftriaxone", "AST_method_Cefuroxime", "Cefuroxime", "AST_method_Meropenem", "Meropenem", "AST_method_Erythromycin", "Erythromycin", "AST_method_Clindamycin", "Clindamycin", "AST_method_COT", "COT", "AST_method_Vancomycin", "Vancomycin", "AST_method_Linezolid", "Linezolid", "AST_method_Ciprofloxacin", "Ciprofloxacin", "AST_method_Chloramphenicol", "Chloramphenicol", "AST_method_Tetracycline", "Tetracycline", "AST_method_Levofloxacin", "Levofloxacin", "AST_method_Synercid", "Synercid", "AST_method_Rifampin", "Rifampin", "Comments"]
             antibiotics_columns = ['Penicillin', 'Amoxicillin', 'Cefotaxime', 'Ceftriaxone', 'Cefuroxime', 'Meropenem', 'Erythromycin', 'Clindamycin', 'COT', 'Vancomycin', 'Linezolid', 'Ciprofloxacin', 'Chloramphenicol', 'Tetracycline', 'Levofloxacin', 'Synercid', 'Rifampin']
             check_case_only_columns = ['Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution', 'Underlying_conditions', 'Phenotypic_serotype_method', 'AST_method_Penicillin', 'AST_method_Amoxicillin', 'AST_method_Cefotaxime', 'AST_method_Ceftriaxone', 'AST_method_Cefuroxime', 'AST_method_Meropenem', 'AST_method_Erythromycin', 'AST_method_Clindamycin', 'AST_method_COT', 'AST_method_Vancomycin', 'AST_method_Linezolid', 'AST_method_Ciprofloxacin', 'AST_method_Chloramphenicol', 'AST_method_Tetracycline', 'AST_method_Levofloxacin', 'AST_method_Synercid', 'AST_method_Rifampin']
         case 2:
@@ -101,9 +101,6 @@ def check_meta_table(df_meta, table, version):
     check_columns(df_meta, meta_columns, table)
 
     check_whitespace(df_meta, table)
-
-    if version == "1":
-        check_continent(df_meta, 'Continent', table)
 
     check_sample_name(df_meta, 'Sample_name', table)
     check_public_name(df_meta, 'Public_name', table)
@@ -133,25 +130,21 @@ def check_meta_table(df_meta, table, version):
 
 # Check whether qc table only contains expected values / patterns
 def check_qc_table(df_qc, table, version):
-    match version:
-        case 1:
-            qc_columns = ["Lane_id", "Public_name", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "Proportion_of_Het_SNPs", "QC", "Supplier_name", "Hetsites_50bp"]
-        case 2:
-            qc_columns = ["Lane_id", "Public_name", "Assembler", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "Proportion_of_Het_SNPs", "QC", "Supplier_name", "Hetsites_50bp"]
-
+    qc_columns = ["Lane_id", "Public_name", "Pipeline_version", "Assembler", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "QC", "Supplier_name", "Hetsites_50bp"]
     check_columns(df_qc, qc_columns, table)
 
     match version:
         case 1:
             check_lane_id(df_qc, 'Lane_id', table)
-            check_case(df_qc, 'Public_name', table)
-            check_space(df_qc, 'Public_name', table)
         case 2:
-            check_case_and_space_columns = ['Lane_id', 'Public_name']
-            for col in check_case_and_space_columns:
-                check_case(df_qc, col, table)
-                check_space(df_qc, col, table)
-            check_assembler(df_qc, 'Assembler', table)
+            check_case(df_qc, 'Lane_id', table)
+            check_space(df_qc, 'Lane_id', table)
+    
+    check_case(df_qc, 'Public_name', table)
+    check_space(df_qc, 'Public_name', table)
+    
+    check_pipeline_version(df_qc, "Pipeline_version", table) 
+    check_assembler(df_qc, 'Assembler', table)
 
     check_lane_id_is_unqiue(df_qc, 'Lane_id', table)
     check_streptococcus_pneumoniae(df_qc, 'Streptococcus_pneumoniae', table, version)
@@ -159,7 +152,6 @@ def check_qc_table(df_qc, table, version):
     check_no_of_contigs(df_qc, 'No_of_contigs', table)
     check_genome_covered(df_qc, 'Genome_covered', table)
     check_depth_of_coverage(df_qc, 'Depth_of_coverage', table, version)
-    check_proportion_of_het_snps(df_qc, 'Proportion_of_Het_SNPs', table)
     check_qc(df_qc, 'QC', table)
     check_hetsites_50bp(df_qc, 'Hetsites_50bp', table)
 
@@ -171,18 +163,12 @@ def check_qc_table(df_qc, table, version):
 # Check whether analysis table only contains expected values / patterns
 # Take QC table for Duplicate auto-assignment
 def check_analysis_table(df_analysis, table, version, df_qc):
-    match version:
-        case 1:
-            analysis_columns = ["Lane_id", "Sample", "Public_name", "ERR", "ERS", "No_of_genome", "Duplicate", "Paper_1", "In_silico_ST", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "GPSC", "GPSC__colour", "In_silico_serotype", "In_silico_serotype__colour", "pbp1a", "pbp2b", "pbp2x", "WGS_PEN", "WGS_PEN_SIR_Meningitis", "WGS_PEN_SIR_Nonmeningitis", "WGS_AMO", "WGS_AMO_SIR", "WGS_MER", "WGS_MER_SIR", "WGS_TAX", "WGS_TAX_SIR_Meningitis", "WGS_TAX_SIR_Nonmeningitis", "WGS_CFT", "WGS_CFT_SIR_Meningitis", "WGS_CFT_SIR_Nonmeningitis", "WGS_CFX", "WGS_CFX_SIR", "WGS_ERY", "WGS_ERY_SIR", "WGS_CLI", "WGS_CLI_SIR", "WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR", "WGS_ERY_CLI", "WGS_COT", "WGS_COT_SIR", "WGS_TET", "WGS_TET_SIR", "WGS_DOX", "WGS_DOX_SIR", "WGS_LFX", "WGS_LFX_SIR", "WGS_CHL", "WGS_CHL_SIR", "WGS_RIF", "WGS_RIF_SIR", "WGS_VAN", "WGS_VAN_SIR", "EC", "Cot", "Tet__autocolour", "FQ__autocolour", "Other", "PBP1A_2B_2X__autocolour", "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", "ermB", "ermB__colour", "mefA", "mefA__colour", "folA_I100L", "folA_I100L__colour", "folP__autocolour", "cat", "cat__colour"]
-        case 2:
-            analysis_columns = ["Lane_id", "Sanger_sample_id", "Public_name", "ERR", "ERS", "No_of_genome", "Duplicate", "In_silico_ST", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "GPSC", "GPSC__colour", "In_silico_serotype", "In_silico_serotype__colour", "pbp1a", "pbp2b", "pbp2x", "WGS_PEN", "WGS_PEN_SIR_Meningitis", "WGS_PEN_SIR_Nonmeningitis", "WGS_AMO", "WGS_AMO_SIR", "WGS_MER", "WGS_MER_SIR", "WGS_TAX", "WGS_TAX_SIR_Meningitis", "WGS_TAX_SIR_Nonmeningitis", "WGS_CFT", "WGS_CFT_SIR_Meningitis", "WGS_CFT_SIR_Nonmeningitis", "WGS_CFX", "WGS_CFX_SIR", "WGS_ERY", "WGS_ERY_SIR", "WGS_CLI", "WGS_CLI_SIR", "WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR", "WGS_ERY_CLI", "WGS_COT", "WGS_COT_SIR", "WGS_TET", "WGS_TET_SIR", "WGS_DOX", "WGS_DOX_SIR", "WGS_LFX", "WGS_LFX_SIR", "WGS_CHL", "WGS_CHL_SIR", "WGS_RIF", "WGS_RIF_SIR", "WGS_VAN", "WGS_VAN_SIR", "EC", "Cot", "Tet__autocolour", "FQ__autocolour", "Other", "PBP1A_2B_2X__autocolour", "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", "ermB", "ermB__colour", "mefA", "mefA__colour", "folA_I100L", "folA_I100L__colour", "folP__autocolour", "cat", "cat__colour"]
-
+    analysis_columns = ["Lane_id", "Sanger_sample_id", "Public_name", "ERR", "ERS", "No_of_genome", "Duplicate", "In_silico_ST", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "GPSC", "GPSC__colour", "In_silico_serotype", "In_silico_serotype__colour", "pbp1a", "pbp2b", "pbp2x", "WGS_PEN", "WGS_PEN_SIR_Meningitis", "WGS_PEN_SIR_Nonmeningitis", "WGS_AMO", "WGS_AMO_SIR", "WGS_MER", "WGS_MER_SIR", "WGS_TAX", "WGS_TAX_SIR_Meningitis", "WGS_TAX_SIR_Nonmeningitis", "WGS_CFT", "WGS_CFT_SIR_Meningitis", "WGS_CFT_SIR_Nonmeningitis", "WGS_CFX", "WGS_CFX_SIR", "WGS_ERY", "WGS_ERY_SIR", "WGS_CLI", "WGS_CLI_SIR", "WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR", "WGS_ERY_CLI", "WGS_COT", "WGS_COT_SIR", "WGS_TET", "WGS_TET_SIR", "WGS_DOX", "WGS_DOX_SIR", "WGS_LFX", "WGS_LFX_SIR", "WGS_CHL", "WGS_CHL_SIR", "WGS_RIF", "WGS_RIF_SIR", "WGS_VAN", "WGS_VAN_SIR", "EC", "Cot", "Tet__autocolour", "FQ__autocolour", "Other", "PBP1A_2B_2X__autocolour", "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", "ermB", "ermB__colour", "mefA", "mefA__colour", "folA_I100L", "folA_I100L__colour", "folP__autocolour", "cat", "cat__colour"]
     check_columns(df_analysis, analysis_columns, table)
 
     match version:
         case 1:
             check_sanger_sample_id(df_analysis, 'Sample', table, version)
-            check_paper_1(df_analysis, 'Paper_1', table)
             check_lane_id(df_analysis, 'Lane_id', table)
         case 2:
             check_sanger_sample_id(df_analysis, 'Sanger_sample_id', table, version)
@@ -319,13 +305,6 @@ def check_selection_random(df, column_name, table):
     check_expected(df, column_name, table, expected)
 
 
-# Check column values is in the expected continent only
-def check_continent(df, column_name, table):
-    expected = {'AFRICA', 'ASIA', 'CENTRAL AMERICA', 'EUROPE', 'LATIN AMERICA', 'NORTH AMERICA', 'OCEANIA', '_'}
-    check_case(df, column_name, table)
-    check_expected(df, column_name, table, expected)
-
-
 # Warn if column values contain countries not in 'data/pcv_introduction_year.csv'; or countries not in 'data/alpha2_country.csv'
 def check_country(df, column_name, table):
     check_case(df, column_name, table)
@@ -439,11 +418,18 @@ def check_lane_id(df, column_name, table):
     check_regex(df, column_name, table, pattern=r'^(?!0)[0-9]{4,5}_[1-9]#(?!0)[0-9]{1,3}$')
 
 
+# Check column values are in "GPS PIPELINE VX.X.X" format only
+def check_pipeline_version(df, column_name, table):
+    check_case(df, column_name, table)
+    check_regex(df, column_name, table, pattern=r'^GPS PIPELINE V[0-9]+\.[0-9]+\.[0-9]+$')
+
+
 # Check column values are "SHOVILL" or "UNICYCLER" only
 def check_assembler(df, column_name, table):
     expected = {'SHOVILL', 'UNICYCLER'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
+
 
 # Check column values are float in 0 - 100 only. Allows to be _ in GPS2 as well.
 def check_streptococcus_pneumoniae(df, column_name, table, version):
@@ -478,10 +464,6 @@ def check_depth_of_coverage(df, column_name, table, version):
             check_regex(df, column_name, table, float_range=float_range)
         case 2:
             check_regex(df, column_name, table, float_range=float_range, allow_empty=True)
-
-# Check column values are float in 0 - 100 or _ only
-def check_proportion_of_het_snps(df, column_name, table):
-    check_regex(df, column_name, table, float_range=(0, 100), allow_empty=True)
 
 
 # Check column values contain PASS, PASSPLUS, FAIL, _ only
@@ -618,13 +600,6 @@ def check_duplicate(df, column_name, table, version, df_qc):
     if duplicates_more_than_one_unique:
         config.LOG.error(f'{table} has the following duplicated Public_name(s) with more than one of their {duplicate_string} marked as UNIQUE in {column_name}: {", ".join(duplicates_more_than_one_unique)}. Fix them manually or change all to DUPLICATE for auto-assignment.')
         found_error()
-
-
-# Check column values contain YES, NO only
-def check_paper_1(df, column_name, table):
-    expected = {'YES', 'NO'}
-    check_case(df, column_name, table)
-    check_expected(df, column_name, table, expected)
 
 
 # Check column values contain 1 - 20000 integers or NEW, -, _ only
