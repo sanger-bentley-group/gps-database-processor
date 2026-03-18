@@ -14,7 +14,7 @@ def main():
     
     df_results, df_info, table2_path, table3_path, df_table2, df_table3, df_gpsc_colour, df_serotype_colour = args_check(args)
     
-    df_table2_new_data = generate_table2_data(df_results, df_info, args.assembler)
+    df_table2_new_data = generate_table2_data(df_results, df_info, args.version, args.assembler)
     df_table3_new_data = generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour)
 
     df_table2_updated = integrate_table2(df_table2_new_data, df_table2, table2_path)
@@ -74,7 +74,7 @@ def args_check(args):
 
 
 # Generate table2 data for integration
-def generate_table2_data(df_results, df_info, assembler):
+def generate_table2_data(df_results, df_info, pipeline_version, assembler):
     df_table2_new_data = df_results.copy()
 
     df_table2_new_data = df_table2_new_data.merge(df_info, left_on="Sample_ID", right_on="Lane_id", how="left")
@@ -83,6 +83,8 @@ def generate_table2_data(df_results, df_info, assembler):
     for col in df_table2_new_data.columns:
         df_table2_new_data[col] = df_table2_new_data[col].str.upper()
 
+    # Add used pipeline version based on user input
+    df_table2_new_data["Pipeline_version"] = pipeline_version
     # Add used assembler based on user input
     df_table2_new_data["Assembler"] = assembler
 
@@ -101,7 +103,7 @@ def generate_table2_data(df_results, df_info, assembler):
     )
 
     # Extract and reorder relevant columns
-    df_table2_new_data = df_table2_new_data[["Lane_id", "Public_name" ,"Assembler", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "Proportion_of_Het_SNPs", "QC", "Supplier_name", "Hetsites_50bp"]]
+    df_table2_new_data = df_table2_new_data[["Lane_id", "Public_name", "Pipeline_version", "Assembler", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "QC", "Supplier_name", "Hetsites_50bp"]]
 
     return df_table2_new_data
 
@@ -421,6 +423,12 @@ def parse_arguments():
         '-d', '--data',
         default=os.getcwd(),
         help='path to gps2-data compatible directory that is holding table2.csv and table3.csv'
+    )
+
+    parser.add_argument(
+        '-v', '--version',
+        required=True,
+        help='Pipeline used in the run (e.g. "GPS Pipeline v1.1.0")'
     )
 
     parser.add_argument(
