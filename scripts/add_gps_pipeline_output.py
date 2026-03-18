@@ -85,8 +85,6 @@ def generate_table2_data(df_results, df_info, assembler):
 
     # Add used assembler based on user input
     df_table2_new_data["Assembler"] = assembler
-    # Add legacy column
-    df_table2_new_data["Proportion_of_Het_SNPs"] = "_"
 
     # Rename columns that are not in table2 format
     df_table2_new_data.rename(
