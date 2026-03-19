@@ -573,14 +573,19 @@ def check_duplicate(df, column_name, table, version, df_qc):
         UPDATED_DUPLICATE.add(table)
 
     # Check, select and assign UNIQUE to duplicated public name with none marked as UNIQUE
+    # Duplicate with ERR information takes priority
     duplicates_no_unique = set(df_duplicates['Public_name_no_suffix']) - set(df_duplicates[df_duplicates['Duplicate']=='UNIQUE']['Public_name_no_suffix'])
     if duplicates_no_unique:
         config.LOG.info(f'{table} has the following duplicated Public_name(s) with none of their {duplicate_string} marked as UNIQUE in {column_name}: {", ".join(duplicates_no_unique)}.')
 
         for duplicate in duplicates_no_unique:
             candidate_lane_ids = df_duplicates[df_duplicates["Public_name_no_suffix"] == duplicate]["Lane_id"].tolist()
-            candidate_qc_scores = {lane_id: 0 for lane_id in candidate_lane_ids}
-    
+            
+            candidate_qc_scores = {
+                    lane_id: 10 if df_duplicates[df_duplicates["Lane_id"] == lane_id]["ERR"].str.fullmatch(r'^[ESD]RR[0-9]{6,8}$').iloc[0] else 0
+                    for lane_id in candidate_lane_ids
+                }
+
             df_qc_candidate = df_qc[df_qc["Lane_id"].isin(candidate_lane_ids)].copy().reset_index(drop=True)
             for high_metric in ("Streptococcus_pneumoniae", "Genome_covered", "Depth_of_coverage"):
                 winner_lane_id = df_qc_candidate.iloc[df_qc_candidate[high_metric].astype(float).idxmax()]["Lane_id"]
