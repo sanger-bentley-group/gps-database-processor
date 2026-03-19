@@ -199,7 +199,7 @@ def check_analysis_table(df_analysis, table, version, df_qc):
     for col in ariba_sir_columns:
         check_ariba_sir_columns(df_analysis, col, table)
     
-    check_wgs_ery_cli(df_analysis, 'WGS_ERY_CLI', table, version)
+    check_wgs_ery_cli(df_analysis, 'WGS_ERY_CLI', table)
     check_pbp1a_2b_2x_autocolour(df_analysis, 'PBP1A_2B_2X__autocolour', table)
 
     pos_neg_columns = ['ermB', 'mefA', 'folA_I100L', 'cat']
@@ -630,13 +630,9 @@ def check_ariba_sir_columns(df, column_name, table):
     check_expected(df, column_name, table, expected)
 
 
-# Check column values contain FLAG, NEG, POS only for GPS1, and contain 
-def check_wgs_ery_cli(df, column_name, table, version):
-    match version:
-        case 1:
-            expected = {'FLAG', 'NEG', 'POS'}
-        case 2:
-            expected = {'R', 'S'}
+# Check column values contain S, R only 
+def check_wgs_ery_cli(df, column_name, table):
+    expected = {'R', 'S'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
