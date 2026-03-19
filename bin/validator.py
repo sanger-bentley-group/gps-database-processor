@@ -455,7 +455,7 @@ def check_sanger_sample_id(df, column_name, table, version):
         case 2:
             check_regex(df, column_name, table, pattern=pattern, allow_empty=True)
 
-# Check column values are in valid run accession format only. Allows to be _ in GPS2 as well.
+# Check column values are in valid run accession format or NOTFOUND only. Allows to be _ in GPS2 as well.
 def check_err(df, column_name, table, version):
     check_case(df, column_name, table)
 
@@ -468,15 +468,15 @@ def check_err(df, column_name, table, version):
     check_regex(df, column_name, table, pattern=pattern)
 
 
-# Check column values are in valid sample accession format only. Allows to be _ in GPS2 as well.
+# Check column values are in valid sample accession format or NOTFOUND only. Allows to be _ or secondary accession format in GPS2 as well.
 def check_ers(df, column_name, table, version):
     check_case(df, column_name, table)
     
     match version:
         case 1:
-            pattern = r'^[ESD]RS[0-9]{6,8}$'
+            pattern = r'^(NOTFOUND|[ESD]RS[0-9]{6,8})$'
         case 2:
-            pattern = r'^([ESD]RS[0-9]{6,8}|_|SAM[DEN][A-Z]?[0-9]{6,})$'
+            pattern = r'^(NOTFOUND|[ESD]RS[0-9]{6,8}|_|SAM[DEN][A-Z]?[0-9]{6,})$'
 
     check_regex(df, column_name, table, pattern=pattern)
 
