@@ -137,9 +137,8 @@ def check_qc_table(df_qc, table, version):
     check_public_name(df_qc, 'Public_name', table, unique=False)
     check_pipeline_version(df_qc, "Pipeline_version", table) 
     check_assembler(df_qc, 'Assembler', table)
-
     check_lane_id_is_unqiue(df_qc, 'Lane_id', table)
-    check_streptococcus_pneumoniae(df_qc, 'Streptococcus_pneumoniae', table, version)
+    check_streptococcus_pneumoniae(df_qc, 'Streptococcus_pneumoniae', table)
     check_total_length(df_qc, 'Total_length', table)
     check_no_of_contigs(df_qc, 'No_of_contigs', table)
     check_genome_covered(df_qc, 'Genome_covered', table)
@@ -422,14 +421,10 @@ def check_assembler(df, column_name, table):
     check_expected(df, column_name, table, expected)
 
 
-# Check column values are float in 0 - 100 only. Allows to be _ in GPS2 as well.
-def check_streptococcus_pneumoniae(df, column_name, table, version):
+# Check column values are float in 0 - 100 or _ only
+def check_streptococcus_pneumoniae(df, column_name, table):
     float_range = (0, 100)
-    match version:
-        case 1:
-            check_regex(df, column_name, table, float_range=float_range)
-        case 2:
-            check_regex(df, column_name, table, float_range=float_range, allow_empty=True)
+    check_regex(df, column_name, table, float_range=float_range, allow_empty=True)
 
 
 # Check column values contain 1 or larger integers or _ only
