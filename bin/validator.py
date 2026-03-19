@@ -584,9 +584,10 @@ def check_in_silico_st(df, column_name, table):
 def check_mlst_gene_in_silico(df, column_name, table):
     check_regex(df, column_name, table, pattern=r'^(((~?[0-9]+|[0-9]+\?)(,(~?[0-9]+|[0-9]+\?))*)|-)$')
 
-# Check column values contain 1 - 2000 integers, _ only
+
+# Check column values contain 1 - 2000 integers, 235;9, _ only
 def check_gpsc(df, column_name, table):
-    check_int_range(df, column_name, table, lo=1, hi=2000, allow_empty=True)
+    check_int_range(df, column_name, table, lo=1, hi=2000, others=["235;9"], allow_empty=True)
 
 
 # Check column values are in HEX color format, _ (optionally TRANSPARENT) only
