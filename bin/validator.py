@@ -103,7 +103,7 @@ def check_meta_table(df_meta, table, version):
     check_whitespace(df_meta, table)
 
     check_sample_name(df_meta, 'Sample_name', table)
-    check_public_name(df_meta, 'Public_name', table)
+    check_public_name(df_meta, 'Public_name', table, unique=True)
     check_selection_random(df_meta, 'Selection_random', table)
     check_country(df_meta, 'Country', table)
     check_month_collection(df_meta, 'Month', table)
@@ -133,16 +133,8 @@ def check_qc_table(df_qc, table, version):
     qc_columns = ["Lane_id", "Public_name", "Pipeline_version", "Assembler", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "QC", "Supplier_name", "Hetsites_50bp"]
     check_columns(df_qc, qc_columns, table)
 
-    match version:
-        case 1:
-            check_lane_id(df_qc, 'Lane_id', table)
-        case 2:
-            check_case(df_qc, 'Lane_id', table)
-            check_space(df_qc, 'Lane_id', table)
-    
-    check_case(df_qc, 'Public_name', table)
-    check_space(df_qc, 'Public_name', table)
-    
+    check_lane_id(df_qc, 'Lane_id', table, version)
+    check_public_name(df_qc, 'Public_name', table, unique=False)
     check_pipeline_version(df_qc, "Pipeline_version", table) 
     check_assembler(df_qc, 'Assembler', table)
 
@@ -167,17 +159,8 @@ def check_analysis_table(df_analysis, table, version, df_qc):
     check_columns(df_analysis, analysis_columns, table)
 
     check_sanger_sample_id(df_analysis, 'Sanger_sample_id', table, version)
-
-    match version:
-        case 1:
-            check_lane_id(df_analysis, 'Lane_id', table)
-        case 2:
-            check_case(df_analysis, 'Lane_id', table)
-            check_space(df_analysis, 'Lane_id', table)
-    
-    check_case(df_analysis, 'Public_name', table)
-    check_space(df_analysis, 'Public_name', table)
-
+    check_lane_id(df_analysis, 'Lane_id', table, version)
+    check_public_name(df_qc, 'Public_name', table, unique=False)
     check_lane_id_is_unqiue(df_analysis, 'Lane_id', table)
     check_err(df_analysis, 'ERR', table, version)
     check_ers(df_analysis, 'ERS', table, version)
@@ -285,10 +268,13 @@ def check_sample_name(df, column_name, table):
     check_case(df, column_name, table)
     check_space(df, column_name, table)
 
-# Check column values are in uppercase letters, have no space, and unique
-def check_public_name(df, column_name, table):
+# Check column values are in uppercase letters, have no space, and optionally unique
+def check_public_name(df, column_name, table, unique=False):
     check_case(df, column_name, table)
     check_space(df, column_name, table)
+    
+    if not unique:
+        return
     
     duplicated_names = df[df.duplicated(subset=[column_name], keep=False)][column_name].unique()
     
@@ -413,9 +399,14 @@ def check_antibiotic_ast(df, column_name, table):
     check_regex(df, column_name, table, allow_empty=True, pattern=r'^([IRS]|NS|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?))$', absolute=False)
 
 
-# Check column values are in Sanger Lane ID format only
-def check_lane_id(df, column_name, table):
-    check_regex(df, column_name, table, pattern=r'^(?!0)[0-9]{4,5}_[1-9]#(?!0)[0-9]{1,3}$')
+# Check column values are in Sanger Lane ID format only. Allows to be anything in GPS2.
+def check_lane_id(df, column_name, table, version):
+    match version:
+        case 1:
+            check_regex(df, column_name, table, pattern=r'^(?!0)[0-9]{4,5}_[1-9]#(?!0)[0-9]{1,3}$')
+        case 2:
+            check_case(df, 'Lane_id', table)
+            check_space(df, 'Lane_id', table)
 
 
 # Check column values are in "GPS PIPELINE VX.X.X" format only
