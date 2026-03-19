@@ -142,7 +142,7 @@ def check_qc_table(df_qc, table, version):
     check_total_length(df_qc, 'Total_length', table)
     check_no_of_contigs(df_qc, 'No_of_contigs', table)
     check_genome_covered(df_qc, 'Genome_covered', table)
-    check_depth_of_coverage(df_qc, 'Depth_of_coverage', table, version)
+    check_depth_of_coverage(df_qc, 'Depth_of_coverage', table)
     check_qc(df_qc, 'QC', table)
     check_hetsites_50bp(df_qc, 'Hetsites_50bp', table)
 
@@ -442,14 +442,10 @@ def check_genome_covered(df, column_name, table):
     check_regex(df, column_name, table, float_range=(0, 100), allow_empty=True)
 
 
-# Check column values are float in 0 - infinity only. Allows to be _ in GPS2 as well.
-def check_depth_of_coverage(df, column_name, table, version):
+# Check column values are float in 0 - infinity or _ only
+def check_depth_of_coverage(df, column_name, table):
     float_range = (0, float('inf'))
-    match version:
-        case 1:
-            check_regex(df, column_name, table, float_range=float_range)
-        case 2:
-            check_regex(df, column_name, table, float_range=float_range, allow_empty=True)
+    check_regex(df, column_name, table, float_range=float_range, allow_empty=True)
 
 
 # Check column values contain PASS, PASSPLUS, FAIL, _ only
