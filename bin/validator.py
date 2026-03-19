@@ -433,9 +433,9 @@ def check_depth_of_coverage(df, column_name, table):
     check_regex(df, column_name, table, float_range=float_range, allow_empty=True)
 
 
-# Check column values contain PASS, PASSPLUS, FAIL, _ only
+# Check column values contain PASS, FAIL only
 def check_qc(df, column_name, table):
-    expected = {'PASS', 'PASSPLUS', 'FAIL', '_'}
+    expected = {'PASS', 'FAIL'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
