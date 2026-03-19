@@ -37,7 +37,7 @@ def get_table4(path, location):
     df_table4_meta['Manifestation'] = df_table4_meta.set_index(['Clinical_manifestation', 'Source']).index.map(config.MANIFESTATIONS.get)
 
     # Add Continent information to table 4
-    df_table4_meta['Continent'] = df_table4_meta['Country'].map(lambda x: config.COUNTRY_CONTINENT.get(x).upper())
+    df_table4_meta['Continent'] = df_table4_meta['Country'].map(lambda x: config.COUNTRY_CONTINENT.get(x, "_").upper())
 
     # Create a partial table4 dataframe based on a subset of table3
     df_table4_analysis = df_analysis[['Public_name', 'In_silico_serotype', 'Duplicate']].copy()
