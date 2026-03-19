@@ -126,11 +126,6 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     df_table3_new_data["No_of_genome"] = 1
     df_table3_new_data["Duplicate"] = "DUPLICATE"
 
-    # Add legacy column
-    legacy_columns = ["WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR"]
-    for col in legacy_columns:
-        df_table3_new_data[col] = "_"
-
     # Rename columns that are not in table2 format
     df_table3_new_data.rename(
         columns = {
@@ -346,8 +341,6 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "WGS_CFX", "WGS_CFX_SIR", 
         "WGS_ERY", "WGS_ERY_SIR", 
         "WGS_CLI", "WGS_CLI_SIR", 
-        "WGS_SYN", "WGS_SYN_SIR", 
-        "WGS_LZO", "WGS_LZO_SIR", 
         "WGS_ERY_CLI", 
         "WGS_COT", "WGS_COT_SIR", 
         "WGS_TET", "WGS_TET_SIR", 
@@ -362,7 +355,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "FQ__autocolour", 
         "Other", 
         "PBP1A_2B_2X__autocolour", 
-        "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
+        "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
         "ermB", "ermB__colour", 
         "mefA", "mefA__colour", 
         "folA_I100L", "folA_I100L__colour", 
