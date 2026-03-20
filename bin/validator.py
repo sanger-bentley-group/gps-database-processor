@@ -90,7 +90,7 @@ def read_tables(table1, table2, table3):
 def check_meta_table(df_meta, table, version):
     match version:
         case 1:
-            meta_columns = ["Sample_name", "Public_name", "Study_name", "Selection_random", "Continent", "Country", "Region", "City", "Facility_where_collected", "Submitting_institution", "Month", "Year", "Gender", "Age_years", "Age_months", "Age_days", "Clinical_manifestation", "Source", "HIV_status", "Underlying_conditions", "Phenotypic_serotype_method", "Phenotypic_serotype", "Sequence_Type", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "AST_method_Penicillin", "Penicillin", "AST_method_Amoxicillin", "Amoxicillin", "AST_method_Cefotaxime", "Cefotaxime", "AST_method_Ceftriaxone", "Ceftriaxone", "AST_method_Cefuroxime", "Cefuroxime", "AST_method_Meropenem", "Meropenem", "AST_method_Erythromycin", "Erythromycin", "AST_method_Clindamycin", "Clindamycin", "AST_method_COT", "COT", "AST_method_Vancomycin", "Vancomycin", "AST_method_Linezolid", "Linezolid", "AST_method_Ciprofloxacin", "Ciprofloxacin", "AST_method_Chloramphenicol", "Chloramphenicol", "AST_method_Tetracycline", "Tetracycline", "AST_method_Levofloxacin", "Levofloxacin", "AST_method_Synercid", "Synercid", "AST_method_Rifampin", "Rifampin", "Comments"]
+            meta_columns = ["Sample_name", "Public_name", "Study_name", "Selection_random", "Country", "Region", "City", "Facility_where_collected", "Submitting_institution", "Month", "Year", "Gender", "Age_years", "Age_months", "Age_days", "Clinical_manifestation", "Source", "HIV_status", "Underlying_conditions", "Phenotypic_serotype_method", "Phenotypic_serotype", "Sequence_Type", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "AST_method_Penicillin", "Penicillin", "AST_method_Amoxicillin", "Amoxicillin", "AST_method_Cefotaxime", "Cefotaxime", "AST_method_Ceftriaxone", "Ceftriaxone", "AST_method_Cefuroxime", "Cefuroxime", "AST_method_Meropenem", "Meropenem", "AST_method_Erythromycin", "Erythromycin", "AST_method_Clindamycin", "Clindamycin", "AST_method_COT", "COT", "AST_method_Vancomycin", "Vancomycin", "AST_method_Linezolid", "Linezolid", "AST_method_Ciprofloxacin", "Ciprofloxacin", "AST_method_Chloramphenicol", "Chloramphenicol", "AST_method_Tetracycline", "Tetracycline", "AST_method_Levofloxacin", "Levofloxacin", "AST_method_Synercid", "Synercid", "AST_method_Rifampin", "Rifampin", "Comments"]
             antibiotics_columns = ['Penicillin', 'Amoxicillin', 'Cefotaxime', 'Ceftriaxone', 'Cefuroxime', 'Meropenem', 'Erythromycin', 'Clindamycin', 'COT', 'Vancomycin', 'Linezolid', 'Ciprofloxacin', 'Chloramphenicol', 'Tetracycline', 'Levofloxacin', 'Synercid', 'Rifampin']
             check_case_only_columns = ['Study_name', 'Region', 'City', 'Facility_where_collected', 'Submitting_institution', 'Underlying_conditions', 'Phenotypic_serotype_method', 'AST_method_Penicillin', 'AST_method_Amoxicillin', 'AST_method_Cefotaxime', 'AST_method_Ceftriaxone', 'AST_method_Cefuroxime', 'AST_method_Meropenem', 'AST_method_Erythromycin', 'AST_method_Clindamycin', 'AST_method_COT', 'AST_method_Vancomycin', 'AST_method_Linezolid', 'AST_method_Ciprofloxacin', 'AST_method_Chloramphenicol', 'AST_method_Tetracycline', 'AST_method_Levofloxacin', 'AST_method_Synercid', 'AST_method_Rifampin']
         case 2:
@@ -102,11 +102,8 @@ def check_meta_table(df_meta, table, version):
 
     check_whitespace(df_meta, table)
 
-    if version == "1":
-        check_continent(df_meta, 'Continent', table)
-
     check_sample_name(df_meta, 'Sample_name', table)
-    check_public_name(df_meta, 'Public_name', table)
+    check_public_name(df_meta, 'Public_name', table, unique=True)
     check_selection_random(df_meta, 'Selection_random', table)
     check_country(df_meta, 'Country', table)
     check_month_collection(df_meta, 'Month', table)
@@ -133,33 +130,19 @@ def check_meta_table(df_meta, table, version):
 
 # Check whether qc table only contains expected values / patterns
 def check_qc_table(df_qc, table, version):
-    match version:
-        case 1:
-            qc_columns = ["Lane_id", "Public_name", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "Proportion_of_Het_SNPs", "QC", "Supplier_name", "Hetsites_50bp"]
-        case 2:
-            qc_columns = ["Lane_id", "Public_name", "Assembler", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "Proportion_of_Het_SNPs", "QC", "Supplier_name", "Hetsites_50bp"]
-
+    qc_columns = ["Lane_id", "Public_name", "Pipeline_version", "Assembler", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "QC", "Supplier_name", "Hetsites_50bp"]
     check_columns(df_qc, qc_columns, table)
 
-    match version:
-        case 1:
-            check_lane_id(df_qc, 'Lane_id', table)
-            check_case(df_qc, 'Public_name', table)
-            check_space(df_qc, 'Public_name', table)
-        case 2:
-            check_case_and_space_columns = ['Lane_id', 'Public_name']
-            for col in check_case_and_space_columns:
-                check_case(df_qc, col, table)
-                check_space(df_qc, col, table)
-            check_assembler(df_qc, 'Assembler', table)
-
+    check_lane_id(df_qc, 'Lane_id', table, version)
+    check_public_name(df_qc, 'Public_name', table, unique=False)
+    check_pipeline_version(df_qc, "Pipeline_version", table) 
+    check_assembler(df_qc, 'Assembler', table)
     check_lane_id_is_unqiue(df_qc, 'Lane_id', table)
-    check_streptococcus_pneumoniae(df_qc, 'Streptococcus_pneumoniae', table, version)
+    check_streptococcus_pneumoniae(df_qc, 'Streptococcus_pneumoniae', table)
     check_total_length(df_qc, 'Total_length', table)
     check_no_of_contigs(df_qc, 'No_of_contigs', table)
     check_genome_covered(df_qc, 'Genome_covered', table)
-    check_depth_of_coverage(df_qc, 'Depth_of_coverage', table, version)
-    check_proportion_of_het_snps(df_qc, 'Proportion_of_Het_SNPs', table)
+    check_depth_of_coverage(df_qc, 'Depth_of_coverage', table)
     check_qc(df_qc, 'QC', table)
     check_hetsites_50bp(df_qc, 'Hetsites_50bp', table)
 
@@ -171,27 +154,12 @@ def check_qc_table(df_qc, table, version):
 # Check whether analysis table only contains expected values / patterns
 # Take QC table for Duplicate auto-assignment
 def check_analysis_table(df_analysis, table, version, df_qc):
-    match version:
-        case 1:
-            analysis_columns = ["Lane_id", "Sample", "Public_name", "ERR", "ERS", "No_of_genome", "Duplicate", "Paper_1", "In_silico_ST", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "GPSC", "GPSC__colour", "In_silico_serotype", "In_silico_serotype__colour", "pbp1a", "pbp2b", "pbp2x", "WGS_PEN", "WGS_PEN_SIR_Meningitis", "WGS_PEN_SIR_Nonmeningitis", "WGS_AMO", "WGS_AMO_SIR", "WGS_MER", "WGS_MER_SIR", "WGS_TAX", "WGS_TAX_SIR_Meningitis", "WGS_TAX_SIR_Nonmeningitis", "WGS_CFT", "WGS_CFT_SIR_Meningitis", "WGS_CFT_SIR_Nonmeningitis", "WGS_CFX", "WGS_CFX_SIR", "WGS_ERY", "WGS_ERY_SIR", "WGS_CLI", "WGS_CLI_SIR", "WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR", "WGS_ERY_CLI", "WGS_COT", "WGS_COT_SIR", "WGS_TET", "WGS_TET_SIR", "WGS_DOX", "WGS_DOX_SIR", "WGS_LFX", "WGS_LFX_SIR", "WGS_CHL", "WGS_CHL_SIR", "WGS_RIF", "WGS_RIF_SIR", "WGS_VAN", "WGS_VAN_SIR", "EC", "Cot", "Tet__autocolour", "FQ__autocolour", "Other", "PBP1A_2B_2X__autocolour", "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", "ermB", "ermB__colour", "mefA", "mefA__colour", "folA_I100L", "folA_I100L__colour", "folP__autocolour", "cat", "cat__colour"]
-        case 2:
-            analysis_columns = ["Lane_id", "Sanger_sample_id", "Public_name", "ERR", "ERS", "No_of_genome", "Duplicate", "In_silico_ST", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "GPSC", "GPSC__colour", "In_silico_serotype", "In_silico_serotype__colour", "pbp1a", "pbp2b", "pbp2x", "WGS_PEN", "WGS_PEN_SIR_Meningitis", "WGS_PEN_SIR_Nonmeningitis", "WGS_AMO", "WGS_AMO_SIR", "WGS_MER", "WGS_MER_SIR", "WGS_TAX", "WGS_TAX_SIR_Meningitis", "WGS_TAX_SIR_Nonmeningitis", "WGS_CFT", "WGS_CFT_SIR_Meningitis", "WGS_CFT_SIR_Nonmeningitis", "WGS_CFX", "WGS_CFX_SIR", "WGS_ERY", "WGS_ERY_SIR", "WGS_CLI", "WGS_CLI_SIR", "WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR", "WGS_ERY_CLI", "WGS_COT", "WGS_COT_SIR", "WGS_TET", "WGS_TET_SIR", "WGS_DOX", "WGS_DOX_SIR", "WGS_LFX", "WGS_LFX_SIR", "WGS_CHL", "WGS_CHL_SIR", "WGS_RIF", "WGS_RIF_SIR", "WGS_VAN", "WGS_VAN_SIR", "EC", "Cot", "Tet__autocolour", "FQ__autocolour", "Other", "PBP1A_2B_2X__autocolour", "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", "ermB", "ermB__colour", "mefA", "mefA__colour", "folA_I100L", "folA_I100L__colour", "folP__autocolour", "cat", "cat__colour"]
-
+    analysis_columns = ["Lane_id", "Sanger_sample_id", "Public_name", "ERR", "ERS", "No_of_genome", "Duplicate", "In_silico_ST", "aroE", "gdh", "gki", "recP", "spi", "xpt", "ddl", "GPSC", "GPSC__colour", "In_silico_serotype", "In_silico_serotype__colour", "pbp1a", "pbp2b", "pbp2x", "WGS_PEN", "WGS_PEN_SIR_Meningitis", "WGS_PEN_SIR_Nonmeningitis", "WGS_AMO", "WGS_AMO_SIR", "WGS_MER", "WGS_MER_SIR", "WGS_TAX", "WGS_TAX_SIR_Meningitis", "WGS_TAX_SIR_Nonmeningitis", "WGS_CFT", "WGS_CFT_SIR_Meningitis", "WGS_CFT_SIR_Nonmeningitis", "WGS_CFX", "WGS_CFX_SIR", "WGS_ERY", "WGS_ERY_SIR", "WGS_CLI", "WGS_CLI_SIR", "WGS_ERY_CLI", "WGS_COT", "WGS_COT_SIR", "WGS_TET", "WGS_TET_SIR", "WGS_DOX", "WGS_DOX_SIR", "WGS_LFX", "WGS_LFX_SIR", "WGS_CHL", "WGS_CHL_SIR", "WGS_RIF", "WGS_RIF_SIR", "WGS_VAN", "WGS_VAN_SIR", "EC", "Cot", "Tet__autocolour", "FQ__autocolour", "Other", "PBP1A_2B_2X__autocolour", "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", "ermB", "ermB__colour", "mefA", "mefA__colour", "folA_I100L", "folA_I100L__colour", "folP__autocolour", "cat", "cat__colour"]
     check_columns(df_analysis, analysis_columns, table)
 
-    match version:
-        case 1:
-            check_sanger_sample_id(df_analysis, 'Sample', table, version)
-            check_paper_1(df_analysis, 'Paper_1', table)
-            check_lane_id(df_analysis, 'Lane_id', table)
-        case 2:
-            check_sanger_sample_id(df_analysis, 'Sanger_sample_id', table, version)
-            check_case(df_analysis, 'Lane_id', table)
-            check_space(df_analysis, 'Lane_id', table)
-    
-    check_case(df_analysis, 'Public_name', table)
-    check_space(df_analysis, 'Public_name', table)
-
+    check_sanger_sample_id(df_analysis, 'Sanger_sample_id', table, version)
+    check_lane_id(df_analysis, 'Lane_id', table, version)
+    check_public_name(df_qc, 'Public_name', table, unique=False)
     check_lane_id_is_unqiue(df_analysis, 'Lane_id', table)
     check_err(df_analysis, 'ERR', table, version)
     check_ers(df_analysis, 'ERS', table, version)
@@ -201,17 +169,12 @@ def check_analysis_table(df_analysis, table, version, df_qc):
 
     mlst_genes_in_silico_columns = ['aroE', 'gdh', 'gki', 'recP', 'spi', 'xpt', 'ddl']
     for col in mlst_genes_in_silico_columns:
-        check_mlst_gene_in_silico(df_analysis, col, table, version)
+        check_mlst_gene_in_silico(df_analysis, col, table)
 
     check_gpsc(df_analysis, 'GPSC', table)
 
-    match version:
-        case 1:
-            color_columns = ['GPSC__colour', 'In_silico_serotype__colour', 'ermB__colour', 'mefA__colour', 'folA_I100L__colour', 'cat__colour']
-            color_columns_with_transparent = ['WGS_PEN_SIR_Meningitis__colour', 'WGS_PEN_SIR_Nonmeningitis__colour', 'WGS_AMO_SIR__colour', 'WGS_MER_SIR__colour', 'WGS_TAX_SIR_Meningitis__colour', 'WGS_TAX_SIR_Nonmeningitis__colour', 'WGS_CFT_SIR_Meningitis__colour', 'WGS_CFT_SIR_Nonmeningitis__colour', 'WGS_CFX_SIR__colour', 'WGS_ERY_SIR__colour', 'WGS_CLI_SIR__colour', 'WGS_SYN_SIR__colour', 'WGS_LZO_SIR__colour', 'WGS_COT_SIR__colour', 'WGS_TET_SIR__colour', 'WGS_DOX_SIR__colour', 'WGS_LFX_SIR__colour', 'WGS_CHL_SIR__colour', 'WGS_RIF_SIR__colour', 'WGS_VAN_SIR__colour']
-        case 2:
-            color_columns = ['ermB__colour', 'mefA__colour', 'folA_I100L__colour', 'cat__colour']
-            color_columns_with_transparent = ['GPSC__colour', 'In_silico_serotype__colour', 'WGS_PEN_SIR_Meningitis__colour', 'WGS_PEN_SIR_Nonmeningitis__colour', 'WGS_AMO_SIR__colour', 'WGS_MER_SIR__colour', 'WGS_TAX_SIR_Meningitis__colour', 'WGS_TAX_SIR_Nonmeningitis__colour', 'WGS_CFT_SIR_Meningitis__colour', 'WGS_CFT_SIR_Nonmeningitis__colour', 'WGS_CFX_SIR__colour', 'WGS_ERY_SIR__colour', 'WGS_CLI_SIR__colour', 'WGS_SYN_SIR__colour', 'WGS_LZO_SIR__colour', 'WGS_COT_SIR__colour', 'WGS_TET_SIR__colour', 'WGS_DOX_SIR__colour', 'WGS_LFX_SIR__colour', 'WGS_CHL_SIR__colour', 'WGS_RIF_SIR__colour', 'WGS_VAN_SIR__colour']
+    color_columns = ['ermB__colour', 'mefA__colour', 'folA_I100L__colour', 'cat__colour']
+    color_columns_with_transparent = ['GPSC__colour', 'In_silico_serotype__colour', 'WGS_PEN_SIR_Meningitis__colour', 'WGS_PEN_SIR_Nonmeningitis__colour', 'WGS_AMO_SIR__colour', 'WGS_MER_SIR__colour', 'WGS_TAX_SIR_Meningitis__colour', 'WGS_TAX_SIR_Nonmeningitis__colour', 'WGS_CFT_SIR_Meningitis__colour', 'WGS_CFT_SIR_Nonmeningitis__colour', 'WGS_CFX_SIR__colour', 'WGS_ERY_SIR__colour', 'WGS_CLI_SIR__colour', 'WGS_COT_SIR__colour', 'WGS_TET_SIR__colour', 'WGS_DOX_SIR__colour', 'WGS_LFX_SIR__colour', 'WGS_CHL_SIR__colour', 'WGS_RIF_SIR__colour', 'WGS_VAN_SIR__colour']
 
     for col in color_columns:
         check_color(df_analysis, col, table)
@@ -224,29 +187,19 @@ def check_analysis_table(df_analysis, table, version, df_qc):
     for col in pbp_columns:
         check_pbp(df_analysis, col, table)
 
-    match version:
-        case 1:
-            wgs_columns = ['WGS_PEN', 'WGS_AMO', 'WGS_MER', 'WGS_TAX', 'WGS_CFT', 'WGS_CFX', 'WGS_ERY', 'WGS_CLI', 'WGS_SYN', 'WGS_LZO', 'WGS_COT', 'WGS_TET', 'WGS_DOX', 'WGS_LFX', 'WGS_CHL', 'WGS_RIF', 'WGS_VAN']
-            wgs_invalid_columns = []
-            wgs_sir_columns = ['WGS_PEN_SIR_Meningitis', 'WGS_PEN_SIR_Nonmeningitis', 'WGS_AMO_SIR', 'WGS_MER_SIR', 'WGS_TAX_SIR_Meningitis', 'WGS_TAX_SIR_Nonmeningitis', 'WGS_CFT_SIR_Meningitis', 'WGS_CFT_SIR_Nonmeningitis', 'WGS_CFX_SIR', 'WGS_ERY_SIR', 'WGS_CLI_SIR', 'WGS_SYN_SIR', 'WGS_LZO_SIR', 'WGS_COT_SIR', 'WGS_TET_SIR', 'WGS_DOX_SIR', 'WGS_LFX_SIR', 'WGS_CHL_SIR', 'WGS_RIF_SIR', 'WGS_VAN_SIR']
-            wgs_sir_invalid_columns = []
-            ariba_sir_columns = []
-        case 2:
-            wgs_columns = ['WGS_PEN', 'WGS_AMO', 'WGS_MER', 'WGS_TAX', 'WGS_CFT', 'WGS_CFX', 'WGS_ERY', 'WGS_CLI', 'WGS_COT', 'WGS_TET', 'WGS_DOX', 'WGS_LFX', 'WGS_CHL', 'WGS_RIF', 'WGS_VAN']
-            wgs_invalid_columns = ['WGS_SYN', 'WGS_LZO']
-            wgs_sir_columns = ['WGS_PEN_SIR_Meningitis', 'WGS_PEN_SIR_Nonmeningitis', 'WGS_AMO_SIR', 'WGS_MER_SIR', 'WGS_TAX_SIR_Meningitis', 'WGS_TAX_SIR_Nonmeningitis', 'WGS_CFT_SIR_Meningitis', 'WGS_CFT_SIR_Nonmeningitis', 'WGS_CFX_SIR']
-            wgs_sir_invalid_columns = ['WGS_SYN_SIR', 'WGS_LZO_SIR']
-            ariba_sir_columns = ['WGS_ERY_SIR', 'WGS_CLI_SIR', 'WGS_COT_SIR', 'WGS_TET_SIR', 'WGS_DOX_SIR', 'WGS_LFX_SIR', 'WGS_CHL_SIR', 'WGS_RIF_SIR', 'WGS_VAN_SIR']
+
+    wgs_columns = ['WGS_PEN', 'WGS_AMO', 'WGS_MER', 'WGS_TAX', 'WGS_CFT', 'WGS_CFX', 'WGS_ERY', 'WGS_CLI', 'WGS_COT', 'WGS_TET', 'WGS_DOX', 'WGS_LFX', 'WGS_CHL', 'WGS_RIF', 'WGS_VAN']
+    wgs_sir_columns = ['WGS_PEN_SIR_Meningitis', 'WGS_PEN_SIR_Nonmeningitis', 'WGS_AMO_SIR', 'WGS_MER_SIR', 'WGS_TAX_SIR_Meningitis', 'WGS_TAX_SIR_Nonmeningitis', 'WGS_CFT_SIR_Meningitis', 'WGS_CFT_SIR_Nonmeningitis', 'WGS_CFX_SIR']
+    ariba_sir_columns = ['WGS_ERY_SIR', 'WGS_CLI_SIR', 'WGS_COT_SIR', 'WGS_TET_SIR', 'WGS_DOX_SIR', 'WGS_LFX_SIR', 'WGS_CHL_SIR', 'WGS_RIF_SIR', 'WGS_VAN_SIR']
+    
     for col in wgs_columns:
         check_wgs(df_analysis, col, table)
     for col in wgs_sir_columns:
         check_wgs_sir(df_analysis, col, table)
     for col in ariba_sir_columns:
         check_ariba_sir_columns(df_analysis, col, table)
-    for col in wgs_invalid_columns + wgs_sir_invalid_columns:
-        check_invalid_wgs_and_wgs_sir(df_analysis, col, table)
     
-    check_wgs_ery_cli(df_analysis, 'WGS_ERY_CLI', table, version)
+    check_wgs_ery_cli(df_analysis, 'WGS_ERY_CLI', table)
     check_pbp1a_2b_2x_autocolour(df_analysis, 'PBP1A_2B_2X__autocolour', table)
 
     pos_neg_columns = ['ermB', 'mefA', 'folA_I100L', 'cat']
@@ -299,10 +252,13 @@ def check_sample_name(df, column_name, table):
     check_case(df, column_name, table)
     check_space(df, column_name, table)
 
-# Check column values are in uppercase letters, have no space, and unique
-def check_public_name(df, column_name, table):
+# Check column values are in uppercase letters, have no space, and optionally unique
+def check_public_name(df, column_name, table, unique=False):
     check_case(df, column_name, table)
     check_space(df, column_name, table)
+    
+    if not unique:
+        return
     
     duplicated_names = df[df.duplicated(subset=[column_name], keep=False)][column_name].unique()
     
@@ -315,13 +271,6 @@ def check_public_name(df, column_name, table):
 # Check column values contain Y, N, _ only
 def check_selection_random(df, column_name, table):
     expected = {'Y', 'N', '_'}
-    check_case(df, column_name, table)
-    check_expected(df, column_name, table, expected)
-
-
-# Check column values is in the expected continent only
-def check_continent(df, column_name, table):
-    expected = {'AFRICA', 'ASIA', 'CENTRAL AMERICA', 'EUROPE', 'LATIN AMERICA', 'NORTH AMERICA', 'OCEANIA', '_'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
@@ -434,9 +383,20 @@ def check_antibiotic_ast(df, column_name, table):
     check_regex(df, column_name, table, allow_empty=True, pattern=r'^([IRS]|NS|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?))$', absolute=False)
 
 
-# Check column values are in Sanger Lane ID format only
-def check_lane_id(df, column_name, table):
-    check_regex(df, column_name, table, pattern=r'^(?!0)[0-9]{4,5}_[1-9]#(?!0)[0-9]{1,3}$')
+# Check column values are in Sanger Lane ID format only. Allows to be anything in GPS2.
+def check_lane_id(df, column_name, table, version):
+    match version:
+        case 1:
+            check_regex(df, column_name, table, pattern=r'^(?!0)[0-9]{4,5}_[1-9]#(?!0)[0-9]{1,3}$')
+        case 2:
+            check_case(df, 'Lane_id', table)
+            check_space(df, 'Lane_id', table)
+
+
+# Check column values are in "GPS PIPELINE VX.X.X" format only
+def check_pipeline_version(df, column_name, table):
+    check_case(df, column_name, table)
+    check_regex(df, column_name, table, pattern=r'^GPS PIPELINE V[0-9]+\.[0-9]+\.[0-9]+$')
 
 
 # Check column values are "SHOVILL" or "UNICYCLER" only
@@ -445,14 +405,11 @@ def check_assembler(df, column_name, table):
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
-# Check column values are float in 0 - 100 only. Allows to be _ in GPS2 as well.
-def check_streptococcus_pneumoniae(df, column_name, table, version):
+
+# Check column values are float in 0 - 100 or _ only
+def check_streptococcus_pneumoniae(df, column_name, table):
     float_range = (0, 100)
-    match version:
-        case 1:
-            check_regex(df, column_name, table, float_range=float_range)
-        case 2:
-            check_regex(df, column_name, table, float_range=float_range, allow_empty=True)
+    check_regex(df, column_name, table, float_range=float_range, allow_empty=True)
 
 
 # Check column values contain 1 or larger integers or _ only
@@ -470,23 +427,15 @@ def check_genome_covered(df, column_name, table):
     check_regex(df, column_name, table, float_range=(0, 100), allow_empty=True)
 
 
-# Check column values are float in 0 - infinity only. Allows to be _ in GPS2 as well.
-def check_depth_of_coverage(df, column_name, table, version):
+# Check column values are float in 0 - infinity or _ only
+def check_depth_of_coverage(df, column_name, table):
     float_range = (0, float('inf'))
-    match version:
-        case 1:
-            check_regex(df, column_name, table, float_range=float_range)
-        case 2:
-            check_regex(df, column_name, table, float_range=float_range, allow_empty=True)
-
-# Check column values are float in 0 - 100 or _ only
-def check_proportion_of_het_snps(df, column_name, table):
-    check_regex(df, column_name, table, float_range=(0, 100), allow_empty=True)
+    check_regex(df, column_name, table, float_range=float_range, allow_empty=True)
 
 
-# Check column values contain PASS, PASSPLUS, FAIL, _ only
+# Check column values contain PASS, FAIL only
 def check_qc(df, column_name, table):
-    expected = {'PASS', 'PASSPLUS', 'FAIL', '_'}
+    expected = {'PASS', 'FAIL'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
@@ -506,7 +455,7 @@ def check_sanger_sample_id(df, column_name, table, version):
         case 2:
             check_regex(df, column_name, table, pattern=pattern, allow_empty=True)
 
-# Check column values are in valid run accession format only. Allows to be _ in GPS2 as well.
+# Check column values are in valid run accession format or NOTFOUND only. Allows to be _ in GPS2 as well.
 def check_err(df, column_name, table, version):
     check_case(df, column_name, table)
 
@@ -519,15 +468,15 @@ def check_err(df, column_name, table, version):
     check_regex(df, column_name, table, pattern=pattern)
 
 
-# Check column values are in valid sample accession format only. Allows to be _ in GPS2 as well.
+# Check column values are in valid sample accession format or NOTFOUND only. Allows to be _ or secondary accession format in GPS2 as well.
 def check_ers(df, column_name, table, version):
     check_case(df, column_name, table)
     
     match version:
         case 1:
-            pattern = r'^[ESD]RS[0-9]{6,8}$'
+            pattern = r'^(NOTFOUND|[ESD]RS[0-9]{6,8})$'
         case 2:
-            pattern = r'^([ESD]RS[0-9]{6,8}|_|SAM[DEN][A-Z]?[0-9]{6,})$'
+            pattern = r'^(NOTFOUND|[ESD]RS[0-9]{6,8}|_|SAM[DEN][A-Z]?[0-9]{6,})$'
 
     check_regex(df, column_name, table, pattern=pattern)
 
@@ -591,14 +540,19 @@ def check_duplicate(df, column_name, table, version, df_qc):
         UPDATED_DUPLICATE.add(table)
 
     # Check, select and assign UNIQUE to duplicated public name with none marked as UNIQUE
+    # Duplicate with ERR information takes priority
     duplicates_no_unique = set(df_duplicates['Public_name_no_suffix']) - set(df_duplicates[df_duplicates['Duplicate']=='UNIQUE']['Public_name_no_suffix'])
     if duplicates_no_unique:
         config.LOG.info(f'{table} has the following duplicated Public_name(s) with none of their {duplicate_string} marked as UNIQUE in {column_name}: {", ".join(duplicates_no_unique)}.')
 
         for duplicate in duplicates_no_unique:
             candidate_lane_ids = df_duplicates[df_duplicates["Public_name_no_suffix"] == duplicate]["Lane_id"].tolist()
-            candidate_qc_scores = {lane_id: 0 for lane_id in candidate_lane_ids}
-    
+            
+            candidate_qc_scores = {
+                    lane_id: 10 if df_duplicates[df_duplicates["Lane_id"] == lane_id]["ERR"].str.fullmatch(r'^[ESD]RR[0-9]{6,8}$').iloc[0] else 0
+                    for lane_id in candidate_lane_ids
+                }
+
             df_qc_candidate = df_qc[df_qc["Lane_id"].isin(candidate_lane_ids)].copy().reset_index(drop=True)
             for high_metric in ("Streptococcus_pneumoniae", "Genome_covered", "Depth_of_coverage"):
                 winner_lane_id = df_qc_candidate.iloc[df_qc_candidate[high_metric].astype(float).idxmax()]["Lane_id"]
@@ -620,31 +574,20 @@ def check_duplicate(df, column_name, table, version, df_qc):
         found_error()
 
 
-# Check column values contain YES, NO only
-def check_paper_1(df, column_name, table):
-    expected = {'YES', 'NO'}
-    check_case(df, column_name, table)
-    check_expected(df, column_name, table, expected)
-
-
 # Check column values contain 1 - 20000 integers or NEW, -, _ only
 def check_in_silico_st(df, column_name, table):
     check_case(df, column_name, table)
     check_int_range(df, column_name, table, lo=1, hi=20000, allow_empty=True, others=['NEW', '-'])
 
 
-# Check column values contain: For GPS1, 1 or larger integers or NEW, PARTIAL_DELETION, ABSENT, _ only; For GPS2, all possible mlst output
-def check_mlst_gene_in_silico(df, column_name, table, version):
-    match version:
-        case 1:
-            check_case(df, column_name, table)
-            check_int_range(df, column_name, table, lo=1, allow_empty=True, others=['NEW', 'PARTIAL_DELETION', 'ABSENT'])
-        case 2:
-            check_regex(df, column_name, table, pattern=r'^(((~?[0-9]+|[0-9]+\?)(,(~?[0-9]+|[0-9]+\?))*)|-)$')
+# Check column values contain aall possible mlst output
+def check_mlst_gene_in_silico(df, column_name, table):
+    check_regex(df, column_name, table, pattern=r'^(((~?[0-9]+|[0-9]+\?)(,(~?[0-9]+|[0-9]+\?))*)|-)$')
 
-# Check column values contain 1 - 2000 integers, _ only
+
+# Check column values contain 1 - 2000 integers, 235;9, _ only
 def check_gpsc(df, column_name, table):
-    check_int_range(df, column_name, table, lo=1, hi=2000, allow_empty=True)
+    check_int_range(df, column_name, table, lo=1, hi=2000, others=["235;9"], allow_empty=True)
 
 
 # Check column values are in HEX color format, _ (optionally TRANSPARENT) only
@@ -687,18 +630,10 @@ def check_ariba_sir_columns(df, column_name, table):
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
-# Check column values _ only
-def check_invalid_wgs_and_wgs_sir(df, column_name, table):
-    expected = {'_'}
-    check_expected(df, column_name, table, expected)
 
-# Check column values contain FLAG, NEG, POS only for GPS1, and contain 
-def check_wgs_ery_cli(df, column_name, table, version):
-    match version:
-        case 1:
-            expected = {'FLAG', 'NEG', 'POS'}
-        case 2:
-            expected = {'R', 'S'}
+# Check column values contain S, R only 
+def check_wgs_ery_cli(df, column_name, table):
+    expected = {'R', 'S'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 

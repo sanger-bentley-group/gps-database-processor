@@ -14,7 +14,7 @@ def main():
     
     df_results, df_info, table2_path, table3_path, df_table2, df_table3, df_gpsc_colour, df_serotype_colour = args_check(args)
     
-    df_table2_new_data = generate_table2_data(df_results, df_info, args.assembler)
+    df_table2_new_data = generate_table2_data(df_results, df_info, args.version, args.assembler)
     df_table3_new_data = generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour)
 
     df_table2_updated = integrate_table2(df_table2_new_data, df_table2, table2_path)
@@ -74,7 +74,7 @@ def args_check(args):
 
 
 # Generate table2 data for integration
-def generate_table2_data(df_results, df_info, assembler):
+def generate_table2_data(df_results, df_info, pipeline_version, assembler):
     df_table2_new_data = df_results.copy()
 
     df_table2_new_data = df_table2_new_data.merge(df_info, left_on="Sample_ID", right_on="Lane_id", how="left")
@@ -83,10 +83,10 @@ def generate_table2_data(df_results, df_info, assembler):
     for col in df_table2_new_data.columns:
         df_table2_new_data[col] = df_table2_new_data[col].str.upper()
 
+    # Add used pipeline version based on user input
+    df_table2_new_data["Pipeline_version"] = pipeline_version
     # Add used assembler based on user input
     df_table2_new_data["Assembler"] = assembler
-    # Add legacy column
-    df_table2_new_data["Proportion_of_Het_SNPs"] = "_"
 
     # Rename columns that are not in table2 format
     df_table2_new_data.rename(
@@ -103,7 +103,7 @@ def generate_table2_data(df_results, df_info, assembler):
     )
 
     # Extract and reorder relevant columns
-    df_table2_new_data = df_table2_new_data[["Lane_id", "Public_name" ,"Assembler", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "Proportion_of_Het_SNPs", "QC", "Supplier_name", "Hetsites_50bp"]]
+    df_table2_new_data = df_table2_new_data[["Lane_id", "Public_name", "Pipeline_version", "Assembler", "Streptococcus_pneumoniae", "Total_length", "No_of_contigs", "Genome_covered", "Depth_of_coverage", "QC", "Supplier_name", "Hetsites_50bp"]]
 
     return df_table2_new_data
 
@@ -125,11 +125,6 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
     # Values will be updated by the GPS Database Processor
     df_table3_new_data["No_of_genome"] = 1
     df_table3_new_data["Duplicate"] = "DUPLICATE"
-
-    # Add legacy column
-    legacy_columns = ["WGS_SYN", "WGS_SYN_SIR", "WGS_LZO", "WGS_LZO_SIR"]
-    for col in legacy_columns:
-        df_table3_new_data[col] = "_"
 
     # Rename columns that are not in table2 format
     df_table3_new_data.rename(
@@ -346,8 +341,6 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "WGS_CFX", "WGS_CFX_SIR", 
         "WGS_ERY", "WGS_ERY_SIR", 
         "WGS_CLI", "WGS_CLI_SIR", 
-        "WGS_SYN", "WGS_SYN_SIR", 
-        "WGS_LZO", "WGS_LZO_SIR", 
         "WGS_ERY_CLI", 
         "WGS_COT", "WGS_COT_SIR", 
         "WGS_TET", "WGS_TET_SIR", 
@@ -362,7 +355,7 @@ def generate_table3_data(df_results, df_info, df_gpsc_colour, df_serotype_colour
         "FQ__autocolour", 
         "Other", 
         "PBP1A_2B_2X__autocolour", 
-        "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_SYN_SIR__colour", "WGS_LZO_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
+        "WGS_PEN_SIR_Meningitis__colour", "WGS_PEN_SIR_Nonmeningitis__colour", "WGS_AMO_SIR__colour", "WGS_MER_SIR__colour", "WGS_TAX_SIR_Meningitis__colour", "WGS_TAX_SIR_Nonmeningitis__colour", "WGS_CFT_SIR_Meningitis__colour", "WGS_CFT_SIR_Nonmeningitis__colour", "WGS_CFX_SIR__colour", "WGS_ERY_SIR__colour", "WGS_CLI_SIR__colour", "WGS_COT_SIR__colour", "WGS_TET_SIR__colour", "WGS_DOX_SIR__colour", "WGS_LFX_SIR__colour", "WGS_CHL_SIR__colour", "WGS_RIF_SIR__colour", "WGS_VAN_SIR__colour", 
         "ermB", "ermB__colour", 
         "mefA", "mefA__colour", 
         "folA_I100L", "folA_I100L__colour", 
@@ -423,6 +416,12 @@ def parse_arguments():
         '-d', '--data',
         default=os.getcwd(),
         help='path to gps2-data compatible directory that is holding table2.csv and table3.csv'
+    )
+
+    parser.add_argument(
+        '-v', '--version',
+        required=True,
+        help='Pipeline used in the run (e.g. "GPS Pipeline v1.1.0")'
     )
 
     parser.add_argument(

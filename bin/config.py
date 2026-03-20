@@ -136,9 +136,14 @@ def read_country_alpha2():
         ALPHA2_COUNTRY = {}
         COUNTRY_CONTINENT = {}
         for alpha2, country, continent in reader:
+            COUNTRY_CONTINENT[country.upper()] = continent
+
+            # Skip non-country entity without alpha-2 code
+            if alpha2 == "_":
+                continue
+
             COUNTRY_ALPHA2[country.upper()] = alpha2.upper()
             ALPHA2_COUNTRY[alpha2.upper()] = country
-            COUNTRY_CONTINENT[country.upper()] = continent
 
 # Initialise config.MAPBOX_GEOCODER if the variable does not exist yet 
 def get_geocoder():

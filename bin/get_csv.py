@@ -10,7 +10,7 @@ import bin.config as config
 
 
 # Generate table4 based on data from table1
-def get_table4(version, path, location):
+def get_table4(path, location):
     table1, table3, table4 = (os.path.join(path, table) for table in ("table1.csv", "table3.csv", "table4.csv"))
 
     config.LOG.info(f'Generating {table4} now...')
@@ -36,9 +36,8 @@ def get_table4(version, path, location):
     # Get the Manifestation based on the values in 'Clinical_manifestation', 'Source' and the 'data/manifestations.csv' reference table.
     df_table4_meta['Manifestation'] = df_table4_meta.set_index(['Clinical_manifestation', 'Source']).index.map(config.MANIFESTATIONS.get)
 
-    # Add Continent information to table 4 for GPS2
-    if version == 2:
-        df_table4_meta['Continent'] = df_table4_meta['Country'].map(lambda x: config.COUNTRY_CONTINENT.get(x).upper())
+    # Add Continent information to table 4
+    df_table4_meta['Continent'] = df_table4_meta['Country'].map(lambda x: config.COUNTRY_CONTINENT.get(x, "_").upper())
 
     # Create a partial table4 dataframe based on a subset of table3
     df_table4_analysis = df_analysis[['Public_name', 'In_silico_serotype', 'Duplicate']].copy()
@@ -58,9 +57,7 @@ def get_table4(version, path, location):
     df_table4.fillna('_', inplace=True)
 
     # Drop all columns that are not in the schema of table4
-    output_cols = ['Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifestation', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT25', 'Published']
-    if version == 2:
-        output_cols.append('Continent')
+    output_cols = ['Public_name', 'Latitude', 'Longitude', 'Resolution', 'Vaccine_period', 'Introduction_year', 'PCV_type', 'Manifestation', 'Less_than_5_years_old', 'PCV7', 'PCV10_GSK', 'PCV10_Pneumosil', 'PCV13', 'PCV15', 'PCV20', 'PCV21', 'PCV24', 'IVT25', 'Published', 'Continent']
     df_table4.drop(columns=[col for col in df_table4 if col not in output_cols], inplace=True)
     df_table4 = df_table4.reindex(columns = output_cols)
     
@@ -84,7 +81,7 @@ def get_monocle(gps1, gps2):
         sys.exit(1)
 
     # Generate dataframes for GPS1 and GPS2
-    for ver, gps_path in ((1, gps1), (2, gps2)):
+    for version, gps_path in ((1, gps1), (2, gps2)):
         table1, table2, table3, table4 = (os.path.join(gps_path, table) for table in ("table1.csv", "table2.csv", "table3.csv", "table4.csv")) 
         df_meta, df_qc, df_analysis, df_table4 = read_tables(table1, table2, table3, table4)
 
@@ -95,14 +92,10 @@ def get_monocle(gps1, gps2):
         # Drop columns that do not exist in Monocle table, and fix differences between GPS1 and GPS2
         df_meta.drop(columns=['Sequence_Type', 'aroE', 'ddl', 'gdh', 'gki', 'recP', 'spi', 'xpt'], inplace=True)
         df_qc.drop(columns=['Public_name', 'Supplier_name'], inplace=True)
+        df_analysis.drop(columns=['No_of_genome', 'Duplicate'], inplace=True)
 
-        match ver:
-            case 1:
-                df_analysis.drop(columns=['No_of_genome', 'Paper_1', 'Duplicate'], inplace=True)
-            case 2:
-                df_meta.drop(columns=['Accession_number'], inplace=True)
-                df_analysis.drop(columns=['No_of_genome', 'Duplicate'], inplace=True)
-                df_analysis.rename(columns={"Sanger_sample_id": "Sample"}, inplace=True)
+        if version == 2:
+            df_meta.drop(columns=['Accession_number'], inplace=True)
         
         # Merge all 4 tables and only retain samples exist in all 4
         df = df_meta.merge(df_analysis, how='inner', on='Public_name', validate='one_to_one')
