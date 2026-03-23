@@ -188,18 +188,18 @@ def check_analysis_table(df_analysis, table, version, df_qc):
         check_pbp(df_analysis, col, table)
 
 
-    wgs_columns = ['WGS_PEN', 'WGS_AMO', 'WGS_MER', 'WGS_TAX', 'WGS_CFT', 'WGS_CFX', 'WGS_ERY', 'WGS_CLI', 'WGS_COT', 'WGS_TET', 'WGS_DOX', 'WGS_LFX', 'WGS_CHL', 'WGS_RIF', 'WGS_VAN']
-    wgs_sir_columns = ['WGS_PEN_SIR_Meningitis', 'WGS_PEN_SIR_Nonmeningitis', 'WGS_AMO_SIR', 'WGS_MER_SIR', 'WGS_TAX_SIR_Meningitis', 'WGS_TAX_SIR_Nonmeningitis', 'WGS_CFT_SIR_Meningitis', 'WGS_CFT_SIR_Nonmeningitis', 'WGS_CFX_SIR']
+    mic_columns = ['WGS_PEN', 'WGS_AMO', 'WGS_MER', 'WGS_TAX', 'WGS_CFT', 'WGS_CFX', 'WGS_ERY', 'WGS_CLI', 'WGS_COT', 'WGS_TET', 'WGS_DOX', 'WGS_LFX', 'WGS_CHL', 'WGS_RIF', 'WGS_VAN']
+    pbp_sir_columns = ['WGS_PEN_SIR_Meningitis', 'WGS_PEN_SIR_Nonmeningitis', 'WGS_AMO_SIR', 'WGS_MER_SIR', 'WGS_TAX_SIR_Meningitis', 'WGS_TAX_SIR_Nonmeningitis', 'WGS_CFT_SIR_Meningitis', 'WGS_CFT_SIR_Nonmeningitis', 'WGS_CFX_SIR']
     ariba_sir_columns = ['WGS_ERY_SIR', 'WGS_CLI_SIR', 'WGS_COT_SIR', 'WGS_TET_SIR', 'WGS_DOX_SIR', 'WGS_LFX_SIR', 'WGS_CHL_SIR', 'WGS_RIF_SIR', 'WGS_VAN_SIR']
     
-    for col in wgs_columns:
-        check_wgs(df_analysis, col, table)
-    for col in wgs_sir_columns:
-        check_wgs_sir(df_analysis, col, table)
+    for col in mic_columns:
+        check_mic(df_analysis, col, table)
+    for col in pbp_sir_columns:
+        check_pbp_sir(df_analysis, col, table)
     for col in ariba_sir_columns:
-        check_ariba_sir_columns(df_analysis, col, table)
+        check_ariba_sir(df_analysis, col, table)
     
-    check_wgs_ery_cli(df_analysis, 'WGS_ERY_CLI', table)
+    check_ariba_ery_cli_sir(df_analysis, 'WGS_ERY_CLI', table)
     check_pbp1a_2b_2x_autocolour(df_analysis, 'PBP1A_2B_2X__autocolour', table)
 
     pos_neg_columns = ['ermB', 'mefA', 'folA_I100L', 'cat']
@@ -613,26 +613,26 @@ def check_pbp(df, column_name, table):
 
 
 # Check column values are numeric values (can be a range: >, <, >=, <=, or value - value), FLAG, NF, or NA only
-def check_wgs(df, column_name, table):
+def check_mic(df, column_name, table):
     check_case(df, column_name, table)
     check_regex(df, column_name, table, allow_empty=True, pattern=r'^(NA|FLAG|NF|([<>]=?)?(?!0[0-9])([0-9]+([.][0-9]+)?)|(?!0[0-9])([0-9]+([.][0-9]+)?)-(?!0[0-9])([0-9]+([.][0-9]+)?))$')
 
 
-# Check column values contain NF, R, I, S, FLAG, _ only
-def check_wgs_sir(df, column_name, table):
-    expected = {'NF', 'R', 'I', 'S', 'FLAG', '_'}
+# Check column values contain NF, R, I, S, U, FLAG, _ only
+def check_pbp_sir(df, column_name, table):
+    expected = {'NF', 'R', 'I', 'S', 'U', 'FLAG', '_'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
 # Check column values contain S, I, R, INDETERMINABLE only
-def check_ariba_sir_columns(df, column_name, table):
+def check_ariba_sir(df, column_name, table):
     expected = {'S', 'I', 'R', 'INDETERMINABLE'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
 
 
 # Check column values contain S, R only 
-def check_wgs_ery_cli(df, column_name, table):
+def check_ariba_ery_cli_sir(df, column_name, table):
     expected = {'R', 'S'}
     check_case(df, column_name, table)
     check_expected(df, column_name, table, expected)
