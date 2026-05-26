@@ -5,3 +5,4 @@ dependencies:
   - python=3.11
   - pandas=1.5
   - geopy=2.3.0
+  - natsort=8.4.0

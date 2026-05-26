@@ -9,6 +9,7 @@ import os
 from collections import defaultdict
 import geopy
 import bin.colorlog as colorlog
+from natsort import natsort_keygen
 
 
 def init():
@@ -110,7 +111,7 @@ def read_pcv_intro_years():
             PCV_INTRO_YEARS[country].append((intro_year, pcv))
         
     for country in PCV_INTRO_YEARS:
-        PCV_INTRO_YEARS[country].sort()
+        PCV_INTRO_YEARS[country].sort(key=natsort_keygen())
 
 
 # Provide global dictionary for acessing valency of vaccines
