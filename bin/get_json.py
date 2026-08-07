@@ -111,16 +111,20 @@ def get_data(df):
     config.LOG.info(f'{data_json} is generated.')
 
 
-# Simplify age to a integer value based on year, or NaN if the precise age year cannot be determined
+# Simplify age to a integer value based on year, "range" if the precise age year cannot be determined, NA if age information is not available
 def simplify_age(row):
     age_years, age_months, age_days = row['Age_years'], row['Age_months'], row['Age_days']
 
-    if (pd.isna(age_years) and pd.isna(age_months) and pd.isna(age_days)) or age_years in config.NON_STANDARD_AGES:
-        simplified_age = pd.NA
-    elif pd.isna(age_years) or float(age_years) < 1:
-        simplified_age = 0
+    if pd.isna(age_years):
+        if not(pd.isna(age_months) and pd.isna(age_days)):
+            simplified_age = 0
+        else:
+            simplified_age = pd.NA
     else:
-        simplified_age = int(float(age_years))
+        try:
+            simplified_age = int(float(age_years))
+        except ValueError:
+            simplified_age = "range"
     
     row['Simplified_age'] = simplified_age
     return row
@@ -175,11 +179,16 @@ def get_age_group_size(df):
     age_group_size = df.groupby(pd.cut(df['Simplified_age'], bins=pd.IntervalIndex.from_tuples(AGE_BINS, closed='both'))).size()
     age_group_size.index = age_group_size.index.map(interval_to_string) # Cannot convert interval to string before groupby, as conversion skips on empty dataframe
     age_group_size = age_group_size.to_dict()
+
+    # Add count of range-only age
+    range_age_size = len(df[df['Simplified_age'] == "range"])
+    age_group_size["Range-only"] = range_age_size
     
-    # Add back count of unknown age
+    
+    # Add count of unknown age
     unknown_age_size = len(df[pd.isna(df['Simplified_age'])])
     age_group_size["NaN"] = unknown_age_size
-    
+
     return age_group_size
 
 # Convert interval index into string for get_age_group_size()
