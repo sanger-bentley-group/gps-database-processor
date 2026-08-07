@@ -57,11 +57,11 @@ def get_data(df):
     # Generate summary part of Data JSON
     # Sort country, vaccine period, manifestation in descending order by values
     # Sort year of collection, age in ascending order by index with NaN at the first position
-    output_summary_country = df.groupby('Country', dropna=False).size().sort_values(ascending=False).to_dict()
+    output_summary_country = df.groupby('Country', dropna=False).size().sort_values(ascending=False, kind='stable').to_dict()
     output['summary']['country'] = {get_summary_country_name(country): val for country, val in output_summary_country.items()}
-    output_summary_vaccine_period = df.groupby('Vaccine_period', dropna=False).size().sort_values(ascending=False).to_dict()
+    output_summary_vaccine_period = df.groupby('Vaccine_period', dropna=False).size().sort_values(ascending=False, kind='stable').to_dict()
     output['summary']['vaccine_period'] = {get_summary_vaccine_period_name(period): val for period, val in output_summary_vaccine_period.items()}
-    output_summary_manifestation = df.groupby('Manifestation', dropna=False).size().sort_values(ascending=False).to_dict()
+    output_summary_manifestation = df.groupby('Manifestation', dropna=False).size().sort_values(ascending=False, kind='stable').to_dict()
     output['summary']['manifestation'] = {MANIFESTATION_DICT.get(manifestation, manifestation): val for manifestation, val in output_summary_manifestation.items()}
     output['summary']['year_of_collection'] = df.groupby('Year', dropna=False).size().sort_index(key=lambda x: x.astype('Int64'), na_position='first').to_dict()
     output['summary']['age'] = get_age_group_size(df)
