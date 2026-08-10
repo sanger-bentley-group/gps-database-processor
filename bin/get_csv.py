@@ -107,8 +107,8 @@ def get_monocle(gps1, gps2):
     # Concat GPS1 and GPS2 Dataframe
     df = pd.concat(dfs, ignore_index=True)
 
-    # Remove Age_months and Age_days information from CDC data
-    remove_age_months_days_information(df, ["CDC"])
+    # Reduce age information resolution of CDC US data
+    reduce_cdc_us_age_info_resolution(df)
     
     # Export Monocle Table
     monocle_csv = 'table_monocle.csv'
@@ -253,8 +253,21 @@ def get_vaccines_covered(row):
 
     return row
 
-# Ensure Age_months and Age_days information are removed from selected institutes, Age_years is set to 0 for thos known to be younger than 1 yo
-def remove_age_months_days_information(df, institutes_list):
-    for institute in institutes_list:
-        df.loc[(df["Submitting_institution"] == institute) & (df["Age_years"] == "_") & ((df["Age_months"].str.isnumeric()) | (df["Age_days"].str.isnumeric())), "Age_years"] = "0"
-        df.loc[(df["Submitting_institution"] == institute) & ((df["Age_months"].str.isnumeric()) | (df["Age_days"].str.isnumeric())), ["Age_months", "Age_days"]] = ["_", "_"]
+# Ensure CDC US data has reduced age information resolution to age group level only
+def reduce_cdc_us_age_info_resolution(df):
+    # Age bins and labels
+    age_bins = [(0, 1), (2, 4), (5, 17), (18, 49), (50, 64), (65, float('inf'))]
+    age_bins_labels = ["<2", "2-4", "5-17", "18-49", "50-64", "65+"]
+
+    # Mask to select CDC US data with any age information
+    mask_cdc_us_has_age_info = (df["Submitting_institution"] == "CDC") & (df["Country"] == "UNITED STATES") & ( (df["Age_years"].str.isnumeric()) | (df["Age_months"].str.isnumeric()) | (df["Age_days"].str.isnumeric()))
+
+    # Set Age_years to "0" if Age_years is "_" but Age_months or Age_days has numeric value
+    df.loc[mask_cdc_us_has_age_info & (df["Age_years"] == "_"), "Age_years"] = "0"
+
+    # Reduce Age_years resolution 
+    df.loc[mask_cdc_us_has_age_info, "Age_years"] = (
+        pd.cut(df.loc[mask_cdc_us_has_age_info, "Age_years"].astype(int), bins=pd.IntervalIndex.from_tuples(age_bins, closed='both'))
+        .cat.rename_categories(age_bins_labels).astype(str)
+    )
+    df.loc[mask_cdc_us_has_age_info, ["Age_months", "Age_days"]] = ["_", "_"]
